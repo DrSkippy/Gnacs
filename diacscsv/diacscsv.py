@@ -82,7 +82,6 @@ class DiacsCSV(object):
             gnip = d["gnip"]
             actor = d["actor"]
             if self.options_lang:
-                record.append(str([str(l) for l in actor["languages"]]))
                 glang = "None"
                 if "language" in gnip:
                     glang = gnip["language"]["value"]
@@ -101,21 +100,26 @@ class DiacsCSV(object):
                 tmp1 = target["id"].split("/")[1]
                 record.append(tmp1)
                 # thread link
-                record.append(self.cleanField(target["link"])
+                record.append(str(target["link"]))
                 # in reply to
-                in_reply_to = d["inReplyTo"]
-                # comment
-                tmp2 = in_reply_to["id"].split("/")[1]
-                # reply to user
-                tmp3 = in_reply_to["author"]["id"].split("/")[1]
-                if tmp3 == "-1":
-                    tmp3 = "Anon"
-                record.append(self.cleanField(tmp3))
+                if "inReplyTo" in d:
+                    in_reply_to = d["inReplyTo"]
+                    # comment
+                    tmp2 = in_reply_to["id"].split("/")[1]
+                    record.append(tmp2)
+                    # reply to user
+                    tmp3 = in_reply_to["author"]["id"].split("/")[1]
+                    if tmp3 == "-1":
+                        tmp3 = "Anon"
+                    record.append(tmp3)
+                else:
+                    record.append("None")
+                    record.append("None")
             if self.options_user:
                 tmp = actor["id"].split("/")[1]
                 if tmp == "-1":
                     tmp = "Anon"
-                record.append(self.cleanField(tmp))
+                record.append(tmp)
             #
             self.cnt += 1
             return self.asString(record)
@@ -123,3 +127,4 @@ class DiacsCSV(object):
             sys.stderr.write("Field missing from record (%d), skipping\n"%self.cnt)
             record.append(gnipError)
             return self.asString(record)
+

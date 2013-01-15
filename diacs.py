@@ -18,14 +18,14 @@ parser.add_option("-s", "--structure", action="store_true", dest="struct", defau
 parser.add_option("-r", "--rules", action="store_true", dest="rules", default=False, help="Include rules fields")
 parser.add_option("-l", "--lang", action="store_true", dest="lang", default=False, help="Include language fields")
 parser.add_option("-p", "--pretty", action="store_true", dest="pretty", default=False, help="Pretty JSON output of full records")
-parser.add_option("-c", "--csv", action="store_true", dest="csv", default=False, help="Comma-delimited output (default is | with out quotes")
+parser.add_option("-c", "--csv", action="store_true", dest="csv", default=False, help="Comma-delimited output (default is | without quotes)")
 (options, args) = parser.parse_args()
 
 if options.csv:
     delim = ","
 else:
     delim = "|"
-dcsv = diacscsv.diacscsv.DiacsCSV(delim, options_user, options_rules, options_lang, options_struct, options_pretty)
+dcsv = diacscsv.diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.pretty)
 for x in sys.stdin:
     record = x.strip()
     if record == "":
