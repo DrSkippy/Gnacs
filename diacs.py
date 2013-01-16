@@ -4,13 +4,13 @@ __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 import sys
 import codecs
+import fileinput
 from optparse import OptionParser
 import diacscsv.diacscsv
 
 # unicode
 reload(sys)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
-sys.stdin = codecs.getreader('utf-8')(sys.stdin)
 
 parser = OptionParser()
 parser.add_option("-u", "--user", action="store_true", dest="user", default=False, help="Include user fields")
@@ -26,8 +26,7 @@ if options.csv:
 else:
     delim = "|"
 dcsv = diacscsv.diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.pretty)
-for x in sys.stdin:
-    record = x.strip()
+for record in fileinput.FileInput(openhook=fileinput.hook_compressed):
     if record == "":
         continue
     sys.stdout.write("%s\n"%dcsv.procRecord(record))
