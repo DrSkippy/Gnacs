@@ -26,7 +26,7 @@ if options.csv:
 else:
     delim = "|"
 dcsv = diacscsv.diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.pretty)
-for record in fileinput.FileInput(openhook=fileinput.hook_compressed):
+for record in fileinput.FileInput(args,openhook=fileinput.hook_compressed):
     if record == "":
         continue
     sys.stdout.write("%s\n"%dcsv.procRecord(record))
