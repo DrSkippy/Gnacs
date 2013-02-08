@@ -7,6 +7,7 @@ import codecs
 import fileinput
 from optparse import OptionParser
 import diacscsv.diacscsv
+import diacscsv.reflect_json
 
 # unicode
 reload(sys)
@@ -19,6 +20,7 @@ parser.add_option("-r", "--rules", action="store_true", dest="rules", default=Fa
 parser.add_option("-l", "--lang", action="store_true", dest="lang", default=False, help="Include language fields")
 parser.add_option("-p", "--pretty", action="store_true", dest="pretty", default=False, help="Pretty JSON output of full records")
 parser.add_option("-c", "--csv", action="store_true", dest="csv", default=False, help="Comma-delimited output (default is | without quotes)")
+parser.add_option("-x", "--explain", action="store_true", dest="explain", default=False, help="Show field names in output for for sample input records")
 (options, args) = parser.parse_args()
 
 if options.csv:
@@ -29,4 +31,6 @@ dcsv = diacscsv.diacscsv.DiacsCSV(delim, options.user, options.rules, options.la
 for record in fileinput.FileInput(args,openhook=fileinput.hook_compressed):
     if record == "":
         continue
+    if options.explain:
+        record = diacscsv.reflect_json.reflect_json(record)
     sys.stdout.write("%s\n"%dcsv.procRecord(record))

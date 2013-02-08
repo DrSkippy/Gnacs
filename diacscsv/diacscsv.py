@@ -42,6 +42,13 @@ class DiacsCSV(object):
     def asString(self,l):
         return self.delim.join(l)
 
+    def splitId(self, x):
+        tmp = x.split("/")
+        if len(tmp) > 1:
+            return tmp[1]
+        else:
+            return x
+
     def procRecord(self,x):
         record = []
         try:
@@ -94,21 +101,21 @@ class DiacsCSV(object):
             if self.options_struct:
                 target = d["target"]
                 # site
-                tmp = target["website"]["id"].split("/")[1]
+                tmp = self.splitId(target["website"]["id"])
                 record.append(tmp)
                 # thread
-                tmp1 = target["id"].split("/")[1]
-                record.append(tmp1)
+                tmp2 = self.splitId(target["id"])
+                record.append(tmp2)
                 # thread link
                 record.append(str(target["link"]))
                 # in reply to
                 if "inReplyTo" in d:
                     in_reply_to = d["inReplyTo"]
                     # comment
-                    tmp2 = in_reply_to["id"].split("/")[1]
+                    tmp2 = self.splitID(in_reply_to["id"])
                     record.append(tmp2)
                     # reply to user
-                    tmp3 = in_reply_to["author"]["id"].split("/")[1]
+                    tmp3 = self.splitID(in_reply_to["author"]["id"])
                     if tmp3 == "-1":
                         tmp3 = "Anon"
                     record.append(tmp3)
@@ -116,7 +123,7 @@ class DiacsCSV(object):
                     record.append("None")
                     record.append("None")
             if self.options_user:
-                tmp = actor["id"].split("/")[1]
+                tmp = self.splitId(actor["id"])
                 if tmp == "-1":
                     tmp = "Anon"
                 record.append(tmp)
