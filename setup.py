@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='diacs',
-    version='0.1.2',
+    version='0.1.3',
     author='Scott Hendrickson',
     author_email='scott@drskippy.net',
     packages=['diacscsv'],
