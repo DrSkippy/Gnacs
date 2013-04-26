@@ -1,15 +1,15 @@
 from distutils.core import setup
 
 setup(
-    name='diacs',
-    version='0.2.0',
+    name='gnacs',
+    version='0.3.0',
     author='Scott Hendrickson',
     author_email='scott@drskippy.net',
-    packages=['diacscsv', 'wpacscsv', 'reflect'],
+    packages=['diacscsv', 'wpacscsv', 'reflect','twacscsv'],
     scripts=['diacs.py','gnacs-prettifier.py', 'gnacs.py'],
     url='http://pypi.python.org/pypi/diacs/',
     license='LICENSE.txt',
-    description='Gnip normalized Disqus comment and Wordperfect post JSON activity to csv parser.',
+    description='Gnip normalized activity JSON to csv parser (Disqus Comments and Wordperfect, Twitter)',
     long_description=open('README.txt').read(),
     install_requires=[
         "ujson >= 1.2",
