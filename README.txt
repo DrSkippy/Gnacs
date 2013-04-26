@@ -6,12 +6,14 @@ Gnip normalized activities parser
 Install with,
 pip install diacs
 
+Supported publishers:
+* twitter
+* disqus
+* wordpress
+* tumblr
 
-
-diacs.py takes 0 or more arguments and reads 1 or more JSON disqus
-activities from standard input.  The activities are parsed and 
-output is pipe-delimited records representing a subset of the activity
-fields.
+The activities are parsed and output is pipe-delimited records representing a 
+subset of the activity fields.
 
 $ ./gnacs.py -h
 Usage: gnacs.py [options]

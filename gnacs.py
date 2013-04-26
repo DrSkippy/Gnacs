@@ -9,6 +9,7 @@ from optparse import OptionParser
 import diacscsv.diacscsv
 import wpacscsv.wpacscsv
 import twacscsv.twacscsv
+import tblracscsv.tblracscsv
 import reflect.reflect_json
 
 # unicode
@@ -37,7 +38,7 @@ parser.add_option("-u","--user", action="store_true", dest="user",
 parser.add_option("-x","--explain", action="store_true", dest="explain", 
         default=False, help="Show field names in output for for sample input records")
 parser.add_option("-z","--publisher", dest="pub", 
-        default="twitter", help="Publisher(default is twitter), twitter, disqus, wordpress, wpcomments")
+        default="twitter", help="Publisher(default is twitter), twitter, disqus, wordpress, wpcomments, tumblr")
 (options, args) = parser.parse_args()
 
 if options.csv:
@@ -51,6 +52,8 @@ if options.pub.startswith("word"):
     proc = wpacscsv.wpacscsv.WPacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.pretty)
 elif options.pub.startswith("disq"):
     proc = diacscsv.diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.pretty)
+elif options.pub.startswith("tumb"):
+    proc = tblracscsv.tblracscsv.TblrCSV(delim, options.user, options.rules, options.lang, options.struct, options.pretty)
 else:
     proc = twacscsv.twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.pretty)
 
