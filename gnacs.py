@@ -37,7 +37,7 @@ parser.add_option("-u","--user", action="store_true", dest="user",
 parser.add_option("-x","--explain", action="store_true", dest="explain", 
         default=False, help="Show field names in output for for sample input records")
 parser.add_option("-z","--publisher", dest="pub", 
-        default="twitter", help="Publisher(default is twitter)\n twitter\n disqus\n wordpress\n wpcomments")
+        default="twitter", help="Publisher(default is twitter), twitter, disqus, wordpress, wpcomments")
 (options, args) = parser.parse_args()
 
 if options.csv:
