@@ -22,7 +22,7 @@ parser.add_option("-l", "--lang", action="store_true", dest="lang", default=Fals
 parser.add_option("-p", "--pretty", action="store_true", dest="pretty", default=False, help="Pretty JSON output of full records")
 parser.add_option("-c", "--csv", action="store_true", dest="csv", default=False, help="Comma-delimited output (default is | without quotes)")
 parser.add_option("-x", "--explain", action="store_true", dest="explain", default=False, help="Show field names in output for for sample input records")
-parser.add_option("-w", "--wordperfect", action="store_true", dest="wppost", default=False, help="Process Wordperfect Post activities (default is Disqus comments).")
+parser.add_option("-w", "--wordpress, action="store_true", dest="wppost", default=False, help="Process Wordpress Post activities (default is Disqus comments).")
 (options, args) = parser.parse_args()
 
 if options.csv:
