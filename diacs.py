@@ -15,6 +15,7 @@ reload(sys)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 
 parser = OptionParser()
+parser.add_option("-a", "--status", action="store_true", dest="status", default=False, help="Include status type and verb fields")
 parser.add_option("-u", "--user", action="store_true", dest="user", default=False, help="Include user fields")
 parser.add_option("-s", "--structure", action="store_true", dest="struct", default=False, help="Include thread linking fields")
 parser.add_option("-r", "--rules", action="store_true", dest="rules", default=False, help="Include rules fields")

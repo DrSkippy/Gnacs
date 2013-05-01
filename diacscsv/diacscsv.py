@@ -17,13 +17,14 @@ gnipError = "GNIPERROR"
 gnipRemove = "GNIPREMOVE"
 
 class DiacsCSV(object):
-    def __init__(self, delim, options_user, options_rules, options_lang, options_struct, options_pretty):
+    def __init__(self, delim, options_user, options_rules, options_lang, options_struct, options_status, options_pretty):
         self.delim = delim
         self.cnt = 0
         self.options_user = options_user
         self.options_rules = options_rules
         self.options_lang = options_lang
         self.options_struct = options_struct
+        self.options_status = options_status
         self.options_pretty = options_pretty
 
     def cleanField(self,f):
@@ -127,6 +128,16 @@ class DiacsCSV(object):
                 if tmp == "-1":
                     tmp = "Anon"
                 record.append(tmp)
+            if self.options_status:
+                record.append(verb)
+                if "disqusType" in d:
+                    record.append(str(d["disqusType"]))
+                else:
+                    record.append("None")
+                if "disqusTypePrev" in d:
+                    record.append(str(d["disqusTypePrev"]))
+                else:
+                    record.append("None")
             #
             self.cnt += 1
             return self.asString(record)

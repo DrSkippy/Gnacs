@@ -17,6 +17,8 @@ reload(sys)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 
 parser = OptionParser()
+parser.add_option("-a","--status", action="store_true", dest="status", 
+        default=False, help="Version, status, etc.")
 parser.add_option("-g","--geo", action="store_true", dest="geo", 
         default=False, help="Include geo fields")
 parser.add_option("-i", "--influence", action="store_true", dest="influence", 
@@ -51,7 +53,7 @@ else:
 if options.pub.startswith("word"):
     proc = wpacscsv.wpacscsv.WPacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.pretty)
 elif options.pub.startswith("disq"):
-    proc = diacscsv.diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.pretty)
+    proc = diacscsv.diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.status, options.pretty)
 elif options.pub.startswith("tumb"):
     proc = tblracscsv.tblracscsv.TblrCSV(delim, options.user, options.rules, options.lang, options.struct, options.pretty)
 else:
