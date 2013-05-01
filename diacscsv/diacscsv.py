@@ -112,10 +112,10 @@ class DiacsCSV(object):
                 if "inReplyTo" in d:
                     in_reply_to = d["inReplyTo"]
                     # comment
-                    tmp2 = self.splitID(in_reply_to["id"])
+                    tmp2 = self.splitId(in_reply_to["id"])
                     record.append(tmp2)
                     # reply to user
-                    tmp3 = self.splitID(in_reply_to["author"]["id"])
+                    tmp3 = self.splitId(in_reply_to["author"]["id"])
                     if tmp3 == "-1":
                         tmp3 = "Anon"
                     record.append(tmp3)
