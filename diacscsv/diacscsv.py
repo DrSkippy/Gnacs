@@ -108,7 +108,10 @@ class DiacsCSV(object):
                 tmp2 = self.splitId(target["id"])
                 record.append(tmp2)
                 # thread link
-                record.append(str(target["link"]))
+                if "link" in target and target["link"] is not None:
+                    record.append(target["link"])
+                else:
+                    record.append("None")
                 # in reply to
                 if "inReplyTo" in d:
                     in_reply_to = d["inReplyTo"]
