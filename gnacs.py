@@ -47,7 +47,6 @@ if options.csv:
     delim = ","
 else:
     delim = "|"
-
 #
 #
 if options.pub.startswith("word"):
@@ -58,12 +57,15 @@ elif options.pub.startswith("tumb"):
     proc = tblracscsv.tblracscsv.TblrCSV(delim, options.user, options.rules, options.lang, options.struct, options.pretty)
 else:
     proc = twacscsv.twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.pretty)
-
 #
 #
-for record in fileinput.FileInput(args,openhook=fileinput.hook_compressed):
-    if record == "":
+for r in fileinput.FileInput(args,openhook=fileinput.hook_compressed):
+    # remove whitepace and trailing newlines
+    # deal with missing new lines
+    recs = r.strip().replace("}{", "}GNIP_SPLIT{").split("GNIP_SPLIT")
+    if recs == []:
         continue
-    if options.explain:
-        record = reflect.reflect_json.reflect_json(record)
-    sys.stdout.write("%s\n"%proc.procRecord(record))
+    for record in recs:
+        if options.explain:
+            record = reflect.reflect_json.reflect_json(record)
+        sys.stdout.write("%s\n"%proc.procRecord(record))
