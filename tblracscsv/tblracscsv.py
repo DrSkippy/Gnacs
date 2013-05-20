@@ -115,7 +115,10 @@ class TblrCSV(object):
                     record.append("None")
                     record.append("None")
             if self.options_user:
-                tmp = actor["id"].split("/")[1]
+                try:
+                    tmp = actor["id"].split("/")[1]
+                except IndexError:
+                    tmp = "actor:id"
                 record.append(tmp)
             #
             self.cnt += 1
