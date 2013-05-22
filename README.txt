@@ -4,7 +4,7 @@ Gnacs
 Gnip normalized activities parser
 
 Install with,
-pip install diacs
+pip install gnacs
 
 Supported publishers:
 * twitter
@@ -38,7 +38,7 @@ Options:
 
 Sample files are included in the data directory, for example:
 
-$ ./gnacs.py -p data/tumblr.sample.json | head -n20
+$ ./gnacs.py -p data/tumblr.sample.json 
 {
    "tumblrRebloggedFrom": {
       "link": "http://illllest.tumblr.com/post/45832750088", 
