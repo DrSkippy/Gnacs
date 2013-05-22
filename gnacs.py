@@ -39,9 +39,9 @@ def main():
     parser.add_option("-u","--user", action="store_true", dest="user", 
             default=False, help="Include user fields")
     parser.add_option("-x","--explain", action="store_true", dest="explain", 
-            default=False, help="Show field names in output for for sample input records")
+            default=False, help="Show field names in output for sample input records")
     parser.add_option("-z","--publisher", dest="pub", 
-            default="twitter", help="Publisher(default is twitter), twitter, disqus, wordpress, wpcomments, tumblr")
+            default="twitter", help="Publisher (default is twitter), twitter, disqus, wordpress, wpcomments, tumblr")
     (options, args) = parser.parse_args()
     #
     #
