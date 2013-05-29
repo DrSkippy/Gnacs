@@ -11,6 +11,7 @@ Supported publishers:
 * disqus
 * wordpress
 * tumblr
+* foursquare 
 
 The activities are parsed and output is pipe-delimited records representing a 
 subset of the activity fields.
@@ -33,7 +34,7 @@ Options:
   -x, --explain         Show field names in output for sample input records
   -z PUB, --publisher=PUB
                         Publisher (default is twitter), twitter, disqus,
-                        wordpress, wpcomments, tumblr
+                        wordpress, wpcomments, tumblr, foursquare
 
 
 Sample files are included in the data directory, for example:
