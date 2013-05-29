@@ -10,6 +10,7 @@ import diacscsv.diacscsv
 import wpacscsv.wpacscsv
 import twacscsv.twacscsv
 import tblracscsv.tblracscsv
+import fsqacscsv.fsqacscsv 
 import reflect.reflect_json
 
 # unicode
@@ -41,7 +42,7 @@ def main():
     parser.add_option("-x","--explain", action="store_true", dest="explain", 
             default=False, help="Show field names in output for sample input records")
     parser.add_option("-z","--publisher", dest="pub", 
-            default="twitter", help="Publisher (default is twitter), twitter, disqus, wordpress, wpcomments, tumblr")
+            default="twitter", help="Publisher (default is twitter), twitter, disqus, wordpress, wpcomments, tumblr, foursquare")
     (options, args) = parser.parse_args()
     #
     #
@@ -56,7 +57,9 @@ def main():
     elif options.pub.startswith("disq"):
         proc = diacscsv.diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.status, options.pretty)
     elif options.pub.startswith("tumb"):
-        proc = tblracscsv.tblracscsv.TblrCSV(delim, options.user, options.rules, options.lang, options.struct, options.pretty)
+        proc = tblracscsv.tblracscsv.TblracsCSV(delim, options.user, options.rules, options.lang, options.struct, options.pretty)
+    elif options.pub.startswith("four"):
+        proc = fsqacscsv.fsqacscsv.FsqacsCSV(delim, options.geo, options.user, options.rules, options.lang, options.struct, options.pretty)
     else:
         proc = twacscsv.twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.pretty)
     #
