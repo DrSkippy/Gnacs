@@ -16,7 +16,7 @@ except ImportError:
 gnipError = "GNIPERROR"
 gnipRemove = "GNIPREMOVE"
 
-class TblrCSV(object):
+class TblracsCSV(object):
     def __init__(self, delim, options_user, options_rules, options_lang, options_struct, options_pretty):
         self.delim = delim
         self.cnt = 0
