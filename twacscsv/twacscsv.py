@@ -59,7 +59,8 @@ class TwacsCSV(object):
             sys.stderr.write("Invalid JSON record (%d) %s, skipping\n"%(self.cnt, x.strip()))
             return None 
         if self.options_pretty:
-            print json_formatter.dumps(d, indent=3)
+            print json_formatter.dumps(d, indent=3, ensure_ascii=False)
+            #print json_formatter.dumps(d, indent=3)
             return None 
         try:
             if "verb" in d:
