@@ -100,7 +100,10 @@ class FsqacsCSV(object):
             record.append(d["postedTime"])
             record.append(self.cleanField(str(d["foursquareCheckinUtcOffset"])))
             record.append(self.cleanField(obj["displayName"]))
-            cat_names = self.buildListString([cat["displayName"] for cat in cat_list])
+            if len(cat_list) > 0 and isinstance(cat_list[0],dict):
+                cat_names = self.buildListString([cat["displayName"] for cat in cat_list])
+            else:
+                cat_names = str(["object:foursquareCategories_list-items:displayName"])
             record.append(cat_names)
             geo_coords = str([str(l) for l in obj["geo"]["coordinates"]])
             record.append(geo_coords)
