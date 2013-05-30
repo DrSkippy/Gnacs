@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='gnacs',
     version='0.4.0',
-    author='Scott Hendrickson',
+    author='Scott Hendrickson, Josh Montague',
     author_email='scott@drskippy.net',
     packages=['diacscsv', 'wpacscsv', 'reflect', 'twacscsv', 'tblracscsv', 'fsqacscsv'],
     scripts=['tblracs.py', 'diacs.py','gnacs-prettifier.py', 'gnacs.py', 'twacs.py', 'fsqacs.py'],
