@@ -2,6 +2,8 @@
 # -*- coding: UTF-8 -*-
 __author__="Scott Hendrickson"
 __license__="Simplified BSD"
+import pkg_resources
+__version__ = pkg_resources.require("gnacs")[0].version
 import sys
 import codecs
 import fileinput
@@ -39,11 +41,17 @@ def main():
             default=False, help="Include rules fields")
     parser.add_option("-u","--user", action="store_true", dest="user", 
             default=False, help="Include user fields")
+    parser.add_option("-v","--version", action="store_true", dest="ver", 
+            default=False, help="Show version number")
     parser.add_option("-x","--explain", action="store_true", dest="explain", 
             default=False, help="Show field names in output for sample input records")
     parser.add_option("-z","--publisher", dest="pub", 
             default="twitter", help="Publisher (default is twitter), twitter, disqus, wordpress, wpcomments, tumblr, foursquare")
     (options, args) = parser.parse_args()
+    #
+    #
+    if options.ver:
+        print "Gnacs installed package version: %s"%__version__
     #
     #
     if options.csv:
