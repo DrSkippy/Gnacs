@@ -49,16 +49,18 @@ def main():
             default="twitter", help="Publisher (default is twitter), twitter, disqus, wordpress, wpcomments, tumblr, foursquare")
     (options, args) = parser.parse_args()
     #
-    #
     if options.ver:
-        print "Gnacs installed package version: %s"%__version__
-    #
+        print "*"*70
+        print "Gnacs Version: %s"%__version__
+        print "Please see https://github.com/DrSkippy27/Gnacs for updates or"
+        print "sudo pip install gnacs --upgrade to install the latest version."
+        print "*"*70
+        sys.exit()
     #
     if options.csv:
         delim = ","
     else:
         delim = "|"
-    #
     #
     if options.pub.startswith("word"):
         proc = wpacscsv.wpacscsv.WPacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.pretty)
