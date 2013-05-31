@@ -81,9 +81,9 @@ class TblracsCSV(object):
             gnip = d["gnip"]
             actor = d["actor"]
             obj = d["object"] 
-            if "summary" in obj:
+            if "summary" in obj and obj["summary"] is not None:
                 record.append(self.cleanField(obj["summary"]))
-            elif "content" in obj:
+            elif "content" in obj and obj["content"] is not None:
                 record.append(self.cleanField(obj["content"]))
             else:
                 record.append("None")
