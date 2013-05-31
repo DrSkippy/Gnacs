@@ -87,8 +87,14 @@ class WPacsCSV(object):
             record.append(d["id"])
             record.append(d["postedTime"])
             obj = d["object"]
-            record.append(self.cleanField(obj["content"]))
-            record.append(self.cleanField(obj["summary"]))
+            if "content" in obj:
+                record.append(self.cleanField(obj["content"]))
+            else:
+                record.append("None")
+            if "summary" in obj:
+                record.append(self.cleanField(obj["summary"]))
+            else:
+                record.append("None")
             #
             gnip = d["gnip"]
             actor = d["actor"]
