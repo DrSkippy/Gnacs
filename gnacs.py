@@ -62,7 +62,7 @@ def main():
     else:
         delim = "|"
     #
-    if options.pub.startswith("word"):
+    if options.pub.startswith("word") or options.pub.startswith("wp-com") or options.pub.startswith("wp-org"):
         proc = wpacscsv.wpacscsv.WPacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.pretty)
     elif options.pub.startswith("disq"):
         proc = diacscsv.diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.status, options.pretty)
