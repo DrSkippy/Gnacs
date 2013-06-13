@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='gnacs',
-    version='0.4.6',
+    version='0.4.8',
     author='Scott Hendrickson, Josh Montague',
     author_email='scott@drskippy.net',
     packages=['diacscsv', 'wpacscsv', 'reflect', 'twacscsv', 'tblracscsv', 'fsqacscsv'],

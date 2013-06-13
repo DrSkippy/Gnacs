@@ -3,21 +3,12 @@
 __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 import sys
-# ujson is 20% faster
-import json as json_formatter
-try:
-    import ujson as json
-except ImportError:
-    try:
-        import json
-    except ImportError:
-        import simplejson as json
 
 gnipError = "GNIPERROR"
 gnipRemove = "GNIPREMOVE"
 
 class DiacsCSV(object):
-    def __init__(self, delim, options_user, options_rules, options_lang, options_struct, options_status, options_pretty):
+    def __init__(self, delim, options_user, options_rules, options_lang, options_struct, options_status):
         self.delim = delim
         self.cnt = 0
         self.options_user = options_user
@@ -25,7 +16,6 @@ class DiacsCSV(object):
         self.options_lang = options_lang
         self.options_struct = options_struct
         self.options_status = options_status
-        self.options_pretty = options_pretty
 
     def cleanField(self,f):
         return f.strip().replace("\n"," ").replace("\r"," ").replace(self.delim, " ")
@@ -50,16 +40,8 @@ class DiacsCSV(object):
         else:
             return x
 
-    def procRecord(self,x):
+    def procRecord(self, d):
         record = []
-        try:
-            d = json.loads(x.strip())
-        except ValueError:
-            sys.stderr.write("Invalid JSON record (%d) %s, skipping\n"%(self.cnt, x.strip()))
-            return None 
-        if self.options_pretty:
-            print json_formatter.dumps(d, indent=3)
-            return None 
         try:
             if "verb" in d:
                 verb = d["verb"]

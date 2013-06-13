@@ -14,6 +14,15 @@ import twacscsv.twacscsv
 import tblracscsv.tblracscsv
 import fsqacscsv.fsqacscsv 
 import reflect.reflect_json
+# ujson is 20% faster
+import json as json_formatter
+try:
+    import ujson as json
+except ImportError:
+    try:
+        import json
+    except ImportError:
+        import simplejson as json
 
 # unicode
 reload(sys)
@@ -63,24 +72,35 @@ def main():
         delim = "|"
     #
     if options.pub.startswith("word") or options.pub.startswith("wp-com") or options.pub.startswith("wp-org"):
-        proc = wpacscsv.wpacscsv.WPacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.pretty)
+        proc = wpacscsv.wpacscsv.WPacsCSV(delim, options.user, options.rules, options.lang, options.struct)
     elif options.pub.startswith("disq"):
-        proc = diacscsv.diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.status, options.pretty)
+        proc = diacscsv.diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.status)
     elif options.pub.startswith("tumb"):
-        proc = tblracscsv.tblracscsv.TblracsCSV(delim, options.user, options.rules, options.lang, options.struct, options.pretty)
+        proc = tblracscsv.tblracscsv.TblracsCSV(delim, options.user, options.rules, options.lang, options.struct)
     elif options.pub.startswith("four"):
-        proc = fsqacscsv.fsqacscsv.FsqacsCSV(delim, options.geo, options.user, options.rules, options.lang, options.struct, options.pretty)
+        proc = fsqacscsv.fsqacscsv.FsqacsCSV(delim, options.geo, options.user, options.rules, options.lang, options.struct)
     else:
-        proc = twacscsv.twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.pretty)
+        proc = twacscsv.twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence)
     #
-    #
+    cnt = 0
     for r in fileinput.FileInput(args,openhook=fileinput.hook_compressed):
-        # remove whitepace and trailing newlines
-        # deal with missing new lines
-        recs = r.strip().replace("}{", "}GNIP_SPLIT{").split("GNIP_SPLIT")
-        if recs == []:
-            continue
+        cnt += 1
+        try:
+            recs = [json.loads(r.strip())]
+        except ValueError:
+            try:
+                # maybe a missing line feed?
+                recs = [json.loads(x) for x in r.strip().replace("}{", "}GNIP_SPLIT{").split("GNIP_SPLIT")]
+            except ValueError:
+                sys.stderr.write("Invalid JSON record (%d) %s, skipping\n"%(self.cnt, r.strip()))
+                continue
+        if options.pretty:
+            for record in recs:
+                print json_formatter.dumps(record, indent=3)
+            continue 
         for record in recs:
+            if len(record) == 0:
+                continue
             if options.explain:
                 record = reflect.reflect_json.reflect_json(record)
             sys.stdout.write("%s\n"%proc.procRecord(record))

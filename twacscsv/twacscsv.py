@@ -4,22 +4,13 @@ __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 import datetime
 import sys
-# ujson is 20% faster
-import json as json_formatter
-try:
-    import ujson as json
-except ImportError:
-    try:
-        import json
-    except ImportError:
-        import simplejson as json
 
-gnipError = "GNIPERROR"
 gnipRemove = "GNIPREMOVE"
+gnipError = "GNIPERROR"
 gnipDateTime = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 class TwacsCSV(object):
-    def __init__(self, delim, options_geo, options_user, options_rules, options_urls, options_lang, options_influence, options_pretty):
+    def __init__(self, delim, options_geo, options_user, options_rules, options_urls, options_lang, options_influence):
         self.delim = delim
         self.cnt = 0
         self.options_geo = options_geo 
@@ -27,7 +18,6 @@ class TwacsCSV(object):
         self.options_rules = options_rules
         self.options_urls = options_urls
         self.options_lang = options_lang
-        self.options_pretty = options_pretty
         self.options_influence = options_influence
 
     def cleanField(self,f):
@@ -51,17 +41,8 @@ class TwacsCSV(object):
     def procRecord(self,x):
         return self.asString(self.procRecordToList(x))
 
-    def procRecordToList(self,x):
+    def procRecordToList(self,d):
         record = []
-        try:
-            d = json.loads(x.strip())
-        except ValueError:
-            sys.stderr.write("Invalid JSON record (%d) %s, skipping\n"%(self.cnt, x.strip()))
-            return None 
-        if self.options_pretty:
-            print json_formatter.dumps(d, indent=3, ensure_ascii=False)
-            #print json_formatter.dumps(d, indent=3)
-            return None 
         try:
             if "verb" in d:
                 verb = d["verb"]
@@ -80,12 +61,12 @@ class TwacsCSV(object):
                 record.append(msg)
                 return record
             if verb == "delete":
-                record.append(self.cleanField(d["object"]["id"]))
+                record.append(d["object"]["id"])
                 record.append(gnipDateTime)
                 record.append('-'.join([gnipRemove, verb]))
                 return record
             elif verb == "scrub_geo":
-                record.append(self.cleanField(d["actor"]["id"]))
+                record.append(d["actor"]["id"])
                 record.append(gnipDateTime)
                 record.append('-'.join([gnipRemove, verb]))
                 return record

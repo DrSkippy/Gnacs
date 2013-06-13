@@ -3,28 +3,18 @@
 __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 import sys
-# ujson is 20% faster
-import json as json_formatter
-try:
-    import ujson as json
-except ImportError:
-    try:
-        import json
-    except ImportError:
-        import simplejson as json
 
 gnipError = "GNIPERROR"
 gnipRemove = "GNIPREMOVE"
 
 class TblracsCSV(object):
-    def __init__(self, delim, options_user, options_rules, options_lang, options_struct, options_pretty):
+    def __init__(self, delim, options_user, options_rules, options_lang, options_struct):
         self.delim = delim
         self.cnt = 0
         self.options_user = options_user
         self.options_rules = options_rules
         self.options_lang = options_lang
         self.options_struct = options_struct
-        self.options_pretty = options_pretty
 
     def cleanField(self,f):
         return f.strip().replace("\n"," ").replace("\r"," ").replace(self.delim, " ")
@@ -42,16 +32,8 @@ class TblracsCSV(object):
     def asString(self,l):
         return self.delim.join(l)
 
-    def procRecord(self,x):
+    def procRecord(self,d):
         record = []
-        try:
-            d = json.loads(x.strip())
-        except ValueError:
-            sys.stderr.write("Invalid JSON record (%d) %s, skipping\n"%(self.cnt, x.strip()))
-            return None 
-        if self.options_pretty:
-            print json_formatter.dumps(d, indent=3)
-            return None 
         try:
             if "verb" in d:
                 verb = d["verb"]
@@ -70,10 +52,13 @@ class TblracsCSV(object):
                 record.append(msg)
                 return self.asString(record)
             if verb == "delete":
+                record.append(d["id"])
                 record.append(gnipRemove)
                 record.append(verb)
-                record.append(self.cleanField(d["object"]["id"]))
                 return self.asString(record)
+            elif verb == "update":
+                # process as usual
+                pass
             #
             record.append(d["id"])
             record.append(d["postedTime"])

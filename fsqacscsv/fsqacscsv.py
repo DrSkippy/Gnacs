@@ -4,29 +4,19 @@ __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 import datetime
 import sys
-# ujson is 20% faster
-import json as json_formatter
-try:
-    import ujson as json
-except ImportError:
-    try:
-        import json
-    except ImportError:
-        import simplejson as json
 
 gnipError = "GNIPERROR"
 gnipRemove = "GNIPREMOVE"
 gnipDateTime = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 class FsqacsCSV(object):
-    def __init__(self, delim, options_geo, options_user, options_rules, options_lang, options_influence, options_pretty):
+    def __init__(self, delim, options_geo, options_user, options_rules, options_lang, options_influence):
         self.delim = delim
         self.cnt = 0
         self.options_geo = options_geo 
         self.options_user = options_user
         self.options_rules = options_rules
         self.options_lang = options_lang
-        self.options_pretty = options_pretty
         # clean up options that don't pertain
         self.options_influence = options_influence
 
@@ -51,16 +41,8 @@ class FsqacsCSV(object):
     def procRecord(self,x):
         return self.asString(self.procRecordToList(x))
 
-    def procRecordToList(self,x):
+    def procRecordToList(self, d):
         record = []
-        try:
-            d = json.loads(x.strip())
-        except ValueError:
-            sys.stderr.write("Invalid JSON record (%d) %s, skipping\n"%(self.cnt, x.strip()))
-            return None 
-        if self.options_pretty:
-            print json_formatter.dumps(d, indent=3)
-            return None 
         try:
             if "verb" in d:
                 verb = d["verb"]

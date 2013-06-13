@@ -14,14 +14,8 @@ except ImportError:
 
 LIST_ITEMS = "list-items"
 
-def reflect_json(json_string):
-    try:
-        d = json.loads(json_string.strip())
-    except ValueError:
-        sys.stderr.write("Invalid JSON record %s, skipping\n"%(json_string.strip()))
-        return None 
-    #
-    return walk_label(d)
+def reflect_json(d):
+    return json.loads(walk_label(d))
 
 def walk_label(x, label=None):
     if type(x) == type({}):
