@@ -92,7 +92,7 @@ def main():
                 # maybe a missing line feed?
                 recs = [json.loads(x) for x in r.strip().replace("}{", "}GNIP_SPLIT{").split("GNIP_SPLIT")]
             except ValueError:
-                sys.stderr.write("Invalid JSON record (%d) %s, skipping\n"%(self.cnt, r.strip()))
+                sys.stderr.write("Invalid JSON record (%d) %s, skipping\n"%(cnt, r.strip()))
                 continue
         if options.pretty:
             for record in recs:
