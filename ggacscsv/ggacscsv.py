@@ -82,9 +82,11 @@ class GgacsCSV(object):
             record.append(target_id)
             #
             if self.options_rules:
-                rules = '[]'
-                if "matching_rules" in gnip:
-                    rules = self.buildListString(
+                rules = "[]"
+                if "gnip" in d:
+                    gnip = d["gnip"]
+                    if "matching_rules" in gnip:
+                        rules = self.buildListString(
                             [ "%s (%s)"%(l["value"], l["tag"]) for l in gnip["matching_rules"]])
                 record.append(rules)
             #
