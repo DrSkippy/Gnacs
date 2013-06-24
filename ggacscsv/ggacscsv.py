@@ -2,42 +2,16 @@
 # -*- coding: UTF-8 -*-
 __author__="Scott Hendrickson"
 __license__="Simplified BSD"
-import datetime
 import sys
+from acscsv import * 
 
-gnipError = "GNIPERROR"
-gnipRemove = "GNIPREMOVE"
-gnipDateTime = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.000Z")
-
-class GgacsCSV(object):
+class GgacsCSV(AcsCSV):
     def __init__(self, delim, options_user, options_rules, options_urls, options_provider):
-        self.delim = delim
-        self.cnt = 0
+        super(GgacsCSV, self).__init__(delim)
         self.options_rules = options_rules
         self.options_urls = options_urls
         self.options_user = options_user
         self.options_provider = options_provider
-
-    def cleanField(self,f):
-        return f.strip().replace("\n"," ").replace("\r"," ").replace(self.delim, " ")
-
-    def buildListString(self,l):
-        # unicode output of list (without u's)
-        res = '['
-        for r in l:
-            res += "'" + r + "',"
-        if res.endswith(','):
-            res = res[:-1]
-        res += ']'
-        return res
-
-    def asString(self,l):
-        if l is None:
-            return None
-        return self.delim.join(l)
-
-    def procRecord(self,x):
-        return self.asString(self.procRecordToList(x))
 
     def procRecordToList(self, d):
         record = []

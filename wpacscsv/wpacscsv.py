@@ -3,45 +3,17 @@
 __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 import sys
+from acscsv import *
 
-gnipError = "GNIPERROR"
-gnipRemove = "GNIPREMOVE"
-
-class WPacsCSV(object):
+class WPacsCSV(AcsCSV):
     def __init__(self, delim, options_user, options_rules, options_lang, options_struct):
-        self.delim = delim
-        self.cnt = 0
+        super(WPacsCSV, self).__init__(delim)
         self.options_user = options_user
         self.options_rules = options_rules
         self.options_lang = options_lang
         self.options_struct = options_struct
 
-    def cleanField(self,f):
-        return f.strip().replace("\n"," ").replace("\r"," ").replace(self.delim, " ")
-
-    def buildListString(self,l):
-        # unicode output of list (without u's)
-        res = '['
-        for r in l:
-            res += "'" + r + "',"
-        if res.endswith(','):
-            res = res[:-1]
-        res += ']'
-        return res
-
-    def asString(self,l):
-        if l is not None:
-            return self.delim.join(l)
-        return None
-
-    def splitId(self, x):
-        tmp = x.split(":")
-        if len(tmp) > 1:
-            return tmp[-1]
-        else:
-            return x
-
-    def procRecord(self,d):
+    def procRecordToList(self, d):
         record = []
         try:
             if "verb" in d:
@@ -104,10 +76,9 @@ class WPacsCSV(object):
                 tmp = self.splitId(actor["id"])
                 record.append(tmp)
             #
-            self.cnt += 1
-            return self.asString(record)
+            return record
         except KeyError:
             sys.stderr.write("Field missing from record (%d), skipping\n"%self.cnt)
             record.append(gnipError)
-            return self.asString(record)
+            return record
 

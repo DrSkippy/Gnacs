@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-publist="disqus foursquare tumblr twitter wp-com"
+publist="disqus foursquare tumblr twitter wp-com stocktwit"
 echo $(date)
 
-tmpfile="/mnt2/tmp/gnacstest.tmp"
+tmpfile="$TMPDIR/gnacstest.tmp"
 if [ -e $tmpfile ]; then
     rm $tmpfile
 fi
@@ -19,8 +19,8 @@ for pub in $publist; do
     ../gnacs.py -p $fn >> $tmpfile
 done
 
-echo "Output: $(cat $tmpfile | wc -l) should be 19721"
-echo "GNIP lines: $(cat $tmpfile | grep GNIP | wc -l) should be 5"
+echo "Output: $(cat $tmpfile | wc -l) should be 25176"
+echo "GNIP lines: $(cat $tmpfile | grep GNIP | wc -l) should be 4"
 
 if [ -e $tmpfile ]; then
     rm $tmpfile
