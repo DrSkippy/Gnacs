@@ -29,15 +29,15 @@ class DiacsCSV(acscsv.AcsCSV):
                             msg = d["message"]
                         continue
                     mtype = "Unidentified"
-                record.append(gnipRemove)
+                record.append(acscsv.gnipRemove)
                 record.append(mtype)
                 record.append(msg)
-                return self.asString(record)
+                return record
             if verb == "delete":
-                record.append(gnipRemove)
+                record.append(acscsv.gnipRemove)
                 record.append(verb)
                 record.append(self.cleanField(d["object"]["id"]))
-                return self.asString(record)
+                return record
             #
             record.append(d["id"])
             record.append(d["postedTime"])
@@ -101,6 +101,6 @@ class DiacsCSV(acscsv.AcsCSV):
             return record
         except KeyError:
             sys.stderr.write("Field missing from record (%d), skipping\n"%self.cnt)
-            record.append(gnipError)
+            record.append(acscsv.gnipError)
             return record
 

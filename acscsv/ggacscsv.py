@@ -5,7 +5,7 @@ __license__="Simplified BSD"
 import sys
 import acscsv 
 
-class GgacsCSV(acscsv.acscsv.AcsCSV):
+class GgacsCSV(acscsv.AcsCSV):
     def __init__(self, delim, options_user, options_rules, options_urls, options_provider):
         super(GgacsCSV, self).__init__(delim)
         self.options_rules = options_rules
@@ -28,8 +28,8 @@ class GgacsCSV(acscsv.acscsv.AcsCSV):
                             msg = d["message"]
                         continue
                     mtype = "Unidentified"
-                record.append('-'.join([gnipRemove, mtype]))
-                record.append(gnipDateTime)
+                record.append('-'.join([acscsv.gnipRemove, mtype]))
+                record.append(acscsv.gnipDateTime)
                 record.append(msg)
                 return record
             actor = d["actor"]
@@ -80,6 +80,6 @@ class GgacsCSV(acscsv.acscsv.AcsCSV):
             return record
         except KeyError:
             sys.stderr.write("Field missing from record (%d), skipping\n"%self.cnt)
-            record.append(gnipError)
-            record.append(gnipRemove)
+            record.append(acscsv.gnipError)
+            record.append(acscsv.gnipRemove)
             return record

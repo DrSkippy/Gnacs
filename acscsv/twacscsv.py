@@ -5,7 +5,7 @@ __license__="Simplified BSD"
 import sys
 import acscsv
 
-class TwacsCSV(acscsv.acscsv.AcsCSV):
+class TwacsCSV(acscsv.AcsCSV):
     def __init__(self, delim, options_geo, options_user, options_rules, options_urls, options_lang, options_influence):
         super(TwacsCSV, self).__init__(delim)
         self.options_geo = options_geo 
@@ -30,19 +30,19 @@ class TwacsCSV(acscsv.acscsv.AcsCSV):
                             msg = d["message"]
                         continue
                     mtype = "Unidentified"
-                record.append('-'.join([gnipRemove, mtype]))
-                record.append(gnipDateTime)
+                record.append('-'.join([acscsv.gnipRemove, mtype]))
+                record.append(acscsv.gnipDateTime)
                 record.append(msg)
                 return record
             if verb == "delete":
                 record.append(d["object"]["id"])
-                record.append(gnipDateTime)
-                record.append('-'.join([gnipRemove, verb]))
+                record.append(acscsv.gnipDateTime)
+                record.append('-'.join([acscsv.gnipRemove, verb]))
                 return record
             elif verb == "scrub_geo":
                 record.append(d["actor"]["id"])
-                record.append(gnipDateTime)
-                record.append('-'.join([gnipRemove, verb]))
+                record.append(acscsv.gnipDateTime)
+                record.append('-'.join([acscsv.gnipRemove, verb]))
                 return record
             # always first 3 items
             record.append(d["id"])
@@ -129,6 +129,6 @@ class TwacsCSV(acscsv.acscsv.AcsCSV):
             return record
         except KeyError:
             sys.stderr.write("Field missing from record (%d), skipping\n"%self.cnt)
-            record.append(gnipError)
-            record.append(gnipRemove)
+            record.append(acscsv.gnipError)
+            record.append(acscsv.gnipRemove)
             return record

@@ -5,7 +5,7 @@ __license__="Simplified BSD"
 import sys
 import acscsv
 
-class StntvCSV(acscsv.acscsv.AcsCSV):
+class StntvCSV(acscsv.AcsCSV):
     def __init__(self, delim, options_user,options_struct,options_influence):
         super(StntvCSV, self).__init__(delim)
         self.options_user = options_user
@@ -55,10 +55,9 @@ class StntvCSV(acscsv.acscsv.AcsCSV):
                 record.append(following_stocks)
                 record.append(followers)
                 record.append(experience)
-
             return record
         except KeyError:
             sys.stderr.write("Field missing from record (%d), skipping\n"%self.cnt)
-            record.append(gnipError)
-            record.append(gnipRemove)
+            record.append(acscsv.gnipError)
+            record.append(acscsv.gnipRemove)
             return record

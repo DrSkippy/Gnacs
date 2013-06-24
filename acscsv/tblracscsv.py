@@ -5,7 +5,7 @@ __license__="Simplified BSD"
 import sys
 import acscsv
 
-class TblracsCSV(acscsv.acscsv.AcsCSV):
+class TblracsCSV(acscsv.AcsCSV):
     def __init__(self, delim, options_user, options_rules, options_lang, options_struct):
         super(TblracsCSV, self).__init__(delim)
         self.options_user = options_user
@@ -28,15 +28,15 @@ class TblracsCSV(acscsv.acscsv.AcsCSV):
                             msg = d["message"]
                         continue
                     mtype = "Unidentified"
-                record.append(gnipRemove)
+                record.append(acscsv.gnipRemove)
                 record.append(mtype)
                 record.append(msg)
-                return self.asString(record)
+                return record
             if verb == "delete":
                 record.append(d["id"])
-                record.append(gnipRemove)
+                record.append(acscsv.gnipRemove)
                 record.append(verb)
-                return self.asString(record)
+                return record
             elif verb == "update":
                 # process as usual
                 pass
@@ -90,5 +90,5 @@ class TblracsCSV(acscsv.acscsv.AcsCSV):
             return record
         except KeyError:
             sys.stderr.write("Field missing from record (%d), skipping\n"%self.cnt)
-            record.append(gnipError)
+            record.append(acscsv.gnipError)
             return record

@@ -11,7 +11,7 @@ import sys
 import codecs
 import fileinput
 from optparse import OptionParser
-from acscsv import diacscsv
+from acscsv import *
 # ujson is 20% faster
 import json as json_formatter
 try:
@@ -72,19 +72,19 @@ def main():
         delim = "|"
     #
     if options.pub.startswith("word") or options.pub.startswith("wp-com") or options.pub.startswith("wp-org"):
-        proc = wpacscsv.wpacscsv.WPacsCSV(delim, options.user, options.rules, options.lang, options.struct)
+        proc = wpacscsv.WPacsCSV(delim, options.user, options.rules, options.lang, options.struct)
     elif options.pub.startswith("disq") or options.pub.startswith("disqus"):
-        proc = diacscsv.diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.status)
+        proc = diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.status)
     elif options.pub.startswith("tumb") or options.pub.startswith("tumblr"):
-        proc = tblracscsv.tblracscsv.TblracsCSV(delim, options.user, options.rules, options.lang, options.struct)
+        proc = tblracscsv.TblracsCSV(delim, options.user, options.rules, options.lang, options.struct)
     elif options.pub.startswith("four") or options.pub.startswith("foursquare"):
-        proc = fsqacscsv.fsqacscsv.FsqacsCSV(delim, options.geo, options.user, options.rules, options.lang, options.struct)
+        proc = fsqacscsv.FsqacsCSV(delim, options.geo, options.user, options.rules, options.lang, options.struct)
     elif options.pub.startswith("get") or options.pub.startswith("gg") or options.pub.startswith("getglue"):
-        proc = ggacscsv.ggacscsv.GgacsCSV(delim, options.user, options.rules, options.urls, options.origin)
+        proc = ggacscsv.GgacsCSV(delim, options.user, options.rules, options.urls, options.origin)
     elif options.pub.startswith("stock") or options.pub.startswith("stocktwits") or options.pub.startswith("st"):
-        proc = stntvcsv.stntvcsv.StntvCSV(delim, options.user, options.struct, options.influence)
+        proc = stntvcsv.StntvCSV(delim, options.user, options.struct, options.influence)
     else:
-        proc = twacscsv.twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence)
+        proc = twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence)
     #
     cnt = 0
     #
@@ -107,7 +107,7 @@ def main():
             if len(record) == 0:
                 continue
             if options.explain:
-                record = reflect.reflect_json.reflect_json(record)
+                record = reflect_json.reflect_json(record)
             sys.stdout.write("%s\n"%proc.procRecord(cnt, record))
 
 if __name__ == "__main__":

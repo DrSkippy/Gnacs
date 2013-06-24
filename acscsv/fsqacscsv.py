@@ -5,7 +5,7 @@ __license__="Simplified BSD"
 import sys
 import acscsv
 
-class FsqacsCSV(acscsv.acscsv.AcsCSV):
+class FsqacsCSV(acscsv.AcsCSV):
     def __init__(self, delim, options_geo, options_user, options_rules, options_lang, options_influence):
         super(FsqacsCSV, self).__init__(delim)
         self.options_geo = options_geo 
@@ -30,19 +30,19 @@ class FsqacsCSV(acscsv.acscsv.AcsCSV):
                             msg = d["message"]
                         continue
                     mtype = "Unidentified"
-                record.append('-'.join([gnipRemove, mtype]))
-                record.append(gnipDateTime)
+                record.append('-'.join([acscsv.gnipRemove, mtype]))
+                record.append(acscsv.gnipDateTime)
                 record.append(msg)
                 return record
             if verb == "delete":
                 record.append(self.cleanField(d["object"]["id"]))
-                record.append(gnipDateTime)
-                record.append('-'.join([gnipRemove, verb]))
+                record.append(acscsv.gnipDateTime)
+                record.append('-'.join([acscsv.gnipRemove, verb]))
                 return record
             elif verb == "scrub_geo":
                 record.append(self.cleanField(d["actor"]["id"]))
-                record.append(gnipDateTime)
-                record.append('-'.join([gnipRemove, verb]))
+                record.append(acscsv.gnipDateTime)
+                record.append('-'.join([acscsv.gnipRemove, verb]))
                 return record
             # shorthand
             gnip = '[]'
@@ -94,6 +94,6 @@ class FsqacsCSV(acscsv.acscsv.AcsCSV):
             return record
         except KeyError:
             sys.stderr.write("Field missing from record (%d), skipping\n"%self.cnt)
-            record.append(gnipError)
-            record.append(gnipRemove)
+            record.append(acscsv.gnipError)
+            record.append(acscsv.gnipRemove)
             return record
