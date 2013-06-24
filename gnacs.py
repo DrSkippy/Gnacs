@@ -17,6 +17,7 @@ import twacscsv.twacscsv
 import tblracscsv.tblracscsv
 import fsqacscsv.fsqacscsv
 import ggacscsv.ggacscsv
+import stntvcsv.stntvcsv
 import reflect.reflect_json
 # ujson is 20% faster
 import json as json_formatter
@@ -61,7 +62,7 @@ def main():
     parser.add_option("-x","--explain", action="store_true", dest="explain", 
             default=False, help="Show field names in output for sample input records")
     parser.add_option("-z","--publisher", dest="pub", 
-            default="twitter", help="Publisher (default is twitter), twitter, disqus, wordpress, wpcomments, tumblr, foursquare, getglue")
+            default="twitter", help="Publisher (default is twitter), twitter, disqus, wordpress, wpcomments, tumblr, foursquare, getglue, stocktwits")
     (options, args) = parser.parse_args()
     #
     if options.ver:
@@ -79,18 +80,21 @@ def main():
     #
     if options.pub.startswith("word") or options.pub.startswith("wp-com") or options.pub.startswith("wp-org"):
         proc = wpacscsv.wpacscsv.WPacsCSV(delim, options.user, options.rules, options.lang, options.struct)
-    elif options.pub.startswith("disq"):
+    elif options.pub.startswith("disq") or options.pub.startswith("disqus"):
         proc = diacscsv.diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.status)
-    elif options.pub.startswith("tumb"):
+    elif options.pub.startswith("tumb") or options.pub.startswith("tumblr"):
         proc = tblracscsv.tblracscsv.TblracsCSV(delim, options.user, options.rules, options.lang, options.struct)
-    elif options.pub.startswith("four"):
+    elif options.pub.startswith("four") or options.pub.startswith("foursquare"):
         proc = fsqacscsv.fsqacscsv.FsqacsCSV(delim, options.geo, options.user, options.rules, options.lang, options.struct)
-    elif options.pub.startswith("get") or options.pub.startswith("gg"):
+    elif options.pub.startswith("get") or options.pub.startswith("gg") or options.pub.startswith("getglue"):
         proc = ggacscsv.ggacscsv.GgacsCSV(delim, options.user, options.rules, options.urls, options.origin)
+    elif options.pub.startswith("stock") or options.pub.startswith("stocktwits") or options.pub.startswith("st"):
+        proc = stntvcsv.stntvcsv.StntvCSV(delim, options.user, options.struct, options.influence)
     else:
         proc = twacscsv.twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence)
     #
     cnt = 0
+    #
     for r in fileinput.FileInput(args,openhook=fileinput.hook_compressed):
         cnt += 1
         try:
@@ -111,7 +115,7 @@ def main():
                 continue
             if options.explain:
                 record = reflect.reflect_json.reflect_json(record)
-            sys.stdout.write("%s\n"%proc.procRecord(record))
+            sys.stdout.write("%s\n"%proc.procRecord(cnt, record))
 
 if __name__ == "__main__":
     main()
