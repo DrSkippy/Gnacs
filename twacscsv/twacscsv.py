@@ -2,44 +2,18 @@
 # -*- coding: UTF-8 -*-
 __author__="Scott Hendrickson"
 __license__="Simplified BSD"
-import datetime
 import sys
+from acscsv import *
 
-gnipRemove = "GNIPREMOVE"
-gnipError = "GNIPERROR"
-gnipDateTime = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.000Z")
-
-class TwacsCSV(object):
+class TwacsCSV(AcsCSV):
     def __init__(self, delim, options_geo, options_user, options_rules, options_urls, options_lang, options_influence):
-        self.delim = delim
-        self.cnt = 0
+        super(TwacsCSV, self).__init__(delim)
         self.options_geo = options_geo 
         self.options_user = options_user
         self.options_rules = options_rules
         self.options_urls = options_urls
         self.options_lang = options_lang
         self.options_influence = options_influence
-
-    def cleanField(self,f):
-        return f.strip().replace("\n"," ").replace("\r"," ").replace(self.delim, " ")
-
-    def buildListString(self,l):
-        # unicode output of list (without u's)
-        res = '['
-        for r in l:
-            res += "'" + r + "',"
-        if res.endswith(','):
-            res = res[:-1]
-        res += ']'
-        return res
-
-    def asString(self,l):
-        if l is None:
-            return None
-        return self.delim.join(l)
-
-    def procRecord(self,x):
-        return self.asString(self.procRecordToList(x))
 
     def procRecordToList(self,d):
         record = []
@@ -152,7 +126,6 @@ class TwacsCSV(object):
                 record.append(listed)
                 record.append(statuses)
             #
-            self.cnt += 1
             return record
         except KeyError:
             sys.stderr.write("Field missing from record (%d), skipping\n"%self.cnt)

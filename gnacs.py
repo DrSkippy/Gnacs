@@ -4,7 +4,7 @@ __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 import pkg_resources
 try:
-	__version__ = pkg_resources.require("gnacs")[0].version
+    __version__ = pkg_resources.require("gnacs")[0].version
 except pkg_resources.DistributionNotFound:
     __version__ = "N/A"
 import sys
@@ -94,6 +94,7 @@ def main():
         proc = twacscsv.twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence)
     #
     cnt = 0
+    #
     for r in fileinput.FileInput(args,openhook=fileinput.hook_compressed):
         cnt += 1
         try:
@@ -114,7 +115,7 @@ def main():
                 continue
             if options.explain:
                 record = reflect.reflect_json.reflect_json(record)
-            sys.stdout.write("%s\n"%proc.procRecord(record))
+            sys.stdout.write("%s\n"%proc.procRecord(cnt, record))
 
 if __name__ == "__main__":
     main()

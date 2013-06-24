@@ -2,41 +2,15 @@
 # -*- coding: UTF-8 -*-
 __author__="Jinsub Hong"
 __license__="Simplified BSD"
-import datetime
 import sys
+from acscsv import *
 
-gnipError = "GNIPERROR"
-gnipRemove = "GNIPREMOVE"
-gnipDateTime = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.000Z")
-
-class StntvCSV(object):
+class StntvCSV(AcsCSV):
     def __init__(self, delim, options_user,options_struct,options_influence):
-        self.delim = delim
-        self.cnt = 0
+        super(StntvCSV, self).__init__(delim)
         self.options_user = options_user
         self.options_struct = options_struct
         self.options_influence = options_influence
-
-    def cleanField(self,f):
-        return f.strip().replace("\n"," ").replace("\r"," ").replace(self.delim, " ")
-
-    def buildListString(self,l):
-        # unicode output of list (without u's)
-        res = '['
-        for r in l:
-            res += "'" + r + "',"
-        if res.endswith(','):
-            res = res[:-1]
-        res += ']'
-        return res
-
-    def asString(self,l):
-        if l is None:
-            return None
-        return self.delim.join(l)
-
-    def procRecord(self,x):
-        return self.asString(self.procRecordToList(x))
 
     def procRecordToList(self, d):
         record = []

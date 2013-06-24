@@ -2,44 +2,18 @@
 # -*- coding: UTF-8 -*-
 __author__="Scott Hendrickson"
 __license__="Simplified BSD"
-import datetime
 import sys
+from acscsv import *
 
-gnipError = "GNIPERROR"
-gnipRemove = "GNIPREMOVE"
-gnipDateTime = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.000Z")
-
-class FsqacsCSV(object):
+class FsqacsCSV(AcsCSV):
     def __init__(self, delim, options_geo, options_user, options_rules, options_lang, options_influence):
-        self.delim = delim
-        self.cnt = 0
+        super(FsqacsCSV, self).__init__(delim)
         self.options_geo = options_geo 
         self.options_user = options_user
         self.options_rules = options_rules
         self.options_lang = options_lang
         # clean up options that don't pertain
         self.options_influence = options_influence
-
-    def cleanField(self,f):
-        return f.strip().replace("\n"," ").replace("\r"," ").replace(self.delim, " ")
-
-    def buildListString(self,l):
-        # unicode output of list (without u's)
-        res = '['
-        for r in l:
-            res += "'" + r + "',"
-        if res.endswith(','):
-            res = res[:-1]
-        res += ']'
-        return res
-
-    def asString(self,l):
-        if l is None:
-            return None
-        return self.delim.join(l)
-
-    def procRecord(self,x):
-        return self.asString(self.procRecordToList(x))
 
     def procRecordToList(self, d):
         record = []
@@ -117,7 +91,6 @@ class FsqacsCSV(object):
             if self.options_user:
                 record.append(self.cleanField(actor["gender"]))
             #
-            self.cnt += 1
             return record
         except KeyError:
             sys.stderr.write("Field missing from record (%d), skipping\n"%self.cnt)
