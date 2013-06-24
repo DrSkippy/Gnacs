@@ -91,7 +91,6 @@ class FsqacsCSV(AcsCSV):
             if self.options_user:
                 record.append(self.cleanField(actor["gender"]))
             #
-            self.cnt += 1
             return record
         except KeyError:
             sys.stderr.write("Field missing from record (%d), skipping\n"%self.cnt)

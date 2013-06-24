@@ -87,7 +87,6 @@ class TblracsCSV(AcsCSV):
                     tmp = "actor:id"
                 record.append(tmp)
             #
-            self.cnt += 1
             return record
         except KeyError:
             sys.stderr.write("Field missing from record (%d), skipping\n"%self.cnt)
