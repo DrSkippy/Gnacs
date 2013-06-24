@@ -4,7 +4,7 @@ __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 import pkg_resources
 try:
-	__version__ = pkg_resources.require("gnacs")[0].version
+    __version__ = pkg_resources.require("gnacs")[0].version
 except pkg_resources.DistributionNotFound:
     __version__ = "N/A"
 import sys
