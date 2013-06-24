@@ -3,9 +3,9 @@
 __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 import sys
-from acscsv import * 
+import acscsv 
 
-class GgacsCSV(AcsCSV):
+class GgacsCSV(acscsv.acscsv.AcsCSV):
     def __init__(self, delim, options_user, options_rules, options_urls, options_provider):
         super(GgacsCSV, self).__init__(delim)
         self.options_rules = options_rules

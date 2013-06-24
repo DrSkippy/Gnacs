@@ -3,9 +3,9 @@
 __author__="Jinsub Hong"
 __license__="Simplified BSD"
 import sys
-from acscsv import *
+import acscsv
 
-class StntvCSV(AcsCSV):
+class StntvCSV(acscsv.acscsv.AcsCSV):
     def __init__(self, delim, options_user,options_struct,options_influence):
         super(StntvCSV, self).__init__(delim)
         self.options_user = options_user

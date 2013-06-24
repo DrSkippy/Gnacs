@@ -3,9 +3,9 @@
 __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 import sys
-from acscsv import *
+import acscsv
 
-class TblracsCSV(AcsCSV):
+class TblracsCSV(acscsv.acscsv.AcsCSV):
     def __init__(self, delim, options_user, options_rules, options_lang, options_struct):
         super(TblracsCSV, self).__init__(delim)
         self.options_user = options_user

@@ -3,9 +3,9 @@
 __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 import sys
-from acscsv import *
+import acscsv
 
-class TwacsCSV(AcsCSV):
+class TwacsCSV(acscsv.acscsv.AcsCSV):
     def __init__(self, delim, options_geo, options_user, options_rules, options_urls, options_lang, options_influence):
         super(TwacsCSV, self).__init__(delim)
         self.options_geo = options_geo 

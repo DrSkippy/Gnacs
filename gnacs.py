@@ -11,14 +11,7 @@ import sys
 import codecs
 import fileinput
 from optparse import OptionParser
-import diacscsv.diacscsv
-import wpacscsv.wpacscsv
-import twacscsv.twacscsv
-import tblracscsv.tblracscsv
-import fsqacscsv.fsqacscsv
-import ggacscsv.ggacscsv
-import stntvcsv.stntvcsv
-import reflect.reflect_json
+from acscsv import diacscsv
 # ujson is 20% faster
 import json as json_formatter
 try:

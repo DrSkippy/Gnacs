@@ -3,16 +3,15 @@
 __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 import sys
-from acscsv import *
+import acscsv
 
-class DiacsCSV(AcsCSV):
-    def __init__(self, delim, options_user, options_rules, options_lang, options_struct, options_status):
-        super(DiacsCSV, self).__init__(delim)
+class WPacsCSV(acscsv.acscsv.AcsCSV):
+    def __init__(self, delim, options_user, options_rules, options_lang, options_struct):
+        super(WPacsCSV, self).__init__(delim)
         self.options_user = options_user
         self.options_rules = options_rules
         self.options_lang = options_lang
         self.options_struct = options_struct
-        self.options_status = options_status
 
     def procRecordToList(self, d):
         record = []
@@ -41,7 +40,15 @@ class DiacsCSV(AcsCSV):
             #
             record.append(d["id"])
             record.append(d["postedTime"])
-            record.append(self.cleanField(d["body"]))
+            obj = d["object"]
+            if "content" in obj:
+                record.append(self.cleanField(obj["content"]))
+            else:
+                record.append("None")
+            if "summary" in obj:
+                record.append(self.cleanField(obj["summary"]))
+            else:
+                record.append("None")
             #
             gnip = d["gnip"]
             actor = d["actor"]
@@ -58,45 +65,16 @@ class DiacsCSV(AcsCSV):
             if self.options_struct:
                 target = d["target"]
                 # site
-                tmp = self.splitId(target["website"]["id"])
-                record.append(tmp)
-                # thread
-                tmp2 = self.splitId(target["id"])
-                record.append(tmp2)
-                # thread link
-                if "link" in target and target["link"] is not None:
-                    record.append(target["link"])
-                else:
-                    record.append("None")
-                # in reply to
-                if "inReplyTo" in d:
-                    in_reply_to = d["inReplyTo"]
-                    # comment
-                    tmp2 = self.splitId(in_reply_to["id"])
-                    record.append(tmp2)
-                    # reply to user
-                    tmp3 = self.splitId(in_reply_to["author"]["id"])
-                    if tmp3 == "-1":
-                        tmp3 = "Anon"
-                    record.append(tmp3)
-                else:
-                    record.append("None")
-                    record.append("None")
+                record.append(str(target["wpBlogId"]))
+                # blog link
+                record.append(str(target["link"]))
+                # object
+                record.append(str(obj["wpPostId"]))
+                # link to post
+                record.append(str(obj["link"]))
             if self.options_user:
                 tmp = self.splitId(actor["id"])
-                if tmp == "-1":
-                    tmp = "Anon"
                 record.append(tmp)
-            if self.options_status:
-                record.append(verb)
-                if "disqusType" in d:
-                    record.append(str(d["disqusType"]))
-                else:
-                    record.append("None")
-                if "disqusTypePrev" in d:
-                    record.append(str(d["disqusTypePrev"]))
-                else:
-                    record.append("None")
             #
             return record
         except KeyError:
