@@ -34,26 +34,36 @@ class GgacsCSV(acscsv.AcsCSV):
                 return record
             actor = d["actor"]
             obj = d["object"]
+            #
             record.append(d["id"])
             record.append(d["postedTime"])
             record.append(d["updatedTime"])
             record.append(verb)
+            #
             record.append(obj["id"])
             record.append(obj["objectType"])
             record.append(self.cleanField(d["displayName"]))
+            #
+            if "target" in d:
+                target = d["target"]
+                record.append(target["id"])
+                record.append(target["objectType"])
+                record.append(self.cleanField(target["displayName"]))
+            else:
+                record.append("None")
+                record.append("None")
+                record.append("None")
+            #
             body = "None"
             if "body" in d:
                 # post type
                 body = self.cleanField(d["body"])
             record.append(body)
+            #
             reply = "None"
             if "inReplyTo" in d:
                 reply = d["inReplyTo"]["link"]
             record.append(reply)
-            target_id = "None"
-            if "target" in d:
-                target_id = d["target"]["id"]
-            record.append(target_id)
             #
             if self.options_rules:
                 rules = "[]"
@@ -65,9 +75,10 @@ class GgacsCSV(acscsv.AcsCSV):
                 record.append(rules)
             #
             if self.options_user:
+                record.append(actor["id"])
                 record.append(self.cleanField(actor["preferredUsername"]))
                 record.append(self.cleanField(actor["displayName"]))
-                record.append(self.cleanField(actor["link"]))
+                record.append(actor["objectType"])
             #
             if self.options_urls:
                 record.append(d["link"])
