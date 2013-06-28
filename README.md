@@ -1,17 +1,16 @@
-Gnacs
-=====
-
-Gnip normalized activities parser
----------------------------------
+Gnip normalized activities parser (Gnacs)
+=========================================
 
 Install with `pip install gnacs`
 
 Supported publishers:
-* twitter
-* disqus
-* wordpress
-* tumblr
-* foursquare 
+* Twitter
+* Disqus
+* Wordpress
+* Tumblr
+* Foursquare 
+* GetGlue
+* Stocktwits (native format only) 
 
 The activities are parsed and output is pipe-delimited records representing a subset of the activity fields.
 
@@ -32,7 +31,8 @@ The activities are parsed and output is pipe-delimited records representing a su
         -x, --explain         Show field names in output for sample input records
         -z PUB, --publisher=PUB
                               Publisher (default is twitter), twitter, disqus,
-                              wordpress, wpcomments, tumblr, foursquare
+                              wordpress, wpcomments, tumblr, foursquare, getglue,
+                              stocktwits
 
 
 Sample files are included in the data directory, for example:
