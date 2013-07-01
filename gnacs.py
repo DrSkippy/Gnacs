@@ -101,7 +101,7 @@ def main():
                 continue
         if options.pretty:
             for record in recs:
-                print json_formatter.dumps(record, indent=3)
+                print json_formatter.dumps(record, indent=3, ensure_ascii=False)
             continue 
         for record in recs:
             if len(record) == 0:
