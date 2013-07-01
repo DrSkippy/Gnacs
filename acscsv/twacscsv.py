@@ -71,6 +71,10 @@ class TwacsCSV(acscsv.AcsCSV):
                 if "language" in gnip:
                     glang = gnip["language"]["value"]
                 record.append(glang)
+                tlang = "None"
+                if "twitter_lang" in d:
+                    tlang = d["twitter_lang"]
+                record.append(tlang)
             if self.options_rules:
                 rules = '[]'
                 if "matching_rules" in gnip:
