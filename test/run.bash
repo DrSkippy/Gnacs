@@ -19,8 +19,8 @@ for pub in $publist; do
     ../gnacs.py -p $fn >> $tmpfile
 done
 
-echo "Output: $(cat $tmpfile | wc -l) should be 25176"
-echo "GNIP lines: $(cat $tmpfile | grep GNIP | wc -l) should be 4"
+echo "Output: $(cat $tmpfile | wc -l) should be 34741"
+echo "GNIP lines: $(cat $tmpfile | grep GNIP | wc -l) should be 1"
 
 if [ -e $tmpfile ]; then
     rm $tmpfile
