@@ -84,7 +84,7 @@ def main():
     elif options.pub.startswith("stock") or options.pub.startswith("stocktwits") or options.pub.startswith("st"):
         proc = stntvcsv.StntvCSV(delim, options.user, options.struct, options.influence)
     else:
-        proc = twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence)
+        proc = twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
     #
     cnt = 0
     #

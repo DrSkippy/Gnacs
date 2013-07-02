@@ -6,7 +6,7 @@ import sys
 import acscsv
 
 class TwacsCSV(acscsv.AcsCSV):
-    def __init__(self, delim, options_geo, options_user, options_rules, options_urls, options_lang, options_influence):
+    def __init__(self, delim, options_geo, options_user, options_rules, options_urls, options_lang, options_influence, options_struct):
         super(TwacsCSV, self).__init__(delim)
         self.options_geo = options_geo 
         self.options_user = options_user
@@ -14,6 +14,7 @@ class TwacsCSV(acscsv.AcsCSV):
         self.options_urls = options_urls
         self.options_lang = options_lang
         self.options_influence = options_influence
+        self.options_struct = options_struct
 
     def procRecordToList(self,d):
         record = []
@@ -129,6 +130,30 @@ class TwacsCSV(acscsv.AcsCSV):
                 record.append(friends)
                 record.append(listed)
                 record.append(statuses)
+            if self.options_struct:
+                oid = "None"
+                opt = "None"
+                overb = "None"
+                inReplyTo = "None"
+                if "inReplyTo" in d:
+                    inReplyTo = d["inReplyTo"]["link"]
+                if "object" in d:
+                    obj = d["object"]
+                    if "objectType" in obj:
+                        overb = obj["objectType"]
+                if verb == "share" and overb == "activity":
+                    record.append("Retweet")
+                    if "id" in obj:
+                        oid = obj["id"]
+                    if "postedTime" in obj:
+                        opt = obj["postedTime"]
+                elif inReplyTo == "None":
+                    record.append("Tweet")
+                else:
+                    record.append("Reply")
+                record.append(inReplyTo)
+                record.append(oid)
+                record.append(opt)
             #
             return record
         except KeyError:

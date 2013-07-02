@@ -12,9 +12,9 @@ for pub in $publist; do
     echo "Parsing $pub..."
     fn="../data/${pub}_sample.json"
     echo " Records for $pub from $fn..."
-    ../gnacs.py -lustrz $pub $fn >> $tmpfile
+    ../gnacs.py -gilustorz $pub $fn >> $tmpfile
     echo " Explanation for $pub from $fn..."
-    ../gnacs.py -xlustrz $pub $fn >> $tmpfile
+    ../gnacs.py -xgilustorz $pub $fn >> $tmpfile
     echo " Pretty $pub from $fn..."
     ../gnacs.py -p $fn >> $tmpfile
 done
