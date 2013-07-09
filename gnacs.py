@@ -71,17 +71,17 @@ def main():
     else:
         delim = "|"
     #
-    if options.pub.startswith("word") or options.pub.startswith("wp-com") or options.pub.startswith("wp-org"):
+    if options.pub.lower().startswith("word") or options.pub.lower().startswith("wp-com") or options.pub.lower().startswith("wp-org"):
         proc = wpacscsv.WPacsCSV(delim, options.user, options.rules, options.lang, options.struct)
-    elif options.pub.startswith("disq") or options.pub.startswith("disqus"):
+    elif options.pub.lower().startswith("disq") or options.pub.lower().startswith("disqus"):
         proc = diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.status)
-    elif options.pub.startswith("tumb") or options.pub.startswith("tumblr"):
+    elif options.pub.lower().startswith("tumb") or options.pub.lower().startswith("tumblr"):
         proc = tblracscsv.TblracsCSV(delim, options.user, options.rules, options.lang, options.struct)
-    elif options.pub.startswith("four") or options.pub.startswith("foursquare"):
+    elif options.pub.lower().startswith("four") or options.pub.lower().startswith("fsq"):
         proc = fsqacscsv.FsqacsCSV(delim, options.geo, options.user, options.rules, options.lang, options.struct)
-    elif options.pub.startswith("get") or options.pub.startswith("gg") or options.pub.startswith("getglue"):
+    elif options.pub.lower().startswith("get") or options.pub.lower().startswith("gg") or options.pub.lower().startswith("getglue"):
         proc = ggacscsv.GgacsCSV(delim, options.user, options.rules, options.urls, options.origin)
-    elif options.pub.startswith("stock") or options.pub.startswith("stocktwits") or options.pub.startswith("st"):
+    elif options.pub.lower().startswith("stock") or options.pub.lower().startswith("stocktwits") or options.pub.lower().startswith("st"):
         proc = stntvcsv.StntvCSV(delim, options.user, options.struct, options.influence)
     else:
         proc = twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
