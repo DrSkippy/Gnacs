@@ -110,6 +110,37 @@ class TwacsCSV(acscsv.AcsCSV):
                 if "location" in actor and "displayName" in actor["location"]:
                     dName = self.cleanField(actor["location"]["displayName"])
                 record.append(dName)
+# work in progress, JM 2013-07-09 
+#                # profile_geo enrichment
+#                # within "profileLocation" (pl) key
+#                # currently a list of one item, but potentially more in the future?
+#                pl_name = "None"
+#                pl_country = "None"
+#                pl_region = "None"
+#                pl_countrycode = "None"
+#                pl_locality = "None"
+#                pl_geotype = "None"
+#                pl_coords = "None"
+#                pl_objtype = "None"
+#                #pl_list = ["None" for i in range(9)] 
+#                if "profileLocations" in d:
+#                    pl = d["profileLocations"]
+#                    pl_name = pl["displayName"]
+#                    #
+#                    pl_a = pl["address"]
+#                    pl_country = pl_a["country"]
+#                    pl_region = pl_a["region"]
+#                    pl_countryCode = ["countryCode"]
+#                    pl_locality = pl_a["locality"]
+#                    #
+#                    pl_g = pl["geo"]
+#                    pl_geotype = pl_g["type"]
+#                    pl_coords = str([str(x) for x in pl_g["coords"]])
+#                    #
+#                    pl_objtype = pl["objectType"] 
+#                #    
+#                # put the whole thing inside a list, potentially with other profileLocations
+#                #
             if self.options_user:
                 record.append(self.cleanField(actor["displayName"]))
                 record.append(self.cleanField(actor["preferredUsername"]))
