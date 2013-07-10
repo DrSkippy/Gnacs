@@ -71,17 +71,17 @@ def main():
     else:
         delim = "|"
     #
-    if options.pub.lower().startswith("word") or options.pub.lower().startswith("wp-com") or options.pub.lower().startswith("wp-org"):
+    if options.pub.lower().startswith("word") or options.pub.lower().startswith("wp"):
         proc = wpacscsv.WPacsCSV(delim, options.user, options.rules, options.lang, options.struct)
-    elif options.pub.lower().startswith("disq") or options.pub.lower().startswith("disqus"):
+    elif options.pub.lower().startswith("disq"):
         proc = diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.status)
-    elif options.pub.lower().startswith("tumb") or options.pub.lower().startswith("tumblr"):
+    elif options.pub.lower().startswith("tumb"): 
         proc = tblracscsv.TblracsCSV(delim, options.user, options.rules, options.lang, options.struct)
     elif options.pub.lower().startswith("four") or options.pub.lower().startswith("fsq"):
         proc = fsqacscsv.FsqacsCSV(delim, options.geo, options.user, options.rules, options.lang, options.struct)
-    elif options.pub.lower().startswith("get") or options.pub.lower().startswith("gg") or options.pub.lower().startswith("getglue"):
+    elif options.pub.lower().startswith("get") or options.pub.lower().startswith("gg"):
         proc = ggacscsv.GgacsCSV(delim, options.user, options.rules, options.urls, options.origin)
-    elif options.pub.lower().startswith("stock") or options.pub.lower().startswith("stocktwits") or options.pub.lower().startswith("st"):
+    elif options.pub.lower().startswith("st"):
         proc = stntvcsv.StntvCSV(delim, options.user, options.struct, options.influence)
     else:
         proc = twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
