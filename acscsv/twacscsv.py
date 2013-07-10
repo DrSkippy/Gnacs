@@ -110,37 +110,49 @@ class TwacsCSV(acscsv.AcsCSV):
                 if "location" in actor and "displayName" in actor["location"]:
                     dName = self.cleanField(actor["location"]["displayName"])
                 record.append(dName)
-# work in progress, JM 2013-07-09 
-#                # profile_geo enrichment
-#                # within "profileLocation" (pl) key
-#                # currently a list of one item, but potentially more in the future?
-#                pl_name = "None"
-#                pl_country = "None"
-#                pl_region = "None"
-#                pl_countrycode = "None"
-#                pl_locality = "None"
-#                pl_geotype = "None"
-#                pl_coords = "None"
-#                pl_objtype = "None"
-#                #pl_list = ["None" for i in range(9)] 
-#                if "profileLocations" in d:
-#                    pl = d["profileLocations"]
-#                    pl_name = pl["displayName"]
-#                    #
-#                    pl_a = pl["address"]
-#                    pl_country = pl_a["country"]
-#                    pl_region = pl_a["region"]
-#                    pl_countryCode = ["countryCode"]
-#                    pl_locality = pl_a["locality"]
-#                    #
-#                    pl_g = pl["geo"]
-#                    pl_geotype = pl_g["type"]
-#                    pl_coords = str([str(x) for x in pl_g["coords"]])
-#                    #
-#                    pl_objtype = pl["objectType"] 
-#                #    
-#                # put the whole thing inside a list, potentially with other profileLocations
-#                #
+                # gnip:profileLocations
+                pl_otype = "None"
+                pl_name = "None"
+                # profileLocations:address
+                pl_country = "None"
+                pl_region = "None"
+                pl_countrycode = "None"
+                pl_locality = "None"
+                # profileLocations:geo
+                pl_gtype = "None"
+                pl_coords = "None"
+                if "profileLocations" in gnip:
+                    # n.b. profileLocations is a list, suggests it might include >1 thing eventually
+                    pl = gnip["profileLocations"][0]
+                    if "objectType" in pl:
+                        pl_otype = pl["objectType"]
+                    if "displayName" in pl:
+                        pl_name = pl["displayName"]
+                    if "address" in pl:
+                        adrs = pl["address"]
+                        if "country" in adrs:
+                            pl_country = adrs["country"]
+                        if "region" in adrs:
+                            pl_region = adrs["region"]
+                        if "countryCode" in adrs:
+                            pl_countrycode = adrs["countryCode"]
+                        if "locality" in adrs:
+                            pl_locality = adrs["locality"]
+                    if "geo" in pl:
+                        geo = pl["geo"]
+                        if "type" in geo:
+                            pl_gtype = geo["type"]
+                        if "coordinates" in geo:
+                            pl_coords = str(geo["coordinates"])
+                record.append(pl_name)
+                record.append(pl_otype)
+                record.append(pl_country)
+                record.append(pl_region)
+                record.append(pl_countrycode)
+                record.append(pl_locality)
+                record.append(pl_gtype)
+                record.append(pl_coords)
+                #
             if self.options_user:
                 record.append(self.cleanField(actor["displayName"]))
                 record.append(self.cleanField(actor["preferredUsername"]))
