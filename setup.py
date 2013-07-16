@@ -2,11 +2,11 @@ from distutils.core import setup
 
 setup(
     name='gnacs',
-    version='0.6.3',
+    version='0.6.4',
     author='Scott Hendrickson, Josh Montague, Jinsub Hong',
     author_email='scott@drskippy.net',
     packages=['acscsv'],
-    scripts=['wpacs.py','ggacs.py','tblracs.py', 'diacs.py', 'gnacs.py', 'twacs.py', 'fsqacs.py'],
+    scripts=['stntv.py', 'wpacs.py', 'ggacs.py','tblracs.py', 'diacs.py', 'gnacs.py', 'twacs.py', 'fsqacs.py'],
     url='https://github.com/DrSkippy27/Gnacs',
     download_url='https://github.com/DrSkippy27/Gnacs/tags/4.0.3',
     license='LICENSE.txt',
