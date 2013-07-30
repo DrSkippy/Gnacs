@@ -15,6 +15,13 @@ class AcsCSV(object):
         self.cnt = None
 
     def cleanField(self,f):
+        try:
+            # odd edge case that f is a number
+            # then can't all string functions
+            float(f)
+            f = str(f)
+        except ValueError:
+            pass
         return f.strip().replace("\n"," ").replace("\r"," ").replace(self.delim, " ")
 
     def buildListString(self,l):
