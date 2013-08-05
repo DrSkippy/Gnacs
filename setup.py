@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='gnacs',
-    version='0.6.4',
+    version='0.6.9',
     author='Scott Hendrickson, Josh Montague, Jinsub Hong',
     author_email='scott@drskippy.net',
     packages=['acscsv'],
@@ -12,6 +12,6 @@ setup(
     license='LICENSE.txt',
     description='Gnip normalized activity JSON to csv parser (Disqus Comments, Wordpress, Twitter, Tumblr, Foursquare, GetGlue, StockTwits)',
     install_requires=[
-        "ujson >= 1.2",
-    ],
-)
+                "ujson >= 1.2",
+                    ]
+    )

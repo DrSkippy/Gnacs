@@ -1,7 +1,13 @@
 Gnip normalized activities parser (Gnacs)
 =========================================
 
-Install with `pip install gnacs`
+If you have a c complier installed (e.g. gcc, or xcode on OSX) with:
+     `sudo pip install gnacs` or 
+     `sudo pip install gnacs --upgrade` if you have installed before.
+
+If you don't have a c complier, use:
+     `sudo pip install gnacs --no-deps` or
+     `sudo pip install gnacs --no-deps --upgrade` if you have installed before.
 
 Supported publishers:
 * Twitter
