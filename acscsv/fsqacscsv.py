@@ -61,7 +61,8 @@ class FsqacsCSV(acscsv.AcsCSV):
             else:
                 cat_names = str(["object:foursquareCategories_list-items:displayName"])
             record.append(cat_names)
-            geo_coords = str([str(l) for l in obj["geo"]["coordinates"]])
+            self.geo_coords_list = obj["geo"]["coordinates"]
+            geo_coords = str(self.geo_coords_list)
             record.append(geo_coords)
             #
             if self.options_rules:

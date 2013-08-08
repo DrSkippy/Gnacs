@@ -49,3 +49,16 @@ class AcsCSV(object):
     def procRecord(self, cnt, x):
         self.cnt = cnt
         return self.asString(self.procRecordToList(x))
+
+    def asGeoJSON(self, cnt, x):
+        recordList = self.procRecordToList(x)
+        if self.__class__.__name__ == "TwacsCSV" and self.options_geo:
+            if self.geoCoordsList is None:
+                return
+            lon_lat = self.geoCoordsList[::-1]
+        elif self.__class__.__name__ == "FsqacsCSV" and self.options_geo:
+            lon_lat = self.geo_coords_list
+        else:
+            return json.dumps({"error":"This publisher doesn't have geo"})
+        return {"type": "Feature", "geometry": { "type": "Point", "coordinates": lon_lat }, "properties": {"id": recordList[0]} }
+

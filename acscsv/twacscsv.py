@@ -83,11 +83,14 @@ class TwacsCSV(acscsv.AcsCSV):
                 record.append(rules)
             if self.options_geo:
                 geoType = "None"
+                self.geoCoordsList = None
                 geoCoords = "None"
                 if "geo" in d:
                     if "type" in d["geo"]:
                         geoType = d["geo"]["type"]
-                        geoCoords = str([str(l) for l in d["geo"]["coordinates"]])
+                        #self.geoCoords = [str(l) for l in d["geo"]["coordinates"]]
+                        self.geoCoordsList = d["geo"]["coordinates"]
+                        geoCoords = str(self.geoCoordsList)
                 record.append(geoCoords)
                 record.append(geoType)
                 locType = "None"
