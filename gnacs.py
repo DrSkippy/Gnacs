@@ -68,10 +68,13 @@ def main():
         print "*"*70
         sys.exit()
     #
+    delim = "|"
     if options.csv:
         delim = ","
-    else:
-        delim = "|"
+    elif options.geojson:
+        options.geo = True 
+        # NOTE: this is an in-memory structure
+        geo_d = {"type": "FeatureCollection", "features": []}
     #
     if options.pub.lower().startswith("word") or options.pub.lower().startswith("wp"):
         proc = wpacscsv.WPacsCSV(delim, options.user, options.rules, options.lang, options.struct)
@@ -89,8 +92,6 @@ def main():
         proc = twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
     #
     cnt = 0
-    # NOTE: this is an in-memory structure
-    geo_d = {"type": "FeatureCollection", "features": []}
     #
     for r in fileinput.FileInput(args,openhook=fileinput.hook_compressed):
         cnt += 1

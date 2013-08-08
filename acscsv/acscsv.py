@@ -59,6 +59,6 @@ class AcsCSV(object):
         elif self.__class__.__name__ == "FsqacsCSV" and self.options_geo:
             lon_lat = self.geo_coords_list
         else:
-            return json.dumps({"error":"This publisher doesn't have geo"})
+            return {"error":"This publisher doesn't have geo"}
         return {"type": "Feature", "geometry": { "type": "Point", "coordinates": lon_lat }, "properties": {"id": recordList[0]} }
 

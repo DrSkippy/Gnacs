@@ -17,9 +17,11 @@ for pub in $publist; do
     ../gnacs.py -xgilustorz $pub $fn >> $tmpfile
     echo " Pretty $pub from $fn..."
     ../gnacs.py -p $fn >> $tmpfile
+    echo " GeoJSON $pub from $fn..."
+    ../gnacs.py -jgz $pub $fn >> $tmpfile
 done
 
-echo "Output: $(cat $tmpfile | wc -l) should be 34741"
+echo "Output: $(cat $tmpfile | wc -l) should be 34747"
 echo "GNIP lines: $(cat $tmpfile | grep GNIP | wc -l) should be 1"
 
 if [ -e $tmpfile ]; then
