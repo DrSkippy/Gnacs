@@ -38,6 +38,8 @@ def main():
             default=False, help="Comma-delimited output (default is | without quotes)")
     parser.add_option("-l","--lang", action="store_true", dest="lang", 
             default=False, help="Include language fields")
+    parser.add_option("-j","--geojson", action="store_true", dest="geojson", 
+            default=False, help="Output is geojson format (Foursquare and Twitter only) Caution: dataset must fit in memory.")
     parser.add_option("-o","--origin", action="store_true", dest="origin", 
             default=False, help="Include source/origin fields")
     parser.add_option("-p","--pretty", action="store_true", dest="pretty", 
@@ -66,10 +68,13 @@ def main():
         print "*"*70
         sys.exit()
     #
+    delim = "|"
     if options.csv:
         delim = ","
-    else:
-        delim = "|"
+    elif options.geojson:
+        options.geo = True 
+        # NOTE: this is an in-memory structure
+        geo_d = {"type": "FeatureCollection", "features": []}
     #
     if options.pub.lower().startswith("word") or options.pub.lower().startswith("wp"):
         proc = wpacscsv.WPacsCSV(delim, options.user, options.rules, options.lang, options.struct)
@@ -108,7 +113,15 @@ def main():
                 continue
             if options.explain:
                 record = reflect_json.reflect_json(record)
-            sys.stdout.write("%s\n"%proc.procRecord(cnt, record))
+                sys.stdout.write("%s\n"%proc.procRecord(cnt, record))
+            elif options.geojson:
+                geo_rec = proc.asGeoJSON(cnt, record)
+                if geo_rec is not None:
+                    geo_d["features"].append(geo_rec)
+            else:
+                sys.stdout.write("%s\n"%proc.procRecord(cnt, record))
 
+    if options.geojson:
+        sys.stdout.write(json.dumps(geo_d) + "\n")
 if __name__ == "__main__":
     main()
