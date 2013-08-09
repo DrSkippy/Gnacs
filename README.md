@@ -1,15 +1,19 @@
-Gnip normalized activities parser (Gnacs)
-=========================================
+# Gnacs
 
-If you have a c complier installed (e.g. gcc, or xcode on OSX) with:
-     `sudo pip install gnacs` or 
-     `sudo pip install gnacs --upgrade` if you have installed before.
+## Gnip Normalized Activities Parser
 
-If you don't have a c complier, use:
-     `sudo pip install gnacs --no-deps` or
-     `sudo pip install gnacs --no-deps --upgrade` if you have installed before.
+### Install
+If you have a `c` complier installed (e.g. gcc, or Xcode on OS X):
 
-Supported publishers:
+    `sudo pip install gnacs` 
+    `sudo pip install gnacs --upgrade` (if you have installed before)
+
+If you don't have a c complier:
+
+     `sudo pip install gnacs --no-deps` 
+     `sudo pip install gnacs --no-deps --upgrade` (if you have installed before)
+
+### Supported publishers:
 * Twitter
 * Disqus
 * Wordpress
@@ -18,14 +22,16 @@ Supported publishers:
 * GetGlue
 * Stocktwits (native format only) 
 
-The activities are parsed and output is pipe-delimited records representing a subset of the activity fields.
+Parsed activities are output as pipe-delimited records with user-chosen subset of the activity fields.
 
     $ ./gnacs.py -h
     Usage: gnacs.py [options]
         Options:
-        -h, --help            show this help message and exit
+        -h, --help            Show this help message and exit
         -a, --status          Version, status, etc.
         -g, --geo             Include geo fields
+        -j, --geojson         Output GeoJSON-spec FeatureCollection of coordinate pairs 
+                                (Foursquare activities + geotagged Twitter activities)
         -i, --influence       Show user's influence metrics
         -c, --csv             Comma-delimited output (default is | without quotes)
         -l, --lang            Include language fields
@@ -74,14 +80,10 @@ Sample files are included in the data directory, for example:
     tag:search.twitter.com,2005:309063808234700802|2013-03-05T22:12:08.000Z|動画をツイッター上であんまり勧めることがないあてくし。だがしかーし！！！！観てくれ聴いてくれ！！！！
     tag:search.twitter.com,2005:309063808142434305|2013-03-05T22:12:08.000Z|SON DAKİKA : Manchester'da olay! İngilizler kebap salonuna saldırdı! http://t.co/eW8XDwlCtc
     tag:search.twitter.com,2005:309063808129835008|2013-03-05T22:12:08.000Z|Mi mas sentido pésame para los familiares del Presidente Chávez y para todos sus seguidores. Q.E.P.D
-    tag:search.twitter.com,2005:309063808150827008|2013-03-05T22:12:08.000Z|I guess I met u for a reason, only time can tell
-    tag:search.twitter.com,2005:119838180060053504|2013-05-22T20:01:00.000Z|GNIPREMOVE-delete
-    tag:search.twitter.com,2005:309063808251486209|2013-03-05T22:12:08.000Z|RT @imamrahardjoe: Yang main United vs Real, yang komen malah bukan fans atau supporter keduanya. Begitu memang kalo klubnya tidak main  ...
-    tag:search.twitter.com,2005:309063808125636608|2013-03-05T22:12:08.000Z|@_WalterLeonardo ahuevos porque perdio el mejor equipo mano ;)
     ...
 
 
-    $ cat data/disqus_sample.json | ./gnacs.py -z disqus -ult`
+    $ cat data/disqus_sample.json | ./gnacs.py -z disqus -ult
     tag:gnip.disqus.com:2012:comment/hosqas/post/2013-03-19T08:30:38|2013-03-19T12:30:38+00:00|So Bush, Cheney and oil cartels did something for US after all these wars and massacres.|en|5gat|4okb2q|http://cnnpreview.turner.com:82/interactive/2013/03/world/baby-noor/index.html|hoit02|uivnl|rvd3a
     tag:gnip.disqus.com:2012:comment/honzhg/update/2013-03-18T19:31:47/b11a0781c2f4d7497c28b948a05c586d30bf986ad19dbca50c17201cd9cf57aa|2013-03-18T23:31:47+00:00|Yes, I agree. The concept of the book sounded interesting and then the review was wholly disappointing. Although this argument above is really juvenile,  I have to give it credit for being more interesting than the review.|en|t3dj|4ing01|http://www.avclub.com/articles/alexander-theroux-the-grammar-of-rock-art-and-artl,93788/|hoviki|lvns6|ytar7
     tag:gnip.disqus.com:2012:comment/hosqcb/post/2013-03-19T08:30:42|2013-03-19T12:30:42+00:00|Traitre|None|aasak|403pb5|http://www.eurosport.fr/football/premier-league/2012-2013/michael-owen-prend-sa-retraite_sto3673680/story.shtml|None|None|j2qov
@@ -89,4 +91,10 @@ Sample files are included in the data directory, for example:
     GNIPREMOVE|delete|tag:gnip.disqus.com:2012:comment/hosl5z
     tag:gnip.disqus.com:2012:comment/host4q/update/2013-03-19T08:28:00/9d34ac326ba4c07c6ede2bb9498c31373794ae7c8a495823bd038c86f8045c44|2013-03-19T12:28:00+00:00|These so-called "journalists" remind of this bunch of biddies:  http://www.youtube.com/watch?v=jbhnRuJBHLs|en|i8ey|q221nc|http://newsbusters.org/blogs/tim-graham/2013/03/19/washpost-misleads-catholics-jokes-pope-francis-infallible-man|hos7ya|vjs3d|78ia4
     ...
+
+
+
+    $ ./gnacs.py -jz twitter data/twitter_sample.json
+    {type: "FeatureCollection", features: [{geometry: {type: "Point",coordinates: [-101.0379045,47.29088246]},type: "Feature",properties: {id: "tag:search.twitter.com,2005:351835317604593666"}},{geometry: {type: "Point",coordinates: [139.84273005,35.70675048]},type: "Feature",properties: {id: "tag:search.twitter.com,2005:351835317747191808"}}, ...
+
 
