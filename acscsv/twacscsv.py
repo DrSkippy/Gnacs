@@ -159,6 +159,7 @@ class TwacsCSV(acscsv.AcsCSV):
             if self.options_user:
                 record.append(self.cleanField(actor["displayName"]))
                 record.append(self.cleanField(actor["preferredUsername"]))
+                record.append(actor["id"].split(":")[2]) #Brian's 1st attempt at Gnacsification
             if self.options_influence:
                 klout = "None"
                 followers = "None"
