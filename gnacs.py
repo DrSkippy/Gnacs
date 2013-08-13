@@ -74,22 +74,23 @@ def main():
     elif options.geojson:
         options.geo = True 
         # NOTE: this is an in-memory structure
-        geo_d = {"type": "FeatureCollection", "features": []}
+        #geo_d = {"type": "FeatureCollection", "features": []}
+        sys.stdout.write('{"type": "FeatureCollection", "features": [')
     #
     if options.pub.lower().startswith("word") or options.pub.lower().startswith("wp"):
-        proc = wpacscsv.WPacsCSV(delim, options.user, options.rules, options.lang, options.struct)
+        processing_obj = wpacscsv.WPacsCSV(delim, options.user, options.rules, options.lang, options.struct)
     elif options.pub.lower().startswith("disq"):
-        proc = diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.status)
+        processing_obj = diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.status)
     elif options.pub.lower().startswith("tumb"): 
-        proc = tblracscsv.TblracsCSV(delim, options.user, options.rules, options.lang, options.struct)
+        processing_obj = tblracscsv.TblracsCSV(delim, options.user, options.rules, options.lang, options.struct)
     elif options.pub.lower().startswith("four") or options.pub.lower().startswith("fsq"):
-        proc = fsqacscsv.FsqacsCSV(delim, options.geo, options.user, options.rules, options.lang, options.struct)
+        processing_obj = fsqacscsv.FsqacsCSV(delim, options.geo, options.user, options.rules, options.lang, options.struct)
     elif options.pub.lower().startswith("get") or options.pub.lower().startswith("gg"):
-        proc = ggacscsv.GgacsCSV(delim, options.user, options.rules, options.urls, options.origin)
+        processing_obj = ggacscsv.GgacsCSV(delim, options.user, options.rules, options.urls, options.origin)
     elif options.pub.lower().startswith("st"):
-        proc = stntvcsv.StntvCSV(delim, options.user, options.struct, options.influence)
+        processing_obj = stntvcsv.StntvCSV(delim, options.user, options.struct, options.influence)
     else:
-        proc = twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
+        processing_obj = twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
     #
     cnt = 0
     #
@@ -113,15 +114,16 @@ def main():
                 continue
             if options.explain:
                 record = reflect_json.reflect_json(record)
-                sys.stdout.write("%s\n"%proc.procRecord(cnt, record))
+                sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
             elif options.geojson:
-                geo_rec = proc.asGeoJSON(cnt, record)
+                geo_rec = processing_obj.asGeoJSON(cnt, record)
                 if geo_rec is not None:
-                    geo_d["features"].append(geo_rec)
+                    sys.stdout.write(json.dumps(geo_rec) + ",")
             else:
-                sys.stdout.write("%s\n"%proc.procRecord(cnt, record))
+                sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
 
     if options.geojson:
-        sys.stdout.write(json.dumps(geo_d) + "\n")
+        # sys.stdout.write(json.dumps(geo_d) + "\n")
+        sys.stdout.write(']}')
 if __name__ == "__main__":
     main()
