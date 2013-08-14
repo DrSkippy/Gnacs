@@ -93,6 +93,7 @@ def main():
         processing_obj = twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
     #
     cnt = 0
+    first_geo = True 
     #
     for r in fileinput.FileInput(args,openhook=fileinput.hook_compressed):
         cnt += 1
@@ -116,14 +117,18 @@ def main():
                 record = reflect_json.reflect_json(record)
                 sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
             elif options.geojson:
+                # geo-tag coords
                 geo_rec = processing_obj.asGeoJSON(cnt, record)
                 if geo_rec is not None:
-                    sys.stdout.write(json.dumps(geo_rec) + ",")
+                    if not first_geo: 
+                        sys.stdout.write(",")
+                    sys.stdout.write(json.dumps(geo_rec))
+                    first_geo = False
             else:
                 sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
 
     if options.geojson:
         # sys.stdout.write(json.dumps(geo_d) + "\n")
-        sys.stdout.write(']}')
+        sys.stdout.write(']}\n')
 if __name__ == "__main__":
     main()
