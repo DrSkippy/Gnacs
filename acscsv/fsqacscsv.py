@@ -54,8 +54,11 @@ class FsqacsCSV(acscsv.AcsCSV):
             # default output: id|postedTime|UTCoffset|displayName|[categories]|[lat,lon]
             record.append(d["id"])
             record.append(d["postedTime"])
-            record.append(self.cleanField(str(d["foursquareCheckinUtcOffset"])))
-            record.append(self.cleanField(obj["displayName"]))
+            #record.append(self.cleanField(str(d["foursquareCheckinUtcOffset"])))
+            fsq_utc_offset = "None" 
+            if d["foursquareCheckinUtcOffset"] is not None:
+                fsq_utc_offset = self.cleanField(d["foursquareCheckinUtcOffset"]) 
+            record.append(fsq_utc_offset)
             if len(cat_list) > 0 and isinstance(cat_list[0],dict):
                 cat_names = self.buildListString([cat["displayName"] for cat in cat_list])
             else:
