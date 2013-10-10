@@ -208,7 +208,7 @@ class TwacsCSV(acscsv.AcsCSV):
             #
             return record
         except KeyError:
-            sys.stderr.write("Field missing from record (%d), skipping\n"%self.cnt)
+            #sys.stderr.write("Field missing from record (%d), skipping\n"%self.cnt)
             record.append(acscsv.gnipError)
             record.append(acscsv.gnipRemove)
             return record

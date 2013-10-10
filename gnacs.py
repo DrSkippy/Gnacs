@@ -113,19 +113,31 @@ def main():
         for record in recs:
             if len(record) == 0:
                 continue
-            if options.explain:
-                record = reflect_json.reflect_json(record)
-                sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
-            elif options.geojson:
-                # geo-tag coords
-                geo_rec = processing_obj.asGeoJSON(cnt, record)
-                if geo_rec is not None:
-                    if not first_geo: 
-                        sys.stdout.write(",")
-                    sys.stdout.write(json.dumps(geo_rec))
-                    first_geo = False
-            else:
-                sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
+            # catch I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
+            try:
+                if options.explain:
+                    record = reflect_json.reflect_json(record)
+                    sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
+                elif options.geojson:
+                    # geo-tag coords
+                    geo_rec = processing_obj.asGeoJSON(cnt, record)
+                    if geo_rec is not None:
+                        if not first_geo: 
+                            sys.stdout.write(",")
+                        sys.stdout.write(json.dumps(geo_rec))
+                        first_geo = False
+                else:
+                    sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
+            except IOError:
+                try:
+                    sys.stdout.close()
+                except IOError:
+                    pass
+                try:
+                    sys.stderr.close()
+                except IOError:
+                    pass
+                break
 
     if options.geojson:
         # sys.stdout.write(json.dumps(geo_d) + "\n")
