@@ -6,8 +6,8 @@ import sys
 import acscsv
 
 class StntvCSV(acscsv.AcsCSV):
-    def __init__(self, delim, options_user,options_struct,options_influence):
-        super(StntvCSV, self).__init__(delim)
+    def __init__(self, delim, options_keypath,options_user,options_struct,options_influence):
+        super(StntvCSV, self).__init__(delim,options_keypath)
         self.options_user = options_user
         self.options_struct = options_struct
         self.options_influence = options_influence
@@ -54,7 +54,7 @@ class StntvCSV(acscsv.AcsCSV):
                 experience = str(user["trading_strategy"]["experience"])
                 record.append(following_stocks)
                 record.append(followers)
-                record.append(experience)
+                record.append(experience)           
             return record
         except KeyError:
             sys.stderr.write("Field missing from record (%d), skipping\n"%self.cnt)

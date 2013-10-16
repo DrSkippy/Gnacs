@@ -6,8 +6,8 @@ import sys
 import acscsv 
 
 class GgacsCSV(acscsv.AcsCSV):
-    def __init__(self, delim, options_user, options_rules, options_urls, options_provider):
-        super(GgacsCSV, self).__init__(delim)
+    def __init__(self, delim, options_keypath, options_user, options_rules, options_urls, options_provider):
+        super(GgacsCSV, self).__init__(delim,options_keypath)
         self.options_rules = options_rules
         self.options_urls = options_urls
         self.options_user = options_user

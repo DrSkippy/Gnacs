@@ -6,8 +6,8 @@ import sys
 import acscsv
 
 class TwacsCSV(acscsv.AcsCSV):
-    def __init__(self, delim, options_geo, options_user, options_rules, options_urls, options_lang, options_influence, options_struct):
-        super(TwacsCSV, self).__init__(delim)
+    def __init__(self, delim, options_keypath, options_geo, options_user, options_rules, options_urls, options_lang, options_influence, options_struct):
+        super(TwacsCSV, self).__init__(delim,options_keypath)
         self.options_geo = options_geo 
         self.options_user = options_user
         self.options_rules = options_rules
@@ -15,7 +15,7 @@ class TwacsCSV(acscsv.AcsCSV):
         self.options_lang = options_lang
         self.options_influence = options_influence
         self.options_struct = options_struct
-
+        
     def procRecordToList(self,d):
         record = []
         try:

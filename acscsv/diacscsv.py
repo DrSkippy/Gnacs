@@ -4,10 +4,9 @@ __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 import sys
 import acscsv
-
 class DiacsCSV(acscsv.AcsCSV):
-    def __init__(self, delim, options_user, options_rules, options_lang, options_struct, options_status):
-        super(DiacsCSV, self).__init__(delim)
+    def __init__(self, delim, options_keypath, options_user, options_rules, options_lang, options_struct, options_status):
+        super(DiacsCSV, self).__init__(delim,options_keypath)
         self.options_user = options_user
         self.options_rules = options_rules
         self.options_lang = options_lang
