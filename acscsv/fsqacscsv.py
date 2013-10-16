@@ -102,7 +102,7 @@ class FsqacsCSV(acscsv.AcsCSV):
                 kp=self.options_key_path.split(":")
                 for num in range(0,len(kp)):
                     try:
-                        buildstring+='{0}'.format(str(kp[num]))
+                        buildstring+='["{0}"]'.format(str(kp[num]))
                         exec("kp_output=d{0}".format(buildstring))
                         if num==len(kp)-1:
                             record.append(json.dumps(kp_output))                    

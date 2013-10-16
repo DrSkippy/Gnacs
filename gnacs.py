@@ -58,6 +58,8 @@ def main():
             default=False, help="Show field names in output for sample input records")
     parser.add_option("-z","--publisher", dest="pub", 
             default="twitter", help="Publisher (default is twitter), twitter, disqus, wordpress, wpcomments, tumblr, foursquare, getglue, stocktwits")
+    parser.add_option("-k","--keypath", dest="keypath", 
+            default=None, help="returns a value from a path of the form 'key:value'")
     (options, args) = parser.parse_args()
     #
     if options.ver:
@@ -76,21 +78,21 @@ def main():
         # NOTE: this is an in-memory structure
         #geo_d = {"type": "FeatureCollection", "features": []}
         sys.stdout.write('{"type": "FeatureCollection", "features": [')
-    #
+    #ß
     if options.pub.lower().startswith("word") or options.pub.lower().startswith("wp"):
-        processing_obj = wpacscsv.WPacsCSV(delim, options.user, options.rules, options.lang, options.struct)
+        processing_obj = wpacscsv.WPacsCSV(delim, options.user, options.rules, options.lang, options.struct,options.keypath)
     elif options.pub.lower().startswith("disq"):
-        processing_obj = diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.status)
+        processing_obj = diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.status,options.keypath)
     elif options.pub.lower().startswith("tumb"): 
-        processing_obj = tblracscsv.TblracsCSV(delim, options.user, options.rules, options.lang, options.struct)
+        processing_obj = tblracscsv.TblracsCSV(delim, options.user, options.rules, options.lang, options.struct,options.keypath)
     elif options.pub.lower().startswith("four") or options.pub.lower().startswith("fsq"):
-        processing_obj = fsqacscsv.FsqacsCSV(delim, options.geo, options.user, options.rules, options.lang, options.struct)
+        processing_obj = fsqacscsv.FsqacsCSV(delim, options.geo, options.user, options.rules, options.lang, options.struct,options.keypath)
     elif options.pub.lower().startswith("get") or options.pub.lower().startswith("gg"):
-        processing_obj = ggacscsv.GgacsCSV(delim, options.user, options.rules, options.urls, options.origin)
+        processing_obj = ggacscsv.GgacsCSV(delim, options.user, options.rules, options.urls, options.origin,options.keypath)
     elif options.pub.lower().startswith("st"):
-        processing_obj = stntvcsv.StntvCSV(delim, options.user, options.struct, options.influence)
+        processing_obj = stntvcsv.StntvCSV(delim, options.user, options.struct, options.influence,options.keypath)
     else:
-        processing_obj = twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
+        processing_obj = twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct,options.keypath)
     #
     cnt = 0
     first_geo = True 
@@ -118,6 +120,7 @@ def main():
                 if options.explain:
                     record = reflect_json.reflect_json(record)
                     sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
+                #
                 elif options.geojson:
                     # geo-tag coords
                     geo_rec = processing_obj.asGeoJSON(cnt, record)
@@ -141,6 +144,8 @@ def main():
 
     if options.geojson:
         # sys.stdout.write(json.dumps(geo_d) + "\n")
-        sys.stdout.write(']}\n')
+        sys.stdout.write(']}\n')            
+            
+            
 if __name__ == "__main__":
     main()
