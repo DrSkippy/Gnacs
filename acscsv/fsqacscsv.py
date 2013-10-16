@@ -4,14 +4,16 @@ __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 import sys
 import acscsv
+import json
 
 class FsqacsCSV(acscsv.AcsCSV):
-    def __init__(self, delim, options_geo, options_user, options_rules, options_lang, options_influence):
+    def __init__(self, delim, options_geo, options_user, options_rules, options_lang, options_influence,options_key_path):
         super(FsqacsCSV, self).__init__(delim)
         self.options_geo = options_geo 
         self.options_user = options_user
         self.options_rules = options_rules
         self.options_lang = options_lang
+        self.options_key_path = options_key_path
         # clean up options that don't pertain
         self.options_influence = options_influence
 
@@ -94,6 +96,28 @@ class FsqacsCSV(acscsv.AcsCSV):
                 record.append(postalCode)
             if self.options_user:
                 record.append(self.cleanField(actor["gender"]))
+            #key_path
+            if self.options_key_path:
+                buildstring=''
+                kp=self.options_key_path.split(":")
+                for num in range(0,len(kp)):
+                    try:
+                        buildstring+='{0}'.format(str(kp[num]))
+                        exec("kp_output=d{0}".format(buildstring))
+                        if num==len(kp)-1:
+                            record.append(json.dumps(kp_output))                    
+                    except KeyError,e:
+                        record.append("PATH_EMPTY")
+                        sys.stderr.write("-- KeyError: {0} , Line: {1} , path_end: {2} --".format(e,self.cnt,kp[num]))
+                        break
+                    except TypeError,e:
+                        record.append("PATH_EMPTY")
+                        sys.stderr.write("-- TypeError: {0} , Line: {1} , path_end: {2} --".format(e,self.cnt,kp[num]))
+                        break
+                    except IndexError,e:
+                        record.append("PATH_EMPTY")
+                        sys.stderr.write("-- IndexError: {0} , Line: {1} , path_end: {2} --".format(e,self.cnt,kp[num]))
+                        break 
             #
             return record
         except KeyError:
