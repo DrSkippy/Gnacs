@@ -80,19 +80,19 @@ def main():
         sys.stdout.write('{"type": "FeatureCollection", "features": [')
     #ß
     if options.pub.lower().startswith("word") or options.pub.lower().startswith("wp"):
-        processing_obj = wpacscsv.WPacsCSV(delim, options.user, options.rules, options.lang, options.struct,options.keypath)
+        processing_obj = wpacscsv.WPacsCSV(delim, options.keypath, options.user, options.rules, options.lang, options.struct)
     elif options.pub.lower().startswith("disq"):
-        processing_obj = diacscsv.DiacsCSV(delim, options.user, options.rules, options.lang, options.struct, options.status,options.keypath)
+        processing_obj = diacscsv.DiacsCSV(delim, options.keypath, options.user, options.rules, options.lang, options.struct, options.status)
     elif options.pub.lower().startswith("tumb"): 
-        processing_obj = tblracscsv.TblracsCSV(delim, options.user, options.rules, options.lang, options.struct,options.keypath)
+        processing_obj = tblracscsv.TblracsCSV(delim, options.keypath, options.user, options.rules, options.lang, options.struct)
     elif options.pub.lower().startswith("four") or options.pub.lower().startswith("fsq"):
-        processing_obj = fsqacscsv.FsqacsCSV(delim, options.geo, options.user, options.rules, options.lang, options.struct,options.keypath)
+        processing_obj = fsqacscsv.FsqacsCSV(delim, options.keypath, options.geo, options.user, options.rules, options.lang, options.struct)
     elif options.pub.lower().startswith("get") or options.pub.lower().startswith("gg"):
-        processing_obj = ggacscsv.GgacsCSV(delim, options.user, options.rules, options.urls, options.origin,options.keypath)
+        processing_obj = ggacscsv.GgacsCSV(delim, options.keypath, options.user, options.rules, options.urls, options.origin)
     elif options.pub.lower().startswith("st"):
-        processing_obj = stntvcsv.StntvCSV(delim, options.user, options.struct, options.influence,options.keypath)
+        processing_obj = stntvcsv.StntvCSV(delim, options.keypath, options.user, options.struct, options.influence)
     else:
-        processing_obj = twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct,options.keypath)
+        processing_obj = twacscsv.TwacsCSV(delim, options.keypath, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
     #
     cnt = 0
     first_geo = True 
@@ -141,7 +141,6 @@ def main():
                 except IOError:
                     pass
                 break
-
     if options.geojson:
         # sys.stdout.write(json.dumps(geo_d) + "\n")
         sys.stdout.write(']}\n')            

@@ -4,15 +4,16 @@ __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 
 import datetime
-
+import json
 gnipError = "GNIPERROR"
 gnipRemove = "GNIPREMOVE"
 gnipDateTime = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 class AcsCSV(object):
-    def __init__(self, delim):
+    def __init__(self, delim,options_keypath):
         self.delim = delim
         self.cnt = None
+        self.options_keypath = options_keypath
 
     def cleanField(self,f):
         try:
@@ -50,7 +51,10 @@ class AcsCSV(object):
 
     def procRecord(self, cnt, x):
         self.cnt = cnt
-        return self.asString(self.procRecordToList(x))
+        source_list = self.procRecordToList(x)
+        if self.options_keypath:
+            source_list.append(self.keyPath(x))
+        return self.asString(source_list)
 
     def asGeoJSON(self, cnt, x):
         recordList = self.procRecordToList(x)
@@ -63,4 +67,27 @@ class AcsCSV(object):
         else:
             return {"Error":"This publisher doesn't have geo"}
         return {"type": "Feature", "geometry": { "type": "Point", "coordinates": lon_lat }, "properties": {"id": recordList[0]} }
+    
+    def keyPath(self,d):
+        buildstring=''
+        kp=self.options_keypath.split(":")
+        output = "PATH_EMPTY"
+        for num in range(0,len(kp)):
+            try:
+                buildstring+='["{0}"]'.format(str(kp[num]))
+                exec("kp_output=d{0}".format(buildstring))
+                if num==len(kp)-1:
+                    output = json.dumps(kp_output)                    
+            except KeyError,e:
+                sys.stderr.write("-- KeyError: {0} , Line: {1} , path_end: {2} --".format(e,self.cnt,kp[num]))
+                break
+            except TypeError,e:
+                sys.stderr.write("-- TypeError: {0} , Line: {1} , path_end: {2} --".format(e,self.cnt,kp[num]))
+                break
+            except IndexError,e:
+                sys.stderr.write("-- IndexError: {0} , Line: {1} , path_end: {2} --".format(e,self.cnt,kp[num]))
+                break
+        return output
+                
+
 
