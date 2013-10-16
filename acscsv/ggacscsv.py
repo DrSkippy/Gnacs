@@ -4,7 +4,6 @@ __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 import sys
 import acscsv 
-import json
 
 class GgacsCSV(acscsv.AcsCSV):
     def __init__(self, delim, options_keypath, options_user, options_rules, options_urls, options_provider):

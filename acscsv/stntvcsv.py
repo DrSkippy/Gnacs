@@ -4,7 +4,6 @@ __author__="Jinsub Hong"
 __license__="Simplified BSD"
 import sys
 import acscsv
-import json
 
 class StntvCSV(acscsv.AcsCSV):
     def __init__(self, delim, options_keypath,options_user,options_struct,options_influence):

@@ -4,7 +4,6 @@ __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 import sys
 import acscsv
-import json
 
 class WPacsCSV(acscsv.AcsCSV):
     def __init__(self, delim, options_keypath, options_user, options_rules, options_lang, options_struct):
