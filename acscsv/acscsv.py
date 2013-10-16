@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 __author__="Scott Hendrickson"
 __license__="Simplified BSD"
-
+import sys
 import datetime
 import json
 gnipError = "GNIPERROR"
@@ -69,25 +69,31 @@ class AcsCSV(object):
         return {"type": "Feature", "geometry": { "type": "Point", "coordinates": lon_lat }, "properties": {"id": recordList[0]} }
     
     def keyPath(self,d):
-        buildstring=''
-        kp=self.options_keypath.split(":")
-        output = "PATH_EMPTY"
-        for num in range(0,len(kp)):
+        key_list = self.options_keypath.split(":")
+        key_stack = self.options_keypath.split(":")
+        x = d
+        while len(key_stack) > 0:
             try:
-                buildstring+='["{0}"]'.format(str(kp[num]))
-                exec("kp_output=d{0}".format(buildstring))
-                if num==len(kp)-1:
-                    output = json.dumps(kp_output)                    
-            except KeyError,e:
-                sys.stderr.write("-- KeyError: {0} , Line: {1} , path_end: {2} --".format(e,self.cnt,kp[num]))
-                break
-            except TypeError,e:
-                sys.stderr.write("-- TypeError: {0} , Line: {1} , path_end: {2} --".format(e,self.cnt,kp[num]))
-                break
-            except IndexError,e:
-                sys.stderr.write("-- IndexError: {0} , Line: {1} , path_end: {2} --".format(e,self.cnt,kp[num]))
-                break
-        return output
-                
-
-
+                k = key_stack.pop(0)
+                try:
+                    idx = int(k)
+                except ValueError:
+                    idx = str(k)
+                x = x[idx]
+            except (IndexError, TypeError, KeyError) as e:
+                sys.stderr.write("Keypath error at %s\n"%k)
+                return "PATH_EMPTY"
+        return str(x)
+        #kp = self.options_keypath.split(":")
+        #buildstring=''
+        #output = "PATH_EMPTY"
+        #for num in range(0,len(kp)):
+        #    try:
+        #        buildstring+='["{0}"]'.format(str(kp[num]))
+        #        exec("kp_output=d{0}".format(buildstring))
+        #        if num==len(kp)-1:
+        #            output = json.dumps(kp_output)                    
+        #    except (KeyError, TypeError, IndexError) as e:
+        #        sys.stderr.write("Custom Keypath Error: {0} , Line: {1} , path_end: {2} \n".format(e,self.cnt,kp[num]))
+        #        break
+        #return output

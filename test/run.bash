@@ -21,6 +21,11 @@ for pub in $publist; do
     ../gnacs.py -jgz $pub $fn >> $tmpfile
     echo " tail-test $pub from $fn..."
     ../gnacs.py -z $pub $fn | tail >> $tmpfile
+    echo " custom keypath test $pub from $fn..."
+    ../gnacs.py -z $pub $fn -k'id' | tail >> $tmpfile
+    ../gnacs.py -z $pub $fn -k'object:id' | tail >> $tmpfile
+    ../gnacs.py -z $pub $fn -k'object:id:mydoghasflees' | tail >> $tmpfile
+    ../gnacs.py -z $pub $fn -k'object:id:1' | tail >> $tmpfile
 done
 
 echo "Output: $(cat $tmpfile | wc -l) should be 34807"
