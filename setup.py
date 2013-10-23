@@ -2,8 +2,8 @@ from distutils.core import setup
 
 setup(
     name='gnacs',
-    version='0.7.1',
-    author='Scott Hendrickson, Josh Montague, Jinsub Hong, Jeff Kolb',
+    version='0.7.2',
+    author='Scott Hendrickson, Josh Montague, Jinsub Hong, Jeff Kolb, Brian Lehman',
     author_email='scott@drskippy.net',
     packages=['acscsv'],
     scripts=['stntv.py', 'wpacs.py', 'ggacs.py','tblracs.py', 'diacs.py', 'gnacs.py', 'twacs.py', 'fsqacs.py'],

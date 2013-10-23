@@ -65,14 +65,20 @@ class TwacsCSV(acscsv.AcsCSV):
                             tmp_url_list = []
                             tmp_un_url_list = []
                             for tmp_rec in d["twitter_entities"]["urls"]:
-                                if "url" in tmp_rec and tmp_rec["url"] is not None:
-                                    tmp_url_list.append(tmp_rec["url"])
-                                else:
-                                    tmp_url_list.append("None")
-                                if "expanded_url" in tmp_rec and tmp_rec["expanded_url"] is not None:
-                                    tmp_un_url_list.append(tmp_rec["expanded_url"])
-                                else:
-                                    tmp_un_url_list.append("None")
+                                try:
+                                    if "url" in tmp_rec and tmp_rec["url"] is not None:
+                                        tmp_url_list.append(tmp_rec["url"])
+                                    else:
+                                        tmp_url_list.append("None")
+                                except TypeError:
+                                    tmp_url_list = ["twitter_entiteis:urls:url"]
+                                try:
+                                    if "expanded_url" in tmp_rec and tmp_rec["expanded_url"] is not None:
+                                        tmp_un_url_list.append(tmp_rec["expanded_url"])
+                                    else:
+                                        tmp_un_url_list.append("None")
+                                except TypeError:
+                                    tmp_un_urls_list = ["twitter_entities:urls:expanded_url"]
                             twitter_urls = self.buildListString(tmp_url_list)
                             twitter_un_urls = self.buildListString(tmp_un_url_list)
                 record.append(twitter_urls)
