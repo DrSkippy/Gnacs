@@ -92,7 +92,7 @@ def main():
     elif options.pub.lower().startswith("st"):
         processing_obj = stntvcsv.StntvCSV(delim, options.keypath, options.user, options.struct, options.influence)
     elif options.pub.lower().startswith("news") or options.pub.lower().startswith("ng"):
-        processing_obj = ngacscsv.NGacsCSV(delim, options.keypath, options.urls)
+        processing_obj = ngacscsv.NGacsCSV(delim, options.keypath, options.urls, options.user)
     else:
         processing_obj = twacscsv.TwacsCSV(delim, options.keypath, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
     #

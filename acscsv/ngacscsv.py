@@ -6,9 +6,10 @@ import sys
 import acscsv
 
 class NGacsCSV(acscsv.AcsCSV):
-    def __init__(self, delim, options_keypath, options_urls):
+    def __init__(self, delim, options_keypath, options_urls, options_user):
         super(NGacsCSV, self).__init__(delim,options_keypath)
         self.options_urls = options_urls
+        self.options_user = options_user
 
     def procRecordToList(self, d):
         record = []
@@ -43,10 +44,6 @@ class NGacsCSV(acscsv.AcsCSV):
                 record.append(self.cleanField(obj["content"]))
             else:
                 record.append("None")
-            #if "summary" in obj:
-            #    record.append(self.cleanField(obj["summary"]))
-            #else:
-            #    record.append("None")
             #
             if self.options_urls:
                 url = "None"
@@ -57,6 +54,13 @@ class NGacsCSV(acscsv.AcsCSV):
                 if "ngFeedXmlUrl" in d:
                     feed = d["ngFeedXmlUrl"]
                 record.append(feed)
+            #
+            if self.options_user:
+                user_name = "None"
+                actor = d["actor"]
+                if actor is not None and "displayName" in actor:
+                    user_name = actor["displayName"]
+                record.append(user_name)
             #
             return record
         except KeyError:
