@@ -64,14 +64,15 @@ class WPacsCSV(acscsv.AcsCSV):
                 record.append(rules)
             if self.options_struct:
                 target = d["target"]
+                # put these things in try blocks / ifs 
                 # site
                 record.append(str(target["wpBlogId"]))
                 # blog link
-                record.append(str(target["link"]))
+                record.append(target["link"].encode('ascii', 'replace'))
                 # object
                 record.append(str(obj["wpPostId"]))
                 # link to post
-                record.append(str(obj["link"]))
+                record.append(obj["link"].encode('ascii', 'replace'))
             if self.options_user:
                 tmp = self.splitId(actor["id"])
                 record.append(tmp)
