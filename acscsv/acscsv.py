@@ -5,13 +5,35 @@ __license__="Simplified BSD"
 import sys
 import datetime
 import json
+import unittest
+
 gnipError = "GNIPERROR"
 gnipRemove = "GNIPREMOVE"
 gnipDateTime = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
+class TestAcsCSV(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def testCleanField(self):
+        a = AcsCSV("|", False)
+        self.assertEquals(a.cleanField("laksjflasjdfl;a"), "laksjflasjdfl;a")
+        self.assertEquals(a.cleanField("\r\n \n\r \r\r \n\n"), "")
+        self.assertEquals(a.cleanField("\r\na \n\r \r\r a\n\n"), "a       a")
+        self.assertEquals(a.cleanField("asdf|asdf,,adsf|asdf"), "asdf asdf,,adsf asdf")
+        b = AcsCSV(",", False)
+        self.assertEquals(b.cleanField("asdf|asdf,,adsf|asdf"), "asdf|asdf  adsf|asdf")
+        self.assertEquals(b.cleanField(245), "245")
+        self.assertEquals(b.cleanField(a), "None")
+
 class AcsCSV(object):
-    def __init__(self, delim,options_keypath):
+    def __init__(self, delim, options_keypath):
         self.delim = delim
+        if delim == "":
+            print >>sys.stderr, "Warning - Output has Null delimiter"
         self.cnt = None
         self.options_keypath = options_keypath
 
@@ -37,10 +59,10 @@ class AcsCSV(object):
         res += ']'
         return res
 
-    def splitId(self, x):
+    def splitId(self, x, index=1):
         tmp = x.split("/")
-        if len(tmp) > 1:
-            return tmp[1]
+        if len(tmp) > index:
+            return tmp[index]
         else:
             return x
 
@@ -78,22 +100,13 @@ class AcsCSV(object):
                 try:
                     idx = int(k)
                 except ValueError:
+                    # keys are ascii strings
                     idx = str(k)
                 x = x[idx]
             except (IndexError, TypeError, KeyError) as e:
                 sys.stderr.write("Keypath error at %s\n"%k)
                 return "PATH_EMPTY"
         return str(x)
-        #kp = self.options_keypath.split(":")
-        #buildstring=''
-        #output = "PATH_EMPTY"
-        #for num in range(0,len(kp)):
-        #    try:
-        #        buildstring+='["{0}"]'.format(str(kp[num]))
-        #        exec("kp_output=d{0}".format(buildstring))
-        #        if num==len(kp)-1:
-        #            output = json.dumps(kp_output)                    
-        #    except (KeyError, TypeError, IndexError) as e:
-        #        sys.stderr.write("Custom Keypath Error: {0} , Line: {1} , path_end: {2} \n".format(e,self.cnt,kp[num]))
-        #        break
-        #return output
+
+if __name__ == "__main__":
+    unittest.main()
