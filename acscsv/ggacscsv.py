@@ -6,12 +6,12 @@ import sys
 import acscsv 
 
 class GgacsCSV(acscsv.AcsCSV):
-    def __init__(self, delim, options_keypath, options_user, options_rules, options_urls, options_provider):
+    def __init__(self, delim, options_keypath, options_user, options_rules, options_urls, options_origin):
         super(GgacsCSV, self).__init__(delim,options_keypath)
         self.options_rules = options_rules
         self.options_urls = options_urls
         self.options_user = options_user
-        self.options_provider = options_provider
+        self.options_origin = options_origin
 
     def procRecordToList(self, d):
         record = []
@@ -83,8 +83,8 @@ class GgacsCSV(acscsv.AcsCSV):
             if self.options_urls:
                 record.append(d["link"])
             #
-            if self.options_provider:
-                prov = d["provider"]
+            if self.options_origin:
+                prov = d["provider"] 
                 record.append(prov["displayName"])
                 record.append(prov["link"])
             #
