@@ -76,7 +76,11 @@ class TblracsCSV(acscsv.AcsCSV):
                     record.append(reblogged_from["link"])
                 elif "inReplyTo" in d:
                     record.append("None")
-                    record.append(d["inReplyTo"]["author"]["link"])
+                    link = d["inReplyTo"]["author"]["link"]
+                    if link is None:
+                        record.append("null")
+                    else:
+                        record.append(d["inReplyTo"]["author"]["link"])
                 else:
                     record.append("None")
                     record.append("None")
