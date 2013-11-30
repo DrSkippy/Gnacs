@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 __author__="Scott Hendrickson"
 __license__="Simplified BSD"
@@ -45,13 +44,35 @@ class TwacsCSV(acscsv.AcsCSV):
                 record.append(acscsv.gnipDateTime)
                 record.append('-'.join([acscsv.gnipRemove, verb]))
                 return record
-            # always first 3 items
+            # always first 2 items
             record.append(d["id"])
             record.append(d["postedTime"])
-            record.append(self.cleanField(d["body"]))
+            # add some handling so calling gnacs without a pub is still useful
+            #   n.b.: -stocktwits is native, so no 'verb' to get here
+            #         -put more-specific fields at the beginning to catch them 
+            obj = d["object"]
+            if d["id"].rfind("getglue") != -1 : # getglue 
+                record.append(verb)     # 'body' is inconsistent in gg
+            elif "geo" in obj and "coordinates" in obj["geo"]:      # fsq
+                record.append(str(obj["geo"]["coordinates"]))
+            elif "wpBlogId" in obj:     # wp
+                record.append(str(obj["wpBlogId"]))
+            elif "tumblrType" in obj:   # tumblr
+                record.append(obj["tumblrType"])
+            elif "body" in d:           # tw, disqus, stocktw,  
+                record.append(self.cleanField(d["body"]))       
+            elif "link" in d:           # ng
+                record.append(d["link"])
+            else:                       # ? 
+                record.append("None")
             #
-            gnip = d["gnip"]
-            actor = d["actor"]
+            gnip = {}
+            actor = {}
+            if "gnip" in d:
+                gnip = d["gnip"]
+            if "actor" in d:    # no 'actor' in ng
+                actor = d["actor"]
+            #
             if self.options_urls:
                 urls = "None"
                 if "urls" in gnip:

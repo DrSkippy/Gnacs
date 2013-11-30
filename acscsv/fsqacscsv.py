@@ -11,9 +11,6 @@ class FsqacsCSV(acscsv.AcsCSV):
         self.options_geo = options_geo 
         self.options_user = options_user
         self.options_rules = options_rules
-        self.options_lang = options_lang
-        # clean up options that don't pertain
-        self.options_influence = options_influence
 
     def procRecordToList(self, d):
         record = []
@@ -44,37 +41,48 @@ class FsqacsCSV(acscsv.AcsCSV):
                 record.append(acscsv.gnipDateTime)
                 record.append('-'.join([acscsv.gnipRemove, verb]))
                 return record
-            # shorthand
-            gnip = '[]'
-            if "gnip" in d:
-                gnip = d["gnip"]
-            actor = d["actor"]
-            obj = d["object"]
-            cat_list = obj["foursquareCategories"]
-            # default output: id|postedTime|UTCoffset|displayName|[categories]|[lat,lon]
-            record.append(d["id"])
-            record.append(d["postedTime"])
-            #record.append(self.cleanField(str(d["foursquareCheckinUtcOffset"])))
-            fsq_utc_offset = "None" 
-            if d["foursquareCheckinUtcOffset"] is not None:
+            ## default fsq output: id|postedTime|UTCoffset|displayName|[categories]|[lat,lon]
+            # consider a 3-field default output: id|postedTime|[lat,lon]
+            # first test activity integrity
+            try:        # should be in all AS activities
+                act_id = d["id"]
+                p_time = d["postedTime"]
+                actor = d["actor"]
+                obj = d["object"]
+            except KeyError:
+                sys.stderr.write("Standard Activity Streams fields missing - ")
+                raise
+            try:        # should be in all fsq acs
                 fsq_utc_offset = self.cleanField(d["foursquareCheckinUtcOffset"]) 
-            record.append(fsq_utc_offset)
+                d_name = obj["displayName"]
+                cat_list = obj["foursquareCategories"]
+                # coords is an obj attribute so it can be used with the geojson methods
+                self.geo_coords_list = obj["geo"]["coordinates"]
+            except KeyError:
+                sys.stderr.write("Standard pub-specific fields missing - ")
+                raise
+            geo_coords = str(self.geo_coords_list)
+            # format fsq category list 
             if len(cat_list) > 0 and isinstance(cat_list[0],dict):
                 cat_names = self.buildListString([cat["displayName"] for cat in cat_list])
             else:
-                cat_names = str(["object:foursquareCategories_list-items:displayName"])
+                cat_names = "['None']"
+            record.append(act_id)
+            record.append(p_time)
+            record.append(fsq_utc_offset)
+            record.append(d_name)
             record.append(cat_names)
-            self.geo_coords_list = obj["geo"]["coordinates"]
-            geo_coords = str(self.geo_coords_list)
             record.append(geo_coords)
             #
+            gnip = '[]'             # shorthand
+            if "gnip" in d:         # only relevant for PT streams
+                gnip = d["gnip"]
             if self.options_rules:
                 rules = '[]'
                 if "matching_rules" in gnip:
                     rules = self.buildListString([ "%s (%s)"%(l["value"], l["tag"]) for l in gnip["matching_rules"]])
                 record.append(rules)
-            if self.options_geo:
-                # geo should add the contents of d[object][address]
+            if self.options_geo:    # add contents of d[object][address]
                 locality = "None"
                 region = "None"
                 postalCode = "None"
@@ -93,7 +101,11 @@ class FsqacsCSV(acscsv.AcsCSV):
                 record.append(country)
                 record.append(postalCode)
             if self.options_user:
-                record.append(self.cleanField(actor["gender"]))
+                try:
+                    record.append(self.cleanField(actor["gender"]))
+                except KeyError:
+                    sys.stderr.write("Standard pub-specific fields missing - ")
+                    raise
             #
             return record
         except KeyError:
