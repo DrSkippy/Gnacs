@@ -88,10 +88,13 @@ class TblracsCSV(acscsv.AcsCSV):
                     record.append("None")
             if self.options_user:
                 try:
-                    tmp = actor["id"].split("/")[1]
+                    tmp1 = actor["id"].split("/")[1]
+                    tmp2 = d["target"]["displayName"]
                 except IndexError:
-                    tmp = "actor:id"
-                record.append(tmp)
+                    tmp1 = "actor:id"
+                    tmp2 = "target:displayName"
+                record.append(tmp1)
+                record.append(tmp2)
             #
             return record
         except KeyError:
