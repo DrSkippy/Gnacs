@@ -1,6 +1,6 @@
 from distutils.core import setup
 
-GNACS_VERSION_NUMBER = "0.7.5"
+GNACS_VERSION_NUMBER = "0.7.6"
 
 setup(
     name='gnacs',

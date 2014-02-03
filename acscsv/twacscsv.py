@@ -53,7 +53,7 @@ class TwacsCSV(acscsv.AcsCSV):
             obj = d["object"]
             if d["id"].rfind("getglue") != -1 : # getglue 
                 record.append(verb)     # 'body' is inconsistent in gg
-            elif "geo" in obj and "coordinates" in obj["geo"]:      # fsq
+            elif "foursquareCategories" in obj or "foursquareCheckinOffset" in obj:      # fsq
                 record.append(str(obj["geo"]["coordinates"]))
             elif "wpBlogId" in obj:     # wp
                 record.append(str(obj["wpBlogId"]))
