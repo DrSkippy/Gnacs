@@ -57,7 +57,7 @@ def main():
     parser.add_option("-x","--explain", action="store_true", dest="explain", 
             default=False, help="Show field names in output for sample input records")
     parser.add_option("-z","--publisher", dest="pub", 
-            default="twitter", help="Publisher (default is twitter), twitter, disqus, wordpress, wpcomments, tumblr, foursquare, getglue, stocktwits")
+            default="twitter", help="Publisher (default is twitter), twitter, disqus, wordpress, wpcomments, tumblr, foursquare, getglue, stocktwits, stocktwits-native")
     (options, args) = parser.parse_args()
     #
     if options.ver:
@@ -87,8 +87,10 @@ def main():
         processing_obj = fsqacscsv.FsqacsCSV(delim, options.geo, options.user, options.rules, options.lang, options.struct)
     elif options.pub.lower().startswith("get") or options.pub.lower().startswith("gg"):
         processing_obj = ggacscsv.GgacsCSV(delim, options.user, options.rules, options.urls, options.origin)
-    elif options.pub.lower().startswith("st"):
+    elif options.pub.lower().startswith("st") and options.pub.lower().endswith("native"):
         processing_obj = stntvcsv.StntvCSV(delim, options.user, options.struct, options.influence)
+    elif options.pub.lower().startswith("st"):
+        processing_obj = stacscsv.StacsCSV(delim, options.user, options.struct, options.influence)
     else:
         processing_obj = twacscsv.TwacsCSV(delim, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
     #
