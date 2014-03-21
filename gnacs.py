@@ -115,7 +115,6 @@ def main():
         for record in recs:
             if len(record) == 0:
                 continue
-            # catch I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
             try:
                 if options.explain:
                     record = reflect_json.reflect_json(record)
@@ -130,6 +129,7 @@ def main():
                         first_geo = False
                 else:
                     sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
+            # catch I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
             except IOError:
                 try:
                     sys.stdout.close()
@@ -140,6 +140,8 @@ def main():
                 except IOError:
                     pass
                 break
+            except UnicodeEncodeError, e:
+                sys.stderr.write("Bad unicode uncoding: record (%d): %s\n"%(cnt, e))
 
     if options.geojson:
         # sys.stdout.write(json.dumps(geo_d) + "\n")
