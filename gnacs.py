@@ -57,7 +57,7 @@ def main():
     parser.add_option("-x","--explain", action="store_true", dest="explain", 
             default=False, help="Show field names in output for sample input records")
     parser.add_option("-z","--publisher", dest="pub", 
-            default="twitter", help="Publisher (default is twitter), twitter, newsgator, disqus, wordpress, wpcomments, tumblr, foursquare, getglue, stocktwits")
+            default="twitter", help="Publisher (default is twitter), twitter, newsgator, disqus, wordpress, wpcomments, tumblr, foursquare, getglue, stocktwits, stocktwits-native")
     parser.add_option("-k","--keypath", dest="keypath", 
             default=None, help="returns a value from a path of the form 'key:value'")
     (options, args) = parser.parse_args()
@@ -88,11 +88,21 @@ def main():
     elif options.pub.lower().startswith("four") or options.pub.lower().startswith("fsq"):
         processing_obj = fsqacscsv.FsqacsCSV(delim, options.keypath, options.geo, options.user, options.rules, options.lang, options.struct)
     elif options.pub.lower().startswith("get") or options.pub.lower().startswith("gg"):
+<<<<<<< HEAD
         processing_obj = ggacscsv.GgacsCSV(delim, options.keypath, options.user, options.rules, options.urls, options.origin)
-    elif options.pub.lower().startswith("st"):
+    elif options.pub.lower().startswith("st") and options.pub.lower().endswith("native"):
         processing_obj = stntvcsv.StntvCSV(delim, options.keypath, options.user, options.struct, options.influence)
+    elif options.pub.lower().startswith("st"):
+        processing_obj = stacscsv.StacsCSV(delim, options.user, options.struct, options.influence)
     elif options.pub.lower().startswith("news") or options.pub.lower().startswith("ng"):
         processing_obj = ngacscsv.NGacsCSV(delim, options.keypath, options.urls, options.user)
+=======
+        processing_obj = ggacscsv.GgacsCSV(delim, options.user, options.rules, options.urls, options.origin)
+    elif options.pub.lower().startswith("st") and options.pub.lower().endswith("native"):
+        processing_obj = stntvcsv.StntvCSV(delim, options.user, options.struct, options.influence)
+    elif options.pub.lower().startswith("st"):
+        processing_obj = stacscsv.StacsCSV(delim, options.user, options.struct, options.influence)
+>>>>>>> 8a789b1553b0889c1ad244a00d42577489c1dfe4
     else:
         processing_obj = twacscsv.TwacsCSV(delim, options.keypath, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
     #
@@ -117,7 +127,6 @@ def main():
         for record in recs:
             if len(record) == 0:
                 continue
-            # catch I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
             try:
                 if options.explain:
                     record = reflect_json.reflect_json(record)
@@ -133,6 +142,7 @@ def main():
                         first_geo = False
                 else:
                     sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
+            # catch I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
             except IOError:
                 try:
                     sys.stdout.close()
@@ -143,6 +153,9 @@ def main():
                 except IOError:
                     pass
                 break
+            except UnicodeEncodeError, e:
+                sys.stderr.write("Bad unicode uncoding: record (%d): %s\n"%(cnt, e))
+
     if options.geojson:
         # sys.stdout.write(json.dumps(geo_d) + "\n")
         sys.stdout.write(']}\n')            

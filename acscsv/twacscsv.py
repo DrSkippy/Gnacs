@@ -105,7 +105,11 @@ class TwacsCSV(acscsv.AcsCSV):
                 record.append(twitter_urls)
                 record.append(twitter_un_urls)
             if self.options_lang:
-                record.append(str([str(l) for l in actor["languages"]]))
+                try:
+                    record.append(str([str(l) for l in actor["languages"]]))
+                except UnicodeEncodeError, e:
+                    record.append(str("bad lang"))
+                    raise UnicodeEncodeError("unicode encoding problem in actor:language")
                 glang = "None"
                 if "language" in gnip:
                     glang = gnip["language"]["value"]
