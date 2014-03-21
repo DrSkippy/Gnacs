@@ -88,6 +88,7 @@ def main():
     elif options.pub.lower().startswith("four") or options.pub.lower().startswith("fsq"):
         processing_obj = fsqacscsv.FsqacsCSV(delim, options.keypath, options.geo, options.user, options.rules, options.lang, options.struct)
     elif options.pub.lower().startswith("get") or options.pub.lower().startswith("gg"):
+<<<<<<< HEAD
         processing_obj = ggacscsv.GgacsCSV(delim, options.keypath, options.user, options.rules, options.urls, options.origin)
     elif options.pub.lower().startswith("st") and options.pub.lower().endswith("native"):
         processing_obj = stntvcsv.StntvCSV(delim, options.keypath, options.user, options.struct, options.influence)
@@ -95,6 +96,13 @@ def main():
         processing_obj = stacscsv.StacsCSV(delim, options.user, options.struct, options.influence)
     elif options.pub.lower().startswith("news") or options.pub.lower().startswith("ng"):
         processing_obj = ngacscsv.NGacsCSV(delim, options.keypath, options.urls, options.user)
+=======
+        processing_obj = ggacscsv.GgacsCSV(delim, options.user, options.rules, options.urls, options.origin)
+    elif options.pub.lower().startswith("st") and options.pub.lower().endswith("native"):
+        processing_obj = stntvcsv.StntvCSV(delim, options.user, options.struct, options.influence)
+    elif options.pub.lower().startswith("st"):
+        processing_obj = stacscsv.StacsCSV(delim, options.user, options.struct, options.influence)
+>>>>>>> 8a789b1553b0889c1ad244a00d42577489c1dfe4
     else:
         processing_obj = twacscsv.TwacsCSV(delim, options.keypath, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
     #
