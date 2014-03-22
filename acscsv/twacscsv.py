@@ -108,8 +108,7 @@ class TwacsCSV(acscsv.AcsCSV):
                 try:
                     record.append(str([str(l) for l in actor["languages"]]))
                 except UnicodeEncodeError, e:
-                    record.append(str("bad lang"))
-                    raise UnicodeEncodeError("unicode encoding problem in actor:language")
+                    record.append(str("bad encoding"))
                 glang = "None"
                 if "language" in gnip:
                     glang = gnip["language"]["value"]
