@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-publist="disqus foursquare tumblr twitter wp-com stocktwit-native"
+publist="disqus foursquare getglue newsgator stocktwit-native tumblr twitter wp-com"
 echo $(date)
 
 tmpfile="$TMPDIR/gnacstest.tmp"
