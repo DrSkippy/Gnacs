@@ -5,6 +5,7 @@ __license__="Simplified BSD"
 import sys
 import acscsv
 import inspect
+import datetime
 
 # move to acscsv?
 class _field(object):
@@ -34,13 +35,8 @@ class _field(object):
         return res
 
 
-#### parsing and formating objects 
-# 2014-04-22, JM
-#   -- working through them top --> bottom of original twacscsv.py
-#
 # TODO:
 # - convert all class docstrings to consistently use the key1.key2.key3 syntax 
-# - 
 
 
 # notes 
@@ -75,6 +71,61 @@ class field_verb(_field):
         # in any field_* class, add any needed custom parsing here
 
 
+class field_id(_field):
+    """assign to self.value the value in id"""
+    path = ["id"]
+    
+    def __init__(self, json_record):
+        super(
+            field_id
+            , self).__init__(json_record)
+        # self.value starts with tag:search.twitter.....
+        self.value = self.value.split(":")[2]
+
+
+class field_postedtime(_field):
+    """assign to self.value the value in postedTime"""
+    path = ["postedTime"]
+    
+    def __init__(self, json_record):
+        super(
+            field_postedtime
+            , self).__init__(json_record)
+
+
+class field_body(_field):
+    """assign to self.value the value in top-level body"""
+    path = ["body"]
+    
+    def __init__(self, json_record):
+        super(
+            field_body
+            , self).__init__(json_record)
+
+
+class field_link(_field):
+    """assign to self.value the value in top-level link"""
+    path = ["link"]
+    
+    def __init__(self, json_record):
+        super(
+            field_link
+            , self).__init__(json_record)
+
+
+class field_generator_displayname(_field):
+    """assign to self.value the value in generator.displayName"""
+    path = ["generator", "displayName"]
+    
+    def __init__(self, json_record):
+        super(
+            field_generator_displayname
+            , self).__init__(json_record)
+
+
+
+
+
 ########
 # urls
 class field_gnip_urls(_field):
@@ -86,8 +137,10 @@ class field_gnip_urls(_field):
         super(
             field_gnip_urls
             , self).__init__(json_record)
-        # self.value is a list of url & expanded url dicts.
-        self.value = [ x["expanded_url"] for x in self.value ] ]
+        # self.value is (possibly) a list of url & expanded url dicts
+        if self.value != self.default_value:
+            #self.value = [ x["expanded_url"] for x in self.value ] 
+            self.value = str( [ x["expanded_url"] for x in self.value ] ) 
 
 
 class _field_twitter_urls(_field):
@@ -95,7 +148,7 @@ class _field_twitter_urls(_field):
     # nb: there are 3x urls in twitter_entities 
     path = ["twitter_entities", "urls"]
     
-    def __init__(self, json_record, key=None):
+    def __init__(self, json_record, key):
         super(
             _field_twitter_urls
             , self).__init__(json_record)
@@ -110,9 +163,10 @@ class _field_twitter_urls(_field):
                         url_list.append( self.default_value ) 
                 except TypeError:
                     url_list = [ self.default_value ]
-            self.value = url_list
+            #self.value = url_list
+            self.value = str( url_list )
         else:
-            self.value = [ self.default_value ]
+            self.value = str( [ self.default_value ] )
 
 
 class field_twitter_urls_url(_field_twitter_urls):
@@ -124,29 +178,43 @@ class field_twitter_urls_url(_field_twitter_urls):
     def __init__(self, json_record):
         super(
             field_twitter_urls_url
-            , self).__init__(json_record, key="url")
+            , self).__init__(json_record, "url")
 
 
-class field_twitter_expanded_urls(_field_twitter_urls):
+class field_twitter_urls_expanded_url(_field_twitter_urls):
     """assign to self.value the list of 'expanded_url' values within 'twitter_entities', 
     'urls' dict. Inherits from _filed_twitter_urls class.
     """
 
     def __init__(self, json_record):
         super(
-            field_twitter_expanded_urls
-            , self).__init__(json_record, key="expanded_url")
+            field_twitter_urls_expanded_url
+            , self).__init__(json_record, "expanded_url")
 
 
-class field_twitter_display_urls(_field):
+class field_twitter_urls_display_url(_field_twitter_urls):
     """assign to self.value the list of 'display_url' values within 'twitter_entities', 
     'urls' dict. Inherits from _filed_twitter_urls class.
     """
 
     def __init__(self, json_record):
         super(
-            field_twitter_expanded_urls
-            , self).__init__(json_record, key="display_url")
+            field_twitter_urls_display_url
+            , self).__init__(json_record, "display_url")
+
+
+class field_twitter_hashtags_text(_field):
+    """assign to self.value the value of twitter_entities.hashtags.text"""
+    path = ["twitter_entities", "hashtags"]
+
+    def __init__(self, json_record):
+        super(
+            field_twitter_hashtags_text
+            , self).__init__(json_record)
+        # self.value is possibly a list of dicts for each activity hashtag
+        if self.value != self.default_value:
+            self.value = [ x["text"] for x in self.value ] 
+        self.value = str( self.value )
 
 
 ########
@@ -159,7 +227,9 @@ class field_actor_lang(_field):
         super(
             field_actor_lang
             , self).__init__(json_record)
-        # self.value is now a list
+        # self.value is a list, but have only ever seen with one value, so take that one. 
+        # can simply use str( self.value ) if more than one appear someday
+        self.value = self.value[0]
 
 
 class field_gnip_lang(_field):
@@ -167,8 +237,8 @@ class field_gnip_lang(_field):
     
     def __init__(self, json_record):
         super(
-                field_gnip_language
-                , self).__init__(json_record)
+            field_gnip_lang
+            , self).__init__(json_record)
 
 
 class field_twitter_lang(_field):
@@ -179,7 +249,6 @@ class field_twitter_lang(_field):
         super(
             field_twitter_lang
             , self).__init__(json_record)
-        # does twitter_lang ever have > 1 value? (JM)
 
 
 ########
@@ -198,6 +267,7 @@ class field_gnip_rules(_field):
             self.value = [ "{} ({})".format( d["value"], d["tag"] ) for d in self.value ]
         else:
             self.value = [ self.default_value ]
+        self.value = str( self.value )
 
 
 ########
@@ -223,8 +293,9 @@ class field_geo_coords(_field):
     
     def __init__(self, json_record):
         super(
-            field_geo_coordse
+            field_geo_coords
             , self).__init__(json_record)
+        self.value = str( self.value )
 
 
 class field_location_coords(_field):
@@ -236,8 +307,9 @@ class field_location_coords(_field):
             field_location_coords
             , self).__init__(json_record)
         # self.value is a list of lists of floats 
-        self.value = [ str(x) for x in self.value[0] ]
-        # self.value is a list of string-ed lists
+        if self.value != self.default_value: 
+            self.value = str( self.value[0] )
+        # twitter coords are [ lat, lon ]
     
 
 class field_location_type(_field):
@@ -276,10 +348,10 @@ class field_actor_utcoffset(_field):
     
     def __init__(self, json_record):
         super(
-            field_actor_utcOffset
+            field_actor_utcoffset
             , self).__init__(json_record)
         # self.value is a signed integer 
-        self.value = str(self.value)
+        self.value = str( self.value )
 
 
 class field_actor_loc_displayname(_field):
@@ -386,14 +458,26 @@ class field_actor_displayname(_field):
             , self).__init__(json_record)
 
 
-class field_actor_preferredname(_field):
+class field_actor_preferredusername(_field):
     """Assign to self.value the value of actor.preferredUsername"""
     path = ["actor", "preferredUsername"]
     
     def __init__(self, json_record):
         super(
-            field_actor_preferredname
+            field_actor_preferredusername
             , self).__init__(json_record)
+
+
+class field_actor_id(_field):
+    """Assign to self.value the value of actor.id"""
+    path = ["actor", "id"]
+    
+    def __init__(self, json_record):
+        super(
+            field_actor_id
+            , self).__init__(json_record)
+        # self.value has an id:twitter....
+        self.value = self.value.split(":")[2]
 
 
 ########
@@ -407,7 +491,7 @@ class field_gnip_kloutscore(_field):
             field_gnip_kloutscore
             , self).__init__(json_record)
         # self.value is an int 
-        self.value = str(self.value)
+        self.value = str( self.value )
 
 
 class field_actor_followers(_field):
@@ -419,7 +503,7 @@ class field_actor_followers(_field):
             field_actor_followers
             , self).__init__(json_record)
         # self.value is an int 
-        self.value = str(self.value)
+        self.value = str( self.value )
 
 
 class field_actor_friends(_field):
@@ -431,7 +515,7 @@ class field_actor_friends(_field):
             field_actor_friends
             , self).__init__(json_record)
         # self.value is an int 
-        self.value = str(self.value)
+        self.value = str( self.value )
 
 
 class field_actor_lists(_field):
@@ -443,7 +527,7 @@ class field_actor_lists(_field):
             field_actor_lists
             , self).__init__(json_record)
         # self.value is an int 
-        self.value = str(self.value)
+        self.value = str( self.value )
 
 
 class field_actor_statuses(_field):
@@ -455,7 +539,7 @@ class field_actor_statuses(_field):
             field_actor_statuses
             , self).__init__(json_record)
         # self.value is an int 
-        self.value = str(self.value)
+        self.value = str( self.value )
 
 
 ########
@@ -505,7 +589,6 @@ class field_object_id(_field):
     
     def __init__(self, json_record):
         super(
-            #field_structure_id
             field_object_id
             , self).__init__(json_record)
 
@@ -516,15 +599,14 @@ class field_object_postedtime(_field):
     
     def __init__(self, json_record):
         super(
-            #field_structure_postedtime
             field_object_postedtime
             , self).__init__(json_record)
 
 
 
 ############################
-#class Twacs(acscsv.AcsCSV):
-class TwacsCSV(acscsv.AcsCSV):
+#class TwacsCSV(acscsv.AcsCSV):
+class Twacs(acscsv.AcsCSV):
     def __init__(self
             , delim
             , options_keypath
@@ -534,8 +616,10 @@ class TwacsCSV(acscsv.AcsCSV):
             , options_urls
             , options_lang
             , options_influence
-            , options_struct):
-        super(Twacs, self).__init__(delim,options_keypath)
+            , options_struct
+            , options_db
+            ):
+        super(Twacs, self).__init__(delim, options_keypath, options_db)
         self.options_geo = options_geo 
         self.options_user = options_user
         self.options_rules = options_rules
@@ -543,6 +627,7 @@ class TwacsCSV(acscsv.AcsCSV):
         self.options_lang = options_lang
         self.options_influence = options_influence
         self.options_struct = options_struct
+        self.options_db = options_db
         
     def procRecordToList(self, d):
         """
@@ -566,6 +651,7 @@ class TwacsCSV(acscsv.AcsCSV):
                         continue
                     mtype = "Unidentified"
                 record.append('-'.join([acscsv.gnipRemove, mtype]))
+                #TODO: convert gnipDateTime, gnipRemove into classes like everything else
                 record.append(acscsv.gnipDateTime)
                 record.append(msg)
                 return record
@@ -579,21 +665,34 @@ class TwacsCSV(acscsv.AcsCSV):
                 record.append(acscsv.gnipDateTime)
                 record.append('-'.join([acscsv.gnipRemove, verb]))
                 return record
+        except KeyError:
+            record.append(acscsv.gnipError)
+            record.append(acscsv.gnipRemove)
+            return record
         # at this point, it's a valid, non-compliance activity
+        if self.options_db:
+            return self.multi_rec(d, record)
+        #
         return self.csv(d, record)
 
     # start refactor to use objects
-    def csv(self, d, record)
+    def csv(self, d, record):
         try:                            # KeyError exception at EOF
             # always first 2 items 
-            record.append(d["id"])
-            record.append(d["postedTime"])
+#######################
+#            # old code (JM)
+#            record.append(d["id"])
+#            record.append(d["postedTime"])
+#######################
+            record.append( field_id(d).value )
+            record.append( field_postedtime(d).value )
             # add some handling so calling gnacs without a pub is still useful
             #   -put more-specific fields at the beginning to catch them 
             #   -stocktwits is native, so no 'verb' to get here
             obj = d["object"]
             if d["id"].rfind("getglue") != -1 : # getglue 
-                record.append(verb)     # 'body' is inconsistent in gg
+#                record.append(verb)     # 'body' is inconsistent in gg
+                record.append( field_verb(d).value ) 
             elif "foursquareCategories" in obj or "foursquareCheckinOffset" in obj:      # fsq
                 record.append(str(obj["geo"]["coordinates"]))
             elif "wpBlogId" in obj:     # wp
@@ -601,7 +700,8 @@ class TwacsCSV(acscsv.AcsCSV):
             elif "tumblrType" in obj:   # tumblr
                 record.append(obj["tumblrType"])
             elif "body" in d:           # tw, disqus, stocktw,  
-                record.append(self.cleanField(d["body"]))       
+#                record.append(self.cleanField(d["body"]))       
+                record.append( field_body(d).value  )       
             elif "link" in d:           # ng
                 record.append(d["link"])
             else:                       # ? 
@@ -617,16 +717,20 @@ class TwacsCSV(acscsv.AcsCSV):
 #                actor = d["actor"]
 #######################
             if self.options_urls:
-                # breaking this section out into separate classes, (JM) 
-                #       but the if self.options flag will combine them all (consistent 
-                #       current implementation
-                #
                 # we may not need to explicitly call the object's .value attr if the .join(record)
                 #   calls the objects' __repr__ (JM)
-                record.append( self.buildListString( field_gnip_urls(d).value ) ) 
-                record.append( self.buildListString( field_twitter_urls_url(d).value ) ) 
-                record.append( self.buildListString( field_twitter_urls_expanded_url(d).value ) ) 
-                record.append( self.buildListString( field_twitter_urls_display_url(d).value ) ) 
+                #
+                # if ___.value is "None", the buildListString method isn't correct. try having all
+                #   classes store a string as their final self.value
+                #
+#                record.append( self.buildListString( field_gnip_urls(d).value ) ) 
+#                record.append( self.buildListString( field_twitter_urls_url(d).value ) ) 
+#                record.append( self.buildListString( field_twitter_urls_expanded_url(d).value ) ) 
+#                record.append( self.buildListString( field_twitter_urls_display_url(d).value ) ) 
+                record.append( field_gnip_urls(d).value ) 
+                record.append( field_twitter_urls_url(d).value ) 
+                record.append( field_twitter_urls_expanded_url(d).value ) 
+                record.append( field_twitter_urls_display_url(d).value )
 #########################
 #                # old code (JM)
 #                urls = "None"
@@ -663,7 +767,8 @@ class TwacsCSV(acscsv.AcsCSV):
             if self.options_lang:
                 # actor lang
                 try: 
-                    record.append( self.buildListString( field_actor_lang(d).value ) ) 
+#                    record.append( self.buildListString( field_actor_lang(d).value ) ) 
+                    record.append( field_actor_lang(d).value ) 
                 except UnicodeEncodeError, e:
                     record.append("bad-encoding")
                 # gnip lang
@@ -685,7 +790,8 @@ class TwacsCSV(acscsv.AcsCSV):
 #                record.append(tlang)
 #########################
             if self.options_rules:
-                record.append( self.buildListString( field_gnip_rules(d).value )
+#                record.append( self.buildListString( field_gnip_rules(d).value ) )
+                record.append( field_gnip_rules(d).value )
 #########################
 #                # old code (JM)
 #                rules = '[]'
@@ -694,13 +800,15 @@ class TwacsCSV(acscsv.AcsCSV):
 #                record.append(rules)
 #########################
             if self.options_geo:
-                record.append( self.buildListString( field_geo_coords(d).value )  
+#                record.append( self.buildListString( field_geo_coords(d).value ) )  
+                record.append( field_geo_coords(d).value ) 
                 record.append( field_geo_type(d).value )  
-                record.append( self.buildListString( field_location_coords(d).value ) ) 
+#                record.append( self.buildListString( field_location_coords(d).value ) ) 
+                record.append( field_location_coords(d).value ) 
                 record.append( field_location_type(d).value )  
                 record.append( field_location_displayname(d).value )  
                 record.append( field_location_twittercountry(d).value )  
-                record.append( field_location_actor_utcoffset(d).value )  
+                record.append( field_actor_utcoffset(d).value )  
                 record.append( field_actor_loc_displayname(d).value )  
                 record.append( field_gnip_pl_displayname(d).value )  
                 record.append( field_gnip_pl_objecttype(d).value )  
@@ -790,7 +898,7 @@ class TwacsCSV(acscsv.AcsCSV):
                 #
             if self.options_user:
                 record.append( field_actor_displayname(d).value )  
-                record.append( field_actor_preferredUsername(d).value )  
+                record.append( field_actor_preferredusername(d).value )  
 #########################
 #                # old code (JM)
 #                record.append(self.cleanField(actor["displayName"]))
@@ -827,7 +935,6 @@ class TwacsCSV(acscsv.AcsCSV):
 #                record.append(statuses)
 #########################
             if self.options_struct:
-
                 record.append( field_activity_type(d).value )  
                 record.append( field_inreplyto_link(d).value )  
                 record.append( field_object_id(d).value )  
@@ -858,7 +965,6 @@ class TwacsCSV(acscsv.AcsCSV):
 #                record.append(oid)
 #                record.append(opt)
 #########################
-            #
             return record
         except KeyError:
             #sys.stderr.write("Field missing from record (%d), skipping\n"%self.cnt)
@@ -866,8 +972,76 @@ class TwacsCSV(acscsv.AcsCSV):
             record.append(acscsv.gnipRemove)
             return record
 
-    def db_output(self, d):
-        """Explicitly specific the order and fields that get output to specific files."""
-        return [
-                field_gnip_language(d).value, 
-                ]
+    def multi_rec(self, d, record):
+        """Return multiple lists for e.g. writing to separate streams/files""" 
+        ########
+        # need to do a handful of preprocessing steps for various fields. use the 
+        #   object attrs where possible 
+        #
+        # remember that all objects have a string for self.value
+        #
+        # timestamp format
+        t_fmt = "%Y-%m-%dT %H:%M:%S"
+        ##### geotag coords
+        if not eval( field_location_coords(d).value ):  # .value = "None" (no coords)
+            coords = ["None", "None"]
+        else:
+            coords = eval( field_location_coords(d).value )
+        ##### hashtags 
+        # don't know anything about them a priori 
+        hashtag_list = eval( field_twitter_hashtags_text(d).value )
+        n = len(hashtag_list)
+        entity_count = 5            # arb number, defined by table schema
+        if n < entity_count:    # pad list
+            for _ in range(entity_count - n):
+                hashtag_list.append("None")
+        if n > entity_count:    # truncate list
+            hashtag_list = hashtag_list[:entity_count]
+        ##### urls
+#
+#
+#
+# WIP
+#
+#
+
+        #
+        acs_list = [
+                    field_id(d).value 
+                    , field_gnip_rules(d).value 
+                    , datetime.datetime.utcnow().strftime( t_fmt )
+                    , field_postedtime(d).value 
+                    , field_verb(d).value 
+                    , field_actor_id(d).value 
+                    , field_body(d).value 
+                    , field_twitter_lang(d).value 
+                    , field_gnip_lang(d).value 
+                    , field_link(d).value 
+                    , field_generator_displayname(d).value 
+                    , coords[0] 
+                    , coords[1] 
+                    , hashtag_list[0]
+                    , hashtag_list[1]
+                    , hashtag_list[2]
+                    , hashtag_list[3]
+                    , hashtag_list[4]
+
+                    ] 
+        ustatic_list = [
+                        "test_ustatic"
+                        ]
+        udyn_list = [ 
+                    "test_udyn"
+                    ]
+        #
+        flag = "GNIPSPLIT"  # this is hardcoded into gnacs.py, as well. change both if needed!
+        # only need mortar on first two bricks 
+        [ x.append(flag) for x in acs_list, ustatic_list ]
+        combined_list = [] 
+        combined_list.extend(acs_list)
+        combined_list.extend(ustatic_list)
+        combined_list.extend(udyn_list)
+        #
+        return combined_list 
+
+

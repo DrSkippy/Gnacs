@@ -10,6 +10,8 @@ except pkg_resources.DistributionNotFound:
 import sys
 import codecs
 import fileinput
+import re
+import os
 from optparse import OptionParser
 from acscsv import *
 # ujson is 20% faster
@@ -60,6 +62,8 @@ def main():
             default="twitter", help="Publisher (default is twitter), twitter, newsgator, disqus, wordpress, wpcomments, tumblr, foursquare, getglue, stocktwits, stocktwits-native")
     parser.add_option("-k","--keypath", dest="keypath", 
             default=None, help="returns a value from a path of the form 'key:value'")
+    parser.add_option("-D","--database", action="store_true", dest="db", 
+            default=False, help="directs stdout to file objects for uploading to mysql db tables")
     (options, args) = parser.parse_args()
     #
     if options.ver:
@@ -96,8 +100,10 @@ def main():
     elif options.pub.lower().startswith("news") or options.pub.lower().startswith("ng"):
         processing_obj = ngacscsv.NGacsCSV(delim, options.keypath, options.urls, options.user)
     else:
+        # pre-DB default option
         #processing_obj = twacscsv.TwacsCSV(delim, options.keypath, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
-        processing_obj = new_twacs.TwacsCSV(delim, options.keypath, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
+        # refactored twacs code -- should run identically to twacscsv (new option may break e.g. TaSS) 
+        processing_obj = twacsDB.Twacs(delim, options.keypath, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct, options.db)
     #
     cnt = 0
     first_geo = True 
@@ -117,14 +123,23 @@ def main():
             for record in recs:
                 print json_formatter.dumps(record, indent=3, ensure_ascii=False)
             continue 
+        if options.db:
+            # create a new data directory (change as needed)
+            data_dir = os.environ['HOME'] + "/gnacs_db"
+            if not os.path.exists(data_dir):
+                os.mkdir(data_dir)
+            # open 3 file objects to use below
+            acs_f = open( data_dir + '/activities_table.sql', 'wb') 
+            ustatic_f = open( data_dir + '/users_static_table.sql', 'wb') 
+            udyn_f = open( data_dir + '/users_dynamic_table.sql', 'wb') 
         for record in recs:
             if len(record) == 0:
+                # ignore blank lines
                 continue
             try:
                 if options.explain:
                     record = reflect_json.reflect_json(record)
                     sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
-                #
                 elif options.geojson:
                     # geo-tag coords
                     geo_rec = processing_obj.asGeoJSON(cnt, record)
@@ -133,6 +148,18 @@ def main():
                             sys.stdout.write(",")
                         sys.stdout.write(json.dumps(geo_rec))
                         first_geo = False
+                elif options.db:
+                    compRE = re.compile(r"GNIPREMOVE") 
+                    tmp_combined_rec = processing_obj.procRecord(cnt, record)
+                    if compRE.search(tmp_combined_rec): 
+                        sys.stderr.write("Compliance activity skipped ({}) {}\n".format(cnt, tmp_combined_rec) ) 
+                        continue
+                    # otherwise, write to appropriate file objects (from above)
+                    flag = "GNIPSPLIT"      # also hardcoded in twacsDB.py
+                    acs_str, ustatic_str, udyn_str = tmp_combined_rec.split(flag) 
+                    acs_f.write(acs_str + "\n")
+                    ustatic_f.write(ustatic_str + "\n")
+                    udyn_f.write(udyn_str + "\n")
                 else:
                     sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
             # catch I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')

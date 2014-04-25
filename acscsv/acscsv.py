@@ -30,12 +30,13 @@ class TestAcsCSV(unittest.TestCase):
         self.assertEquals(b.cleanField(a), "None")
 
 class AcsCSV(object):
-    def __init__(self, delim, options_keypath):
+    def __init__(self, delim, options_keypath, options_db):
         self.delim = delim
         if delim == "":
             print >>sys.stderr, "Warning - Output has Null delimiter"
         self.cnt = None
         self.options_keypath = options_keypath
+        self.options_db = options_db
 
     def cleanField(self,f):
         try:
@@ -47,7 +48,11 @@ class AcsCSV(object):
             pass
         except TypeError:
             f = "None"
-        return f.strip().replace("\n"," ").replace("\r"," ").replace(self.delim, " ")
+        return f.strip(
+                ).replace("\n"," "
+                ).replace("\r"," "
+                ).replace(self.delim, " "
+                )
 
     def buildListString(self,l):
         # unicode output of list (without u's)
@@ -69,6 +74,9 @@ class AcsCSV(object):
     def asString(self,l):
         if l is None:
             return None
+        # debug
+        #print >>sys.stderr, "list l={}".format(l) 
+        #
         return self.delim.join(l)
 
     def procRecord(self, cnt, x):
@@ -76,6 +84,9 @@ class AcsCSV(object):
         source_list = self.procRecordToList(x)
         if self.options_keypath:
             source_list.append(self.keyPath(x))
+        # ensure no pipes, newlines, etc
+        #TODO: remove calls to cleanField() in submodules
+        source_list = [ self.cleanField(x) for x in source_list ]
         return self.asString(source_list)
 
     def asGeoJSON(self, cnt, x):
