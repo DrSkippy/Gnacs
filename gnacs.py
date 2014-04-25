@@ -96,7 +96,8 @@ def main():
     elif options.pub.lower().startswith("news") or options.pub.lower().startswith("ng"):
         processing_obj = ngacscsv.NGacsCSV(delim, options.keypath, options.urls, options.user)
     else:
-        processing_obj = twacscsv.TwacsCSV(delim, options.keypath, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
+        #processing_obj = twacscsv.TwacsCSV(delim, options.keypath, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
+        processing_obj = new_twacs.TwacsCSV(delim, options.keypath, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
     #
     cnt = 0
     first_geo = True 
