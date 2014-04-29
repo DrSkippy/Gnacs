@@ -110,6 +110,7 @@ def main():
     #
     for r in fileinput.FileInput(args,openhook=fileinput.hook_compressed):
         cnt += 1
+        r = r.decode('utf8')    # first slice of the unicode sandwich: convert bytes to unicode code point
         try:
             recs = [json.loads(r.strip())]
         except ValueError:
@@ -128,10 +129,10 @@ def main():
             data_dir = os.environ['HOME'] + "/gnacs_db"
             if not os.path.exists(data_dir):
                 os.mkdir(data_dir)
-            # open 3 file objects to use below
-#            acs_f = open( data_dir + '/activities_table.sql', 'wb') 
-#            ustatic_f = open( data_dir + '/users_static_table.sql', 'wb') 
-#            udyn_f = open( data_dir + '/users_dynamic_table.sql', 'wb') 
+            # open 3 file objects for use below
+            acs_f = open( data_dir + '/activities_table.sql', 'ab') 
+            ustatic_f = open( data_dir + '/users_static_table.sql', 'ab') 
+            udyn_f = open( data_dir + '/users_dynamic_table.sql', 'ab') 
         for record in recs:
             if len(record) == 0:
                 # ignore blank lines
@@ -157,13 +158,19 @@ def main():
                     # otherwise, write to appropriate file objects (from above)
                     flag = "GNIPSPLIT"      # also hardcoded in twacsDB.py
                     acs_str, ustatic_str, udyn_str = tmp_combined_rec.split(flag) 
-                    sys.stdout.write("\n###### acs_str ######\n{}".format(acs_str) )
-                    sys.stdout.write("\n###### ustatic_str ######\n{}".format(ustatic_str) )
-                    sys.stdout.write("\n###### udyn_str ######\n{}".format(udyn_str) )
+                    # clean up leading/trailing pipes & close the unicode sandwich (code points ==> bytes)
+                    acs_str = acs_str.strip("|").encode('utf8')
+                    ustatic_str = ustatic_str.strip("|").encode('utf8')
+                    udyn_str = udyn_str.strip("|").encode('utf8')
                     #
-#                    acs_f.write(acs_str + "\n")
-#                    ustatic_f.write(ustatic_str + "\n")
-#                    udyn_f.write(udyn_str + "\n")
+                    # debug
+#                    sys.stdout.write("\n\n###### acs_str ######\n{}".format(acs_str) )
+#                    sys.stdout.write("\n###### ustatic_str ######\n{}".format(ustatic_str) )
+#                    sys.stdout.write("\n###### udyn_str ######\n{}".format(udyn_str) )
+                    #
+                    acs_f.write(acs_str + "\n")
+                    ustatic_f.write(ustatic_str + "\n")
+                    udyn_f.write(udyn_str + "\n")
                 else:
                     sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
             # catch I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
@@ -178,7 +185,9 @@ def main():
                     pass
                 break
             except UnicodeEncodeError, e:
-                sys.stderr.write("Bad unicode uncoding: record (%d): %s\n"%(cnt, e))
+                sys.stderr.write("Bad unicode encoding: error={} ({})\n".format(e, cnt))
+                # use this if you want to see the full troublesome records  
+                #sys.stderr.write("Bad unicode encoding: error={} ({}), record={}\n".format(e, cnt, record))
 
     if options.geojson:
         # sys.stdout.write(json.dumps(geo_d) + "\n")

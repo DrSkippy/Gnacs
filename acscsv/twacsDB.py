@@ -17,6 +17,7 @@ class _field(object):
     by overwriting the "path" list. 
     """
     # default values, can be overwritten in custom classes 
+    default_t_fmt = "%Y-%m-%d %H:%M:%S"
     default_value = "None"
     value = None
     value_list = []
@@ -26,6 +27,7 @@ class _field(object):
         self.value = self.walk_path(json_record)
 
     def __repr__(self):
+        # should this be doing some unicode encoding?
         return self.value
 
     def walk_path(self, json_record):
@@ -198,6 +200,16 @@ class field_link(_field):
 #            , self).__init__(json_record)
 
 
+class field_twitter_lang(_field):
+    """assign to self.value the value of top-level 'twitter_lang'"""
+    path = ["twitter_lang"]
+    
+#    def __init__(self, json_record):
+#        super(
+#            field_twitter_lang
+#            , self).__init__(json_record)
+
+
 class field_generator_displayname(_field):
     """assign to self.value the value in generator.displayName"""
     path = ["generator", "displayName"]
@@ -226,6 +238,21 @@ class field_gnip_urls(_field):
         if self.value != self.default_value:
             self.value = str( [ x["expanded_url"] for x in self.value ] ) 
 
+
+class field_gnip_lang(_field):
+    path = ["gnip","language","value"]
+    
+#    def __init__(self, json_record):
+#        super(
+#            field_gnip_lang
+#            , self).__init__(json_record)
+
+
+
+
+####################
+#   'twitter_entities' fields 
+####################
 
 class _field_twitter_urls(_field):
     """
@@ -327,12 +354,12 @@ class field_twitter_hashtags_text_DB(field_twitter_hashtags_text):
             field_twitter_hashtags_text_DB
             , self).__init__(json_record)
         # self.value is either a list of hashtag texts for each activity hashtag or default_value
-        if self.value == self.default_value or len(self.value) == 0:
-            self.value = [ self.default_value ]*limit
-        else:   # found something in the list
-            self.value = self.fix_length( self.value, limit ) 
-        # 
-        self.value_list = self.value
+        if self.value == self.default_value: #or len(self.value) == 0:
+            self.value_list = [ self.default_value ]*limit
+        else:   # value_list should be a list of 'text's 
+            self.value_list = self.fix_length( self.value_list, limit ) 
+        #print >>sys.stderr, "self.value={} (type={})".format(self.value, type(self.value))
+        #print >>sys.stderr, "self.value_list={} (type={})".format(self.value_list, type(self.value_list))
 
 
 class field_twitter_symbols_text_DB(_field):
@@ -348,6 +375,7 @@ class field_twitter_symbols_text_DB(_field):
             field_twitter_symbols_text_DB
             , self).__init__(json_record)
         # self.value is possibly a list of dicts for each activity symbol 
+        #print >>sys.stderr, "self.value={} (type={})".format(self.value, type(self.value))
         if self.value == self.default_value or len(self.value) == 0:
             self.value_list = [ self.default_value ]*limit
         else:   # found something in the list
@@ -360,6 +388,7 @@ class field_twitter_symbols_text_DB(_field):
         # self.value is now a list of length 'limit' with 
         #  some combination of symbol text (str) and "None"
         self.value = str( self.value_list ) 
+        #print >>sys.stderr, "self.value={} (type={})".format(self.value, type(self.value))
         #print >>sys.stderr, "self.value_list={} (type={})".format(self.value_list, type(self.value_list))
 
 
@@ -374,62 +403,56 @@ class field_twitter_mentions_name_id_DB(_field):
         super(
             field_twitter_mentions_name_id_DB
             , self).__init__(json_record)
-#        print >>sys.stderr, "called field_twitter_mentions_name_id_DB"
-#        print >>sys.stderr, "self.value={}".format(self.value)
         # self.value is possibly a list of dicts for each activity user mention 
         if self.value == self.default_value or len(self.value) == 0:
-            self.value = [ self.default_value ]*(2*limit)
+            self.value_list = [ self.default_value ]*(2*limit)
         else:   # found something in the list
             #self.value = [ [ x["screen_name"], x["id_str"] ]  for x in self.value ]
             # couldn't get the nesting correct with inline list comp on self.value... (JM)
             tmp = []
             [ tmp.extend( [ x["screen_name"], x["id_str"] ] ) for x in self.value ]
-            self.value = tmp
-#            print >>sys.stderr, "self.value={}".format(self.value)
-            current_len = len(self.value)
+            self.value_list = tmp
+            current_len = len(self.value_list)
             if current_len < limit:         # need to pad list
-                #[ self.value.extend( ["None", "None"] ) for _ in range(limit - current_len) ]
                 for _ in range( limit - current_len):
-                    self.value += ["None", "None"]
-#                print >>sys.stderr, "self.value={}".format(self.value)
+                    self.value_list += ["None", "None"]
             elif current_len > limit:         # need to truncate list
-                #self.value = self.value[:current_len]
-                self.value = self.value[:limit]
-#                print >>sys.stderr, "self.value={}".format(self.value)
-            # self.value is now a list of lists, with total length 2*limit. now flatten it:
-            #self.value = list( itertools.chain.from_iterable( self.value ) ) 
-#        print >>sys.stderr, "self.value={}\n\n".format(self.value)
-        self.value_list = self.value
-        print >>sys.stderr, "self.value_list={} (type={})".format(self.value_list, type(self.value_list))
+                self.value_list = self.value_list[:limit]
+        self.value = str( self.value_list )
 
 
-class field_twitter_media_id_DB(_field):
+class field_twitter_media_id_url_DB(_field):
     """
-    Assign to self.value a list of twitter_entities.media.id
+    Assign to self.value a list of twitter_entities.media.id and .expanded_url pairs
     """
     path = ["twitter_entities", "media"]
 
-    def __init__(self, json_record):
+    def __init__(self, json_record, limit=5):
         super(
-            field_twitter_media_id_DB 
+            field_twitter_media_id_url_DB 
             , self).__init__(json_record)
         # self.value is possibly a list of dicts for each activity media object 
         if self.value == self.default_value or len(self.value) == 0:
-            self.value = [ self.default_value ]*limit
-#
-# WIP
-#
+            self.value_list = [ self.default_value ]*(2*limit)
+        else:   # found something in the list
+            tmp = []
+            [ tmp.extend( [ x["id"], x["expanded_url"] ] ) for x in self.value ]
+            self.value_list = tmp
+            current_len = len(self.value_list)
+            if current_len < limit:         # need to pad list
+                for _ in range( limit - current_len):
+                    self.value_list += ["None", "None"]
+            elif current_len > limit:         # need to truncate list
+                self.value_list = self.value_list[:limit]
+        self.value = str( self.value_list )
 
 
+####################
+#   'actor' fields 
+####################
 
-
-
-
-
-########
-# langs 
 class field_actor_lang(_field):
-    """assign to self.value the value of 'actor', 'languages'"""
+    """assign to self.value the value of actor.languages"""
     path = ["actor", "languages"]
     
     def __init__(self, json_record):
@@ -441,23 +464,41 @@ class field_actor_lang(_field):
         self.value = self.value[0]
 
 
-class field_gnip_lang(_field):
-    path = ["gnip","language","value"]
+class field_actor_postedtime(_field):
+    """Assign to self.value the value of actor.postedTime"""
+    path = ["actor", "postedTime"]
     
-#    def __init__(self, json_record):
-#        super(
-#            field_gnip_lang
-#            , self).__init__(json_record)
+    def __init__(self, json_record):
+        super(
+            field_actor_postedtime 
+            , self).__init__(json_record)
+        # self.value is a datetime string 
+        input_fmt = "%Y-%m-%dT%H:%M:%S"
+        self.value = datetime.strptime( 
+                        self.value, input_fmt 
+                        ).strftime( 
+                            self.default_t_fmt ) 
 
 
-class field_twitter_lang(_field):
-    """assign to self.value the value of top-level 'twitter_lang'"""
-    path = ["twitter_lang"]
-    
-#    def __init__(self, json_record):
-#        super(
-#            field_twitter_lang
-#            , self).__init__(json_record)
+class field_actor_username(_field):
+    """assign to self.value the value of actor.preferredUsername"""
+    path = ["actor", "preferredUsername"]
+
+
+class field_actor_displayname(_field):
+    """assign to self.value the value of actor.displayName"""
+    path = ["actor", "displayName"]
+
+
+class field_actor_link(_field):
+    """assign to self.value the value of actor.link"""
+    path = ["actor", "link"]
+
+
+class field_actor_summary(_field):
+    """assign to self.value the value of actor.summary"""
+    path = ["actor", "summary"]
+
 
 
 ########
@@ -994,28 +1035,15 @@ class Twacs(acscsv.AcsCSV):
         at the gnacs.py level and written to separate files.      
         """
         # timestamp format
-        t_fmt = "%Y-%m-%dT%H:%M:%S"
+        t_fmt = "%Y-%m-%d %H:%M:%S"
+        now = datetime.datetime.utcnow().strftime( t_fmt )
 
-        # this is now abstracted to the individual classes (via default constructor args)
-        # field limit in various list tables 
-        limit = 5
-    
-        # for convenience (and tidiness) here, some of these new classes will have self.value
-        #  be an actual list, so that its length can be arbitrarily defined in one place (just above) 
-
-#
-#   replace value with list_value
-#   remove empty constructors
-#   make the constructor do all the work 
-#
-
-        #print >>sys.stderr, "field_twitter_mentions_name_id_DB(d, limit).value={}".format(field_twitter_mentions_name_id_DB(d, limit).value)
         acs_list = [
                     # <class>.value is a string 
                     # <class>.value_list is a list 
                     field_id(d).value 
                     , field_gnip_rules(d).value 
-                    , datetime.datetime.utcnow().strftime( t_fmt )
+                    , now 
                     , field_postedtime(d).value 
                     , field_verb(d).value 
                     , field_actor_id(d).value 
@@ -1027,34 +1055,31 @@ class Twacs(acscsv.AcsCSV):
                     ] \
                     + field_geo_coords_DB(d).value_list \
                     + field_twitter_hashtags_text_DB(d).value_list \
-                    + field_twitter_symbols_text_DB(d).value \
-                    + field_twitter_mentions_name_id_DB(d).value_list 
-
-#
-#   WIP
-#
-
-
-
-#                    + field_twitter_mentions_name_id_DB(d, limit).value_list 
-#                    + itertools.chain.from_iterable(                
-#                        zip( self.fix_length( field_twitter_urls_url(d).value, limit ) 
-#                            , self.fix_length( field_twitter_urls_expanded_url(d).value, limit ) 
-#                        )
-#                    )
-                    # call the fix_length method in the constructor of the class (pass the length from here)
-                    #   (as an optional kwarg)
-                    
-                    # ^ add the media info
-
+                    + field_twitter_symbols_text_DB(d).value_list \
+                    + field_twitter_mentions_name_id_DB(d).value_list \
+                    + field_twitter_media_id_url_DB(d).value_list 
 
         ustatic_list = [
-                        "test_ustatic"
+                    now 
+                    , field_actor_id(d).value 
+                    , field_id(d).value         # this needs to be updated programatically in an actual app 
+                    , field_actor_postedtime(d).value 
+                    , field_actor_username(d).value 
+                    , field_actor_displayname(d).value 
+                    , field_actor_link(d).value 
+                    , field_actor_summary(d).value 
+
                         ]
+
+
+
+
+
         udyn_list = [ 
                     "test_udyn"
                     ]
         #
+        # consider instead sending the combined list and an arbitrary list of positions to split it
         flag = "GNIPSPLIT"  # this is hardcoded into gnacs.py, as well. change both if needed!
         # only need mortar on first two bricks 
         [ x.append(flag) for x in acs_list, ustatic_list ]
