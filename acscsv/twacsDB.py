@@ -6,6 +6,7 @@ import sys
 import acscsv
 import inspect
 import datetime
+import itertools
 
 # move to acscsv?
 class _field(object):
@@ -15,8 +16,10 @@ class _field(object):
     this default when needed. Subclasses should also define the keypath to the desired location
     by overwriting the "path" list. 
     """
+    # default values, can be overwritten in custom classes 
     default_value = "None"
     value = None
+    value_list = []
     path = []
 
     def __init__(self, json_record):
@@ -35,8 +38,45 @@ class _field(object):
         return res
 
 
+    def fix_length(self, iterable, limit=None):
+        """
+        Takes an iterable (typically a list) and an optional maximum length (limit). 
+        If limit is not given, and the input iterable is not equal to self.default_value
+        (typically "None"), the input iterable is returned. If limit is given, the return
+        value is a list that is either truncated to the first limit items, or padded 
+        with self.default_value until it is of size limit 
+        """
+        res = [] 
+
+        if limit is None:
+            # no limits on the length of the result, so just return the original iterable
+            res = iterable
+        else:
+            if iterable == self.default_value or len(iterable) == 0:
+                # if walk_path() finds the final key, but the value is an empty list 
+                #   (common for e.g. the contents of twitter_entities) 
+                #   overwrite self.value with a list of self.default_value and of length limit
+                res = [ self.default_value ]*limit
+            else:
+                # found something useful in the iterable, either pad the list or truncate 
+                #   to end up with something of the proper length 
+                current_length = len( iterable ) 
+                if current_length < limit:
+                    res = iterable + [ self.default_value 
+                                        for _ in range(limit - current_length) ]
+                else:  
+                    res = iterable[:limit]
+        return res
+
+
+
+
 # TODO:
-# - convert all class docstrings to consistently use the key1.key2.key3 syntax 
+# - test removing the super() call if only overwriting 'path'
+# - convert all class docstrings to consistently use the key1.key2.key3 format 
+# - choose an ordering for the field classes that makes sense / is managable and maintainable 
+# - abstract all list extractions & padding (e.g fields in twitter_entities) to general 
+#       class/method a la _field() class
 
 
 # notes 
@@ -49,13 +89,58 @@ class _field(object):
 # where possible, avoid mixing camelCase and underscore_case by collapsing camelCase 
 # keys into lowercase e.g. camelcase. (JM)
 #
-# - on self.value types...
-# in order to do the final list join, all classes must end with self.value as either a string 
-# or a list (which will be converted to a string using acscsv.listBuildString() within the 
-# csv() method (JM)
+# - on subclassing...
+# all classes should reach back to the _field class, which does the JSON walk and sets the initial
+# self.value. the first round of subclasses inherit from _field and update self.value to be backward
+# compatible to older gnacs. in order to do further processing or create custom output, you can also 
+# subclass the existing field_* classes and add your processing in the class constructor. this should 
+# allows us to follow the "unix philosophy" and keep building on these classes. Note that the classes
+# currently ending in _DB() are leaving self.value in a mix of str and list states. 
 #
+# - on self.value types...
+# in order to do the final list join, all classes must end with self.value as a string. to maintain 
+# backward compatibility, all classes currently result in similar self.value fields as before. now, 
+# when you need to slightly modify the output (or create wholly different, custom output), you can 
+# start by inheriting from the most basic class of that type, and manipulate self.value accordingly.
 #
  
+class example_class(_field):
+    """
+    Assign to self.value the value of zig.zag . This is the dictionary created by the user's chosen
+    values of zig and zag (at the time of account creation. 
+
+    Your real class should begin with 'field_' in order to be included in the test suite.
+    """
+    # each new class should overwrite the self.path variable with a list of the appropriate keys
+    #   that lead to the field of interest
+    path = ["zig", "zag"]               
+
+    # if the final result to be used in the custom csv function is most appropriately a list, 
+    #   reassign self.value_list so the code is easier to read in the assembly/output portion 
+    value_list = []
+
+    def __init__(self, json_record):
+        """
+        Calls parent constructor, which walks the specified dict path to find appropriate value
+        to store in self.value. This __init__() only needs to be included if there is further 
+        processing to be done on self.value e.g. slicing a list/string/other computations."""
+        super(
+                example_class
+                , self).__init__(json_record)
+        # include a helpful note here for the next user that describes what self.value becomes, 
+        #   and then again at the final state
+        # self.value is now a dictionary of magical unicorns 
+        self.value = "|".join( [ x["rainbows"] for x in self.value ] )
+        # self.value is now a pipe-delimited string of the values corresponding to the 'rainbow' keys 
+
+        self.value_list = self.value.split("|")
+        # self.value_list is now a list of the 'rainbow' keys (as an example)
+
+
+####################
+#   top-level keys 
+####################
+
 class field_verb(_field):
     """assign to self.value the value of top-level 'verb' key"""
     # specify path to desired field as a list of dict keys 
@@ -63,11 +148,11 @@ class field_verb(_field):
     # if needed, overwrite default_value
     default_value = "Unidentified meta message"
     
-    def __init__(self, json_record):
-        """Calls base constructor, which walks the specified dict path to find appropriate value"""
-        super(
-                field_verb
-                , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        """Calls base constructor, which walks the specified dict path to find appropriate value"""
+#        super(
+#                field_verb
+#                , self).__init__(json_record)
         # in any field_* class, add any needed custom parsing here
 
 
@@ -79,7 +164,7 @@ class field_id(_field):
         super(
             field_id
             , self).__init__(json_record)
-        # self.value starts with tag:search.twitter.....
+        # self.value starts with tag:search.twitter..... remove all but the actual id 
         self.value = self.value.split(":")[2]
 
 
@@ -87,50 +172,50 @@ class field_postedtime(_field):
     """assign to self.value the value in postedTime"""
     path = ["postedTime"]
     
-    def __init__(self, json_record):
-        super(
-            field_postedtime
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_postedtime
+#            , self).__init__(json_record)
 
 
 class field_body(_field):
     """assign to self.value the value in top-level body"""
     path = ["body"]
     
-    def __init__(self, json_record):
-        super(
-            field_body
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_body
+#            , self).__init__(json_record)
 
 
 class field_link(_field):
     """assign to self.value the value in top-level link"""
     path = ["link"]
     
-    def __init__(self, json_record):
-        super(
-            field_link
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_link
+#            , self).__init__(json_record)
 
 
 class field_generator_displayname(_field):
     """assign to self.value the value in generator.displayName"""
     path = ["generator", "displayName"]
     
-    def __init__(self, json_record):
-        super(
-            field_generator_displayname
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_generator_displayname
+#            , self).__init__(json_record)
 
 
+####################
+#   'gnip' fields 
+####################
+#
+# TODO: use self.walk_json(self.value) to get the second-level values (JM) 
 
-
-
-########
-# urls
 class field_gnip_urls(_field):
     """assign to self.value the list of 'expanded_url' values within 'gnip', 'urls'"""
-    # nb: there exists a t.co url
     path = ["gnip", "urls"]
     
     def __init__(self, json_record):
@@ -139,12 +224,16 @@ class field_gnip_urls(_field):
             , self).__init__(json_record)
         # self.value is (possibly) a list of url & expanded url dicts
         if self.value != self.default_value:
-            #self.value = [ x["expanded_url"] for x in self.value ] 
             self.value = str( [ x["expanded_url"] for x in self.value ] ) 
 
 
 class _field_twitter_urls(_field):
-    """base class for accessing multiple url fields within 'twitter_entities', 'urls'"""
+    """
+    Base class for accessing arbitrary url fields within twitter_entities.urls . Takes 
+    a key that addresses the particular value within twitter_entities_urls . Assigns 
+    to self.value_list a string representation of the corresponding url list (or the 
+    default value in a list). 
+    """
     # nb: there are 3x urls in twitter_entities 
     path = ["twitter_entities", "urls"]
     
@@ -167,6 +256,8 @@ class _field_twitter_urls(_field):
             self.value = str( url_list )
         else:
             self.value = str( [ self.default_value ] )
+        #
+        self.value_list = eval( self.value )
 
 
 class field_twitter_urls_url(_field_twitter_urls):
@@ -175,10 +266,12 @@ class field_twitter_urls_url(_field_twitter_urls):
     Inherits from _filed_twitter_urls class.
     """
     
-    def __init__(self, json_record):
+    def __init__(self, json_record, limit=None):
         super(
             field_twitter_urls_url
             , self).__init__(json_record, "url")
+        if limit is not None:
+            self.value = self.fix_length( self.value, limit )
 
 
 class field_twitter_urls_expanded_url(_field_twitter_urls):
@@ -204,17 +297,133 @@ class field_twitter_urls_display_url(_field_twitter_urls):
 
 
 class field_twitter_hashtags_text(_field):
-    """assign to self.value the value of twitter_entities.hashtags.text"""
+    """Assign to self.value a list of twitter_entities.hashtags 'texts'"""
     path = ["twitter_entities", "hashtags"]
+
+    # consider abstracting the path to a parent class and subclassing for specific fields
 
     def __init__(self, json_record):
         super(
             field_twitter_hashtags_text
             , self).__init__(json_record)
         # self.value is possibly a list of dicts for each activity hashtag
-        if self.value != self.default_value:
-            self.value = [ x["text"] for x in self.value ] 
-        self.value = str( self.value )
+        if self.value != self.default_value and len(self.value) > 0:
+            self.value_list = [ x["text"] for x in self.value ] 
+            self.value = str( self.value_list ) 
+        # hashtags are an existing feature in gnacs, so extend this class for 
+        #   the db-specific configuration...
+        #print >>sys.stderr, "self.value_list={} (type={})".format(self.value_list, type(self.value_list))
+
+
+class field_twitter_hashtags_text_DB(field_twitter_hashtags_text):
+    """
+    Combine the first 'limit' hashtags found in the payload into a list and assign to 
+    self.value. If there are less than 'limit', the list is padded with 
+    self.default_value 
+    """
+
+    def __init__(self, json_record, limit=5):
+        super(
+            field_twitter_hashtags_text_DB
+            , self).__init__(json_record)
+        # self.value is either a list of hashtag texts for each activity hashtag or default_value
+        if self.value == self.default_value or len(self.value) == 0:
+            self.value = [ self.default_value ]*limit
+        else:   # found something in the list
+            self.value = self.fix_length( self.value, limit ) 
+        # 
+        self.value_list = self.value
+
+
+class field_twitter_symbols_text_DB(_field):
+    """
+    Assign to self.value a list of twitter_entities.symbols 'text's.
+    This one is a little experimental... haven't seen it in the wild (Activity Streams) yet, 
+    so using https://blog.twitter.com/2013/symbols-entities-tweets as the template.
+    """
+    path = ["twitter_entities", "symbols"]
+
+    def __init__(self, json_record, limit=5):
+        super(
+            field_twitter_symbols_text_DB
+            , self).__init__(json_record)
+        # self.value is possibly a list of dicts for each activity symbol 
+        if self.value == self.default_value or len(self.value) == 0:
+            self.value_list = [ self.default_value ]*limit
+        else:   # found something in the list
+            current_len = len(self.value)
+            if current_len < limit:         # need to pad list
+                [ self.value_list.append("None") for _ in range(limit - current_len) ]
+            elif current_len > limit:         # need to truncate list
+                #self.value = self.value[:current_len]
+                self.value_list = self.value_list[:limit]
+        # self.value is now a list of length 'limit' with 
+        #  some combination of symbol text (str) and "None"
+        self.value = str( self.value_list ) 
+        #print >>sys.stderr, "self.value_list={} (type={})".format(self.value_list, type(self.value_list))
+
+
+class field_twitter_mentions_name_id_DB(_field):
+    """
+    Assign to self.value a list of 'limit' twitter_entities.user_mentions.screen_name and .id pairs 
+    (in order, but in a flat list).
+    """
+    path = ["twitter_entities", "user_mentions"]
+
+    def __init__(self, json_record, limit=5):
+        super(
+            field_twitter_mentions_name_id_DB
+            , self).__init__(json_record)
+#        print >>sys.stderr, "called field_twitter_mentions_name_id_DB"
+#        print >>sys.stderr, "self.value={}".format(self.value)
+        # self.value is possibly a list of dicts for each activity user mention 
+        if self.value == self.default_value or len(self.value) == 0:
+            self.value = [ self.default_value ]*(2*limit)
+        else:   # found something in the list
+            #self.value = [ [ x["screen_name"], x["id_str"] ]  for x in self.value ]
+            # couldn't get the nesting correct with inline list comp on self.value... (JM)
+            tmp = []
+            [ tmp.extend( [ x["screen_name"], x["id_str"] ] ) for x in self.value ]
+            self.value = tmp
+#            print >>sys.stderr, "self.value={}".format(self.value)
+            current_len = len(self.value)
+            if current_len < limit:         # need to pad list
+                #[ self.value.extend( ["None", "None"] ) for _ in range(limit - current_len) ]
+                for _ in range( limit - current_len):
+                    self.value += ["None", "None"]
+#                print >>sys.stderr, "self.value={}".format(self.value)
+            elif current_len > limit:         # need to truncate list
+                #self.value = self.value[:current_len]
+                self.value = self.value[:limit]
+#                print >>sys.stderr, "self.value={}".format(self.value)
+            # self.value is now a list of lists, with total length 2*limit. now flatten it:
+            #self.value = list( itertools.chain.from_iterable( self.value ) ) 
+#        print >>sys.stderr, "self.value={}\n\n".format(self.value)
+        self.value_list = self.value
+        print >>sys.stderr, "self.value_list={} (type={})".format(self.value_list, type(self.value_list))
+
+
+class field_twitter_media_id_DB(_field):
+    """
+    Assign to self.value a list of twitter_entities.media.id
+    """
+    path = ["twitter_entities", "media"]
+
+    def __init__(self, json_record):
+        super(
+            field_twitter_media_id_DB 
+            , self).__init__(json_record)
+        # self.value is possibly a list of dicts for each activity media object 
+        if self.value == self.default_value or len(self.value) == 0:
+            self.value = [ self.default_value ]*limit
+#
+# WIP
+#
+
+
+
+
+
 
 
 ########
@@ -235,20 +444,20 @@ class field_actor_lang(_field):
 class field_gnip_lang(_field):
     path = ["gnip","language","value"]
     
-    def __init__(self, json_record):
-        super(
-            field_gnip_lang
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_gnip_lang
+#            , self).__init__(json_record)
 
 
 class field_twitter_lang(_field):
     """assign to self.value the value of top-level 'twitter_lang'"""
     path = ["twitter_lang"]
     
-    def __init__(self, json_record):
-        super(
-            field_twitter_lang
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_twitter_lang
+#            , self).__init__(json_record)
 
 
 ########
@@ -278,10 +487,10 @@ class field_geo_type(_field):
     tweet geotag."""
     path = ["geo", "type"]
     
-    def __init__(self, json_record):
-        super(
-            field_geo_type
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_geo_type
+#            , self).__init__(json_record)
 
 
 class field_geo_coords(_field):
@@ -298,48 +507,70 @@ class field_geo_coords(_field):
         self.value = str( self.value )
 
 
-class field_location_coords(_field):
-    """assign to self.value the value of location.geo.coordinates ."""
-    path = ["location", "geo", "coordinates"]
+class field_geo_coords_DB(field_geo_coords):
+    """
+    Modify self.value assigned in the field_geo_coords class. Assign self.value_list to a list 
+    of either  [lat, long] or 2x self.default_value. 
+    """
     
     def __init__(self, json_record):
         super(
-            field_location_coords
+            field_geo_coords_DB
             , self).__init__(json_record)
-        # self.value is a list of lists of floats 
-        if self.value != self.default_value: 
-            self.value = str( self.value[0] )
-        # twitter coords are [ lat, lon ]
-    
+        # self.value is a str of either default_value or '[lat, lon]' 
+        if self.value == self.default_value:
+            self.value_list = [ self.default_value, self.default_value ]
+        else:
+            self.value_list = eval( self.value )
+        #print >>sys.stderr, "field_geo_coords_DB.value_list={} (type={})".format(self.value_list, type(self.value_list))
+ 
 
 class field_location_type(_field):
     """assign to self.value the value of location.geo.type ."""
     path = ["location", "geo", "type"]
     
-    def __init__(self, json_record):
-        super(
-            field_location_type
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_location_type
+#            , self).__init__(json_record)
 
 
 class field_location_displayname(_field):
     """assign to self.value the value of 'location', 'displayName' """
     path = ["location", "displayName"]
     
+#    def __init__(self, json_record):
+#        super(
+#            field_location_displayname
+#            , self).__init__(json_record)
+
+
+class field_location_coords(_field):
+    """
+    Assign to self.value the value of location.geo.coordsindates . This the bounding 
+    polygon from the original activity payload from Twitter.
+    """
+    path = ["location", "geo", "coordinates"]
+
     def __init__(self, json_record):
         super(
-            field_location_displayname
+            field_location_coords
             , self).__init__(json_record)
+        # self.value is either default_value or a list of lists of polygon vertices (lists) 
+        if self.value == self.default_value:
+            self.value = [ self.default_value ]
+        else:
+            self.value = str( self.value[0] ) 
 
 
 class field_location_twittercountry(_field):
     """assign to self.value the value of 'location', 'twitter_country_code' """
     path = ["location", "twitter_country_code"]
     
-    def __init__(self, json_record):
-        super(
-            field_location_twittercountry
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_location_twittercountry
+#            , self).__init__(json_record)
 
 
 class field_actor_utcoffset(_field):
@@ -358,10 +589,10 @@ class field_actor_loc_displayname(_field):
     """assign to self.value the value of actor.location.displayName"""
     path = ["actor", "location", "displayName"]
     
-    def __init__(self, json_record):
-        super(
-            field_actor_loc_displayname
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_actor_loc_displayname
+#            , self).__init__(json_record)
 
 
 class field_gnip_pl_displayname(_field):
@@ -371,79 +602,79 @@ class field_gnip_pl_displayname(_field):
     """
     path = ["gnip", "profileLocations", "displayName"]
     
-    def __init__(self, json_record):
-        super(
-            field_gnip_pl_displayname
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_gnip_pl_displayname
+#            , self).__init__(json_record)
  
 class field_gnip_pl_objecttype(_field):
     """Assign to self.value the value of gnip.profileLocations.objectType"""
     path = ["gnip", "profileLocations", "objectType"]
     
-    def __init__(self, json_record):
-        super(
-            field_gnip_pl_objecttype
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_gnip_pl_objecttype
+#            , self).__init__(json_record)
 
 
 class field_gnip_pl_country(_field):
     """Assign to self.value the value of gnip.profileLocations.address.country"""
     path = ["gnip", "profileLocations", "address", "country"]
     
-    def __init__(self, json_record):
-        super(
-            field_gnip_pl_country
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_gnip_pl_country
+#            , self).__init__(json_record)
 
 
 class field_gnip_pl_region(_field):
     """Assign to self.value the value of gnip.profileLocations.address.region"""
     path = ["gnip", "profileLocations", "address", "region"]
     
-    def __init__(self, json_record):
-        super(
-            field_gnip_pl_region
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_gnip_pl_region
+#            , self).__init__(json_record)
 
 
 class field_gnip_pl_countrycode(_field):
     """Assign to self.value the value of gnip.profileLocations.address.countryCode"""
     path = ["gnip", "profileLocations", "address", "countryCode"]
     
-    def __init__(self, json_record):
-        super(
-            field_gnip_pl_countrycode
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_gnip_pl_countrycode
+#            , self).__init__(json_record)
 
 
 class field_gnip_pl_locality(_field):
     """Assign to self.value the value of gnip.profileLocations.address.locality"""
     path = ["gnip", "profileLocations", "address", "locality"]
     
-    def __init__(self, json_record):
-        super(
-            field_gnip_pl_locality
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_gnip_pl_locality
+#            , self).__init__(json_record)
 
 
 class field_gnip_pl_geo_type(_field):
     """Assign to self.value the value of gnip.profileLocations.geo.type"""
     path = ["gnip", "profileLocations", "geo", "type"]
     
-    def __init__(self, json_record):
-        super(
-            field_gnip_pl_geo_type
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_gnip_pl_geo_type
+#            , self).__init__(json_record)
 
 
 class field_gnip_pl_geo_coords(_field):
     """Assign to self.value the value of gnip.profileLocations.geo.coordinates"""
     path = ["gnip", "profileLocations", "geo", "coordinates"]
     
-    def __init__(self, json_record):
-        super(
-            field_gnip_pl_geo_coords
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_gnip_pl_geo_coords
+#            , self).__init__(json_record)
 
 
 ########
@@ -452,20 +683,20 @@ class field_actor_displayname(_field):
     """Assign to self.value the value of actor.displayName"""
     path = ["actor", "displayName"]
     
-    def __init__(self, json_record):
-        super(
-            field_actor_displayname
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_actor_displayname
+#            , self).__init__(json_record)
 
 
 class field_actor_preferredusername(_field):
     """Assign to self.value the value of actor.preferredUsername"""
     path = ["actor", "preferredUsername"]
     
-    def __init__(self, json_record):
-        super(
-            field_actor_preferredusername
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_actor_preferredusername
+#            , self).__init__(json_record)
 
 
 class field_actor_id(_field):
@@ -577,30 +808,30 @@ class field_inreplyto_link(_field):
     """Assign to self.value the value of inReplyTo.link"""
     path = ["inReplyTo", "link"]
     
-    def __init__(self, json_record):
-        super(
-            field_inreplyto_link
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_inreplyto_link
+#            , self).__init__(json_record)
 
 
 class field_object_id(_field):
     """Assign to self.value the value of object.id"""
     path = ["object", "id"]
     
-    def __init__(self, json_record):
-        super(
-            field_object_id
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_object_id
+#            , self).__init__(json_record)
 
 
 class field_object_postedtime(_field):
     """Assign to self.value the value of object.postedTime"""
     path = ["object", "postedTime"]
     
-    def __init__(self, json_record):
-        super(
-            field_object_postedtime
-            , self).__init__(json_record)
+#    def __init__(self, json_record):
+#        super(
+#            field_object_postedtime
+#            , self).__init__(json_record)
 
 
 
@@ -631,13 +862,12 @@ class Twacs(acscsv.AcsCSV):
         
     def procRecordToList(self, d):
         """
-        Reads JSON payload d, identify the activity type by its verb, 
-        return the appropriate parsed + delimited line.
+        Takes JSON payload d (as a dictionary), identifies the activity type by its verb, 
+        and returns compliance fields if needed. Otherwise, returns the parsed + delimited line, as 
+        determined by user-specified options.
         """ 
         record = []
         try:        # try block needs a KeyError exception?
-            #if "verb" in d:
-            #    verb = d["verb"]
             verb = field_verb(d).value
             # check for compliance
             if verb is None:
@@ -671,139 +901,57 @@ class Twacs(acscsv.AcsCSV):
             return record
         # at this point, it's a valid, non-compliance activity
         if self.options_db:
-            return self.multi_rec(d, record)
+            # custom output function
+            return self.multi_file_DB(d, record)
         #
         return self.csv(d, record)
 
-    # start refactor to use objects
+
     def csv(self, d, record):
         try:                            # KeyError exception at EOF
-            # always first 2 items 
-#######################
-#            # old code (JM)
-#            record.append(d["id"])
-#            record.append(d["postedTime"])
-#######################
+            # always first 3 items 
             record.append( field_id(d).value )
             record.append( field_postedtime(d).value )
-            # add some handling so calling gnacs without a pub is still useful
-            #   -put more-specific fields at the beginning to catch them 
-            #   -stocktwits is native, so no 'verb' to get here
-            obj = d["object"]
-            if d["id"].rfind("getglue") != -1 : # getglue 
-#                record.append(verb)     # 'body' is inconsistent in gg
-                record.append( field_verb(d).value ) 
-            elif "foursquareCategories" in obj or "foursquareCheckinOffset" in obj:      # fsq
-                record.append(str(obj["geo"]["coordinates"]))
-            elif "wpBlogId" in obj:     # wp
-                record.append(str(obj["wpBlogId"]))
-            elif "tumblrType" in obj:   # tumblr
-                record.append(obj["tumblrType"])
-            elif "body" in d:           # tw, disqus, stocktw,  
-#                record.append(self.cleanField(d["body"]))       
-                record.append( field_body(d).value  )       
-            elif "link" in d:           # ng
-                record.append(d["link"])
-            else:                       # ? 
-                record.append("None")
+            record.append( field_body(d).value )
+            ### reverting my earlier inclination here and removing this code
+#            # add some handling so calling gnacs without a pub is still useful
+#            #   -put more-specific fields at the beginning to catch them 
+#            #   -stocktwits is native, so no 'verb' to get here
+#            obj = d["object"]
+#            if d["id"].rfind("getglue") != -1 : # getglue 
+#                record.append( field_verb(d).value ) 
+#            elif "foursquareCategories" in obj or "foursquareCheckinOffset" in obj:      # fsq
+#                record.append(str(obj["geo"]["coordinates"]))
+#            elif "wpBlogId" in obj:     # wp
+#                record.append(str(obj["wpBlogId"]))
+#            elif "tumblrType" in obj:   # tumblr
+#                record.append(obj["tumblrType"])
+#            elif "body" in d:           # tw, disqus, stocktw,  
+#                record.append( field_body(d).value  )       
+#            elif "link" in d:           # ng
+#                record.append(d["link"])
+#            else:                       # ? 
+#                record.append("None")
             #
-#######################
-#            # old code (JM)
-#            gnip = {}
-#            actor = {}
-#            if "gnip" in d:
-#                gnip = d["gnip"]
-#            if "actor" in d:    # no 'actor' in ng
-#                actor = d["actor"]
-#######################
+            ### begin command line options
             if self.options_urls:
-                # we may not need to explicitly call the object's .value attr if the .join(record)
-                #   calls the objects' __repr__ (JM)
-                #
-                # if ___.value is "None", the buildListString method isn't correct. try having all
-                #   classes store a string as their final self.value
-                #
-#                record.append( self.buildListString( field_gnip_urls(d).value ) ) 
-#                record.append( self.buildListString( field_twitter_urls_url(d).value ) ) 
-#                record.append( self.buildListString( field_twitter_urls_expanded_url(d).value ) ) 
-#                record.append( self.buildListString( field_twitter_urls_display_url(d).value ) ) 
                 record.append( field_gnip_urls(d).value ) 
                 record.append( field_twitter_urls_url(d).value ) 
                 record.append( field_twitter_urls_expanded_url(d).value ) 
                 record.append( field_twitter_urls_display_url(d).value )
-#########################
-#                # old code (JM)
-#                urls = "None"
-#                if "urls" in gnip:
-#                    urls = self.buildListString([ l["expanded_url"] for l in gnip["urls"]])
-#                record.append(urls)
-#                twitter_urls = "None"
-#                twitter_un_urls = "None"
-#                if "twitter_entities" in d:
-#                    if "urls" in d["twitter_entities"]:
-#                        if len(d["twitter_entities"]["urls"]) > 0:
-#                            tmp_url_list = []
-#                            tmp_un_url_list = []
-#                            for tmp_rec in d["twitter_entities"]["urls"]:
-#                                try:
-#                                    if "url" in tmp_rec and tmp_rec["url"] is not None:
-#                                        tmp_url_list.append(tmp_rec["url"])
-#                                    else:
-#                                        tmp_url_list.append("None")
-#                                except TypeError:
-#                                    tmp_url_list = ["twitter_entiteis:urls:url"]
-#                                try:
-#                                    if "expanded_url" in tmp_rec and tmp_rec["expanded_url"] is not None:
-#                                        tmp_un_url_list.append(tmp_rec["expanded_url"])
-#                                    else:
-#                                        tmp_un_url_list.append("None")
-#                                except TypeError:
-#                                    tmp_un_urls_list = ["twitter_entities:urls:expanded_url"]
-#                            twitter_urls = self.buildListString(tmp_url_list)
-#                            twitter_un_urls = self.buildListString(tmp_un_url_list)
-#                record.append(twitter_urls)
-#                record.append(twitter_un_urls)
-########################
             if self.options_lang:
                 # actor lang
                 try: 
-#                    record.append( self.buildListString( field_actor_lang(d).value ) ) 
                     record.append( field_actor_lang(d).value ) 
                 except UnicodeEncodeError, e:
                     record.append("bad-encoding")
-                # gnip lang
                 record.append( field_gnip_lang(d).value )
-                # twitter lang
                 record.append( field_twitter_lang(d).value )
-#########################
-#                # old code (JM)
-#                try:
-#                    record.append(str([str(l) for l in actor["languages"]]))
-#                except UnicodeEncodeError, e:
-#                    record.append(str("bad encoding"))
-#                #glang = "None"
-#                #if "language" in gnip:
-#                #    glang = gnip["language"]["value"]
-#                tlang = "None"
-#                if "twitter_lang" in d:
-#                    tlang = d["twitter_lang"]
-#                record.append(tlang)
-#########################
             if self.options_rules:
-#                record.append( self.buildListString( field_gnip_rules(d).value ) )
                 record.append( field_gnip_rules(d).value )
-#########################
-#                # old code (JM)
-#                rules = '[]'
-#                if "matching_rules" in gnip:
-#                    rules = self.buildListString([ "%s (%s)"%(l["value"], l["tag"]) for l in gnip["matching_rules"]])
-#                record.append(rules)
-#########################
             if self.options_geo:
-#                record.append( self.buildListString( field_geo_coords(d).value ) )  
                 record.append( field_geo_coords(d).value ) 
                 record.append( field_geo_type(d).value )  
-#                record.append( self.buildListString( field_location_coords(d).value ) ) 
                 record.append( field_location_coords(d).value ) 
                 record.append( field_location_type(d).value )  
                 record.append( field_location_displayname(d).value )  
@@ -818,153 +966,20 @@ class Twacs(acscsv.AcsCSV):
                 record.append( field_gnip_pl_locality(d).value )  
                 record.append( field_gnip_pl_geo_type(d).value )  
                 record.append( field_gnip_pl_geo_coords(d).value )  
-#########################
-#                # old code (JM)
-#                geoType = "None"
-#                self.geoCoordsList = None
-#                geoCoords = "None"
-#                if "geo" in d:
-#                    if "type" in d["geo"]:
-#                        geoType = d["geo"]["type"]
-#                        #self.geoCoords = [str(l) for l in d["geo"]["coordinates"]]
-#                        self.geoCoordsList = d["geo"]["coordinates"]
-#                        geoCoords = str(self.geoCoordsList)
-#                record.append(geoCoords)
-#                record.append(geoType)
-#                locType = "None"
-#                locCoords = "None"
-#                locName = "None"
-#                locCountry = "None"
-#                if "location" in d:
-#                    locName = self.cleanField(d["location"]["displayName"])
-#                    locCountry = self.cleanField(d["location"]["twitter_country_code"])
-#                    if "geo" in d["location"] and d["location"]["geo"] is not None:
-#                        if "type" in d["location"]["geo"]:
-#                            locType = d["location"]["geo"]["type"]
-#                            locCoords = str([str(l) for l in d["location"]["geo"]["coordinates"][0]])
-#                record.append(locCoords)
-#                record.append(locType)
-#                record.append(locName)
-#                record.append(locCountry)
-#                record.append(str(actor["utcOffset"]))
-#                dName = "None"
-#                if "location" in actor and "displayName" in actor["location"]:
-#                    dName = self.cleanField(actor["location"]["displayName"])
-#                record.append(dName)
-#
-#                # gnip:profileLocations
-#                pl_otype = "None"
-#                pl_name = "None"
-#                # profileLocations:address
-#                pl_country = "None"
-#                pl_region = "None"
-#                pl_countrycode = "None"
-#                pl_locality = "None"
-#                # profileLocations:geo
-#                pl_gtype = "None"
-#                pl_coords = "None"
-#                if "profileLocations" in gnip:
-#                    # n.b. profileLocations is a list, suggests it might include >1 thing eventually
-#                    pl = gnip["profileLocations"][0]
-#                    if "objectType" in pl:
-#                        pl_otype = pl["objectType"]
-#                    if "displayName" in pl:
-#                        pl_name = pl["displayName"]
-#                    if "address" in pl:
-#                        adrs = pl["address"]
-#                        if "country" in adrs:
-#                            pl_country = adrs["country"]
-#                        if "region" in adrs:
-#                            pl_region = adrs["region"]
-#                        if "countryCode" in adrs:
-#                            pl_countrycode = adrs["countryCode"]
-#                        if "locality" in adrs:
-#                            pl_locality = adrs["locality"]
-#                    if "geo" in pl:
-#                        geo = pl["geo"]
-#                        if "type" in geo:
-#                            pl_gtype = geo["type"]
-#                        if "coordinates" in geo:
-#                            pl_coords = str(geo["coordinates"])
-#                record.append(pl_name)
-#                record.append(pl_otype)
-#                record.append(pl_country)
-#                record.append(pl_region)
-#                record.append(pl_countrycode)
-#                record.append(pl_locality)
-#                record.append(pl_gtype)
-#                record.append(pl_coords)
-########################
-                #
             if self.options_user:
                 record.append( field_actor_displayname(d).value )  
                 record.append( field_actor_preferredusername(d).value )  
-#########################
-#                # old code (JM)
-#                record.append(self.cleanField(actor["displayName"]))
-#                record.append(self.cleanField(actor["preferredUsername"]))
-#                try:
-#                    tmp = actor["id"].split(":")[2] #Brian's 1st attempt at Gnacsification
-#                except IndexError:
-#                    tmp = "actor:id"                    
-#                record.append(tmp)
-########################
             if self.options_influence:
                 record.append( field_gnip_kloutscore(d).value )  
                 record.append( field_actor_followers(d).value )  
                 record.append( field_actor_friends(d).value )  
                 record.append( field_actor_lists(d).value )  
                 record.append( field_actor_statuses(d).value )  
-#########################
-#                # old code (JM)
-#                klout = "None"
-#                followers = "None"
-#                friends = "None"
-#                listed = "None"
-#                statuses = "None"
-#                if "klout_score" in gnip:
-#                    klout = str(gnip["klout_score"])
-#                followers = str(actor["followersCount"])
-#                friends = str(actor["friendsCount"])
-#                listed = str(actor["listedCount"])
-#                statuses = str(actor["statusesCount"])
-#                record.append(klout)
-#                record.append(followers)
-#                record.append(friends)
-#                record.append(listed)
-#                record.append(statuses)
-#########################
             if self.options_struct:
                 record.append( field_activity_type(d).value )  
                 record.append( field_inreplyto_link(d).value )  
                 record.append( field_object_id(d).value )  
                 record.append( field_object_postedtime(d).value )  
-#########################
-#                # old code (JM)
-#                oid = "None"
-#                opt = "None"
-#                overb = "None"
-#                inReplyTo = "None"
-#                if "inReplyTo" in d:
-#                    inReplyTo = d["inReplyTo"]["link"]
-#                if "object" in d:
-#                    obj = d["object"]
-#                    if "objectType" in obj:
-#                        overb = obj["objectType"]
-#                if verb == "share" and overb == "activity":
-#                    record.append("Retweet")
-#                    if "id" in obj:
-#                        oid = obj["id"]
-#                    if "postedTime" in obj:
-#                        opt = obj["postedTime"]
-#                elif inReplyTo == "None":
-#                    record.append("Tweet")
-#                else:
-#                    record.append("Reply")
-#                record.append(inReplyTo)
-#                record.append(oid)
-#                record.append(opt)
-#########################
             return record
         except KeyError:
             #sys.stderr.write("Field missing from record (%d), skipping\n"%self.cnt)
@@ -972,41 +987,32 @@ class Twacs(acscsv.AcsCSV):
             record.append(acscsv.gnipRemove)
             return record
 
-    def multi_rec(self, d, record):
-        """Return multiple lists for e.g. writing to separate streams/files""" 
-        ########
-        # need to do a handful of preprocessing steps for various fields. use the 
-        #   object attrs where possible 
-        #
-        # remember that all objects have a string for self.value
-        #
+    def multi_file_DB(self, d, record):
+        """
+        Custom output format designed for loading multiple database tables.
+        Creates 3 separate lists of activity fields, joins them on a GNIPSPLIT to be split 
+        at the gnacs.py level and written to separate files.      
+        """
         # timestamp format
-        t_fmt = "%Y-%m-%dT %H:%M:%S"
-        ##### geotag coords
-        if not eval( field_location_coords(d).value ):  # .value = "None" (no coords)
-            coords = ["None", "None"]
-        else:
-            coords = eval( field_location_coords(d).value )
-        ##### hashtags 
-        # don't know anything about them a priori 
-        hashtag_list = eval( field_twitter_hashtags_text(d).value )
-        n = len(hashtag_list)
-        entity_count = 5            # arb number, defined by table schema
-        if n < entity_count:    # pad list
-            for _ in range(entity_count - n):
-                hashtag_list.append("None")
-        if n > entity_count:    # truncate list
-            hashtag_list = hashtag_list[:entity_count]
-        ##### urls
+        t_fmt = "%Y-%m-%dT%H:%M:%S"
+
+        # this is now abstracted to the individual classes (via default constructor args)
+        # field limit in various list tables 
+        limit = 5
+    
+        # for convenience (and tidiness) here, some of these new classes will have self.value
+        #  be an actual list, so that its length can be arbitrarily defined in one place (just above) 
+
 #
-#
-#
-# WIP
-#
+#   replace value with list_value
+#   remove empty constructors
+#   make the constructor do all the work 
 #
 
-        #
+        #print >>sys.stderr, "field_twitter_mentions_name_id_DB(d, limit).value={}".format(field_twitter_mentions_name_id_DB(d, limit).value)
         acs_list = [
+                    # <class>.value is a string 
+                    # <class>.value_list is a list 
                     field_id(d).value 
                     , field_gnip_rules(d).value 
                     , datetime.datetime.utcnow().strftime( t_fmt )
@@ -1018,15 +1024,30 @@ class Twacs(acscsv.AcsCSV):
                     , field_gnip_lang(d).value 
                     , field_link(d).value 
                     , field_generator_displayname(d).value 
-                    , coords[0] 
-                    , coords[1] 
-                    , hashtag_list[0]
-                    , hashtag_list[1]
-                    , hashtag_list[2]
-                    , hashtag_list[3]
-                    , hashtag_list[4]
+                    ] \
+                    + field_geo_coords_DB(d).value_list \
+                    + field_twitter_hashtags_text_DB(d).value_list \
+                    + field_twitter_symbols_text_DB(d).value \
+                    + field_twitter_mentions_name_id_DB(d).value_list 
 
-                    ] 
+#
+#   WIP
+#
+
+
+
+#                    + field_twitter_mentions_name_id_DB(d, limit).value_list 
+#                    + itertools.chain.from_iterable(                
+#                        zip( self.fix_length( field_twitter_urls_url(d).value, limit ) 
+#                            , self.fix_length( field_twitter_urls_expanded_url(d).value, limit ) 
+#                        )
+#                    )
+                    # call the fix_length method in the constructor of the class (pass the length from here)
+                    #   (as an optional kwarg)
+                    
+                    # ^ add the media info
+
+
         ustatic_list = [
                         "test_ustatic"
                         ]

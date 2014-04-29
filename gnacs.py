@@ -129,9 +129,9 @@ def main():
             if not os.path.exists(data_dir):
                 os.mkdir(data_dir)
             # open 3 file objects to use below
-            acs_f = open( data_dir + '/activities_table.sql', 'wb') 
-            ustatic_f = open( data_dir + '/users_static_table.sql', 'wb') 
-            udyn_f = open( data_dir + '/users_dynamic_table.sql', 'wb') 
+#            acs_f = open( data_dir + '/activities_table.sql', 'wb') 
+#            ustatic_f = open( data_dir + '/users_static_table.sql', 'wb') 
+#            udyn_f = open( data_dir + '/users_dynamic_table.sql', 'wb') 
         for record in recs:
             if len(record) == 0:
                 # ignore blank lines
@@ -152,14 +152,18 @@ def main():
                     compRE = re.compile(r"GNIPREMOVE") 
                     tmp_combined_rec = processing_obj.procRecord(cnt, record)
                     if compRE.search(tmp_combined_rec): 
-                        sys.stderr.write("Compliance activity skipped ({}) {}\n".format(cnt, tmp_combined_rec) ) 
+                        sys.stderr.write("Skipping compliance activity: ({}) {}\n".format(cnt, tmp_combined_rec) ) 
                         continue
                     # otherwise, write to appropriate file objects (from above)
                     flag = "GNIPSPLIT"      # also hardcoded in twacsDB.py
                     acs_str, ustatic_str, udyn_str = tmp_combined_rec.split(flag) 
-                    acs_f.write(acs_str + "\n")
-                    ustatic_f.write(ustatic_str + "\n")
-                    udyn_f.write(udyn_str + "\n")
+                    sys.stdout.write("\n###### acs_str ######\n{}".format(acs_str) )
+                    sys.stdout.write("\n###### ustatic_str ######\n{}".format(ustatic_str) )
+                    sys.stdout.write("\n###### udyn_str ######\n{}".format(udyn_str) )
+                    #
+#                    acs_f.write(acs_str + "\n")
+#                    ustatic_f.write(ustatic_str + "\n")
+#                    udyn_f.write(udyn_str + "\n")
                 else:
                     sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
             # catch I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
