@@ -130,9 +130,9 @@ def main():
             if not os.path.exists(data_dir):
                 os.mkdir(data_dir)
             # open 3 file objects for use below
-            acs_f = open( data_dir + '/activities_table.sql', 'ab') 
-            ustatic_f = open( data_dir + '/users_static_table.sql', 'ab') 
-            udyn_f = open( data_dir + '/users_dynamic_table.sql', 'ab') 
+            acs_f = open( data_dir + '/table_activities.csv', 'ab') 
+            ustatic_f = open( data_dir + '/table_users_static.csv', 'ab') 
+            udyn_f = open( data_dir + '/table_users_dynamic.csv', 'ab') 
         for record in recs:
             if len(record) == 0:
                 # ignore blank lines

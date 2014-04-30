@@ -5,8 +5,9 @@ __license__="Simplified BSD"
 import sys
 import acscsv
 import inspect
-import datetime
+from datetime import datetime
 import itertools
+import re
 
 # move to acscsv?
 class _field(object):
@@ -46,7 +47,9 @@ class _field(object):
         If limit is not given, and the input iterable is not equal to self.default_value
         (typically "None"), the input iterable is returned. If limit is given, the return
         value is a list that is either truncated to the first limit items, or padded 
-        with self.default_value until it is of size limit 
+        with self.default_value until it is of size limit. Note: strings are iterables, 
+        so if you pass this function a string, it will (optionally) truncate the 
+        number of characters in the string according to limit. 
         """
         res = [] 
 
@@ -74,44 +77,36 @@ class _field(object):
 
 
 # TODO:
-# - test removing the super() call if only overwriting 'path'
-# - convert all class docstrings to consistently use the key1.key2.key3 format 
+# - remove the super() call if only overwriting 'path'
+# - convert all class docstrings to consistently use the key1.key2.key3 format & fill them out 
 # - choose an ordering for the field classes that makes sense / is managable and maintainable 
-# - abstract all list extractions & padding (e.g fields in twitter_entities) to general 
-#       class/method a la _field() class
+#       (organize by hierarchy of key location (actor, gnip, object, ...)
 
 
 # notes 
 #
-# - on class naming conventions...
-# the path to a particular key-value pair may be quite long. as long as there arent collisions, 
-# ive chosen to use the following convention: field_<top level key>_<final_key>(...) . 
-# in this way, the user can get a sense of the beginning and end of the path to the field of 
-# interest. when it helps clarify, additional keys or abbreviations can also be added. 
-# where possible, avoid mixing camelCase and underscore_case by collapsing camelCase 
-# keys into lowercase e.g. camelcase. (JM)
-#
 # - on subclassing...
-# all classes should reach back to the _field class, which does the JSON walk and sets the initial
+# most classes should inherit from the _field class, which does the JSON walk and sets the initial
 # self.value. the first round of subclasses inherit from _field and update self.value to be backward
 # compatible to older gnacs. in order to do further processing or create custom output, you can also 
 # subclass the existing field_* classes and add your processing in the class constructor. this should 
-# allows us to follow the "unix philosophy" and keep building on these classes. Note that the classes
-# currently ending in _DB() are leaving self.value in a mix of str and list states. 
+# allows us to follow the "unix philosophy" and keep building on these classes. 
 #
 # - on self.value types...
-# in order to do the final list join, all classes must end with self.value as a string. to maintain 
-# backward compatibility, all classes currently result in similar self.value fields as before. now, 
-# when you need to slightly modify the output (or create wholly different, custom output), you can 
-# start by inheriting from the most basic class of that type, and manipulate self.value accordingly.
-#
+# my current thought is that self.value should always return a string representation of the 
+# corresponding field (such that it is consistent with classic gnacs), and self.value_list should be 
+# a Python list. This should make it easier to read the code that assembles the pieces for output. 
+# For example, self.value will often simply be set to str( self.value_list ).
+
  
 class example_class(_field):
     """
     Assign to self.value the value of zig.zag . This is the dictionary created by the user's chosen
     values of zig and zag (at the time of account creation. 
 
-    Your real class should begin with 'field_' in order to be included in the test suite.
+    Your real class should begin with 'field_' in order to be included in the test suite. It should 
+    also try to strike a balance between being user-friendly (can the next user figure out what it
+    does without reading too much code?) and being 500 characters long. 
     """
     # each new class should overwrite the self.path variable with a list of the appropriate keys
     #   that lead to the field of interest
@@ -150,13 +145,6 @@ class field_verb(_field):
     # if needed, overwrite default_value
     default_value = "Unidentified meta message"
     
-#    def __init__(self, json_record):
-#        """Calls base constructor, which walks the specified dict path to find appropriate value"""
-#        super(
-#                field_verb
-#                , self).__init__(json_record)
-        # in any field_* class, add any needed custom parsing here
-
 
 class field_id(_field):
     """assign to self.value the value in id"""
@@ -174,57 +162,234 @@ class field_postedtime(_field):
     """assign to self.value the value in postedTime"""
     path = ["postedTime"]
     
-#    def __init__(self, json_record):
-#        super(
-#            field_postedtime
-#            , self).__init__(json_record)
-
 
 class field_body(_field):
     """assign to self.value the value in top-level body"""
     path = ["body"]
     
-#    def __init__(self, json_record):
-#        super(
-#            field_body
-#            , self).__init__(json_record)
-
 
 class field_link(_field):
     """assign to self.value the value in top-level link"""
     path = ["link"]
     
-#    def __init__(self, json_record):
-#        super(
-#            field_link
-#            , self).__init__(json_record)
-
 
 class field_twitter_lang(_field):
     """assign to self.value the value of top-level 'twitter_lang'"""
     path = ["twitter_lang"]
     
-#    def __init__(self, json_record):
-#        super(
-#            field_twitter_lang
-#            , self).__init__(json_record)
-
 
 class field_generator_displayname(_field):
     """assign to self.value the value in generator.displayName"""
     path = ["generator", "displayName"]
     
-#    def __init__(self, json_record):
-#        super(
-#            field_generator_displayname
-#            , self).__init__(json_record)
-
 
 ####################
+#   'actor' fields 
+####################
+
+class field_actor_id(_field):
+    """Assign to self.value the value of actor.id"""
+    path = ["actor", "id"]
+    
+    def __init__(self, json_record):
+        super(
+            field_actor_id
+            , self).__init__(json_record)
+        # self.value has an id:twitter....
+        self.value = self.value.split(":")[2]
+
+
+class field_actor_postedtime(_field):
+    """Assign to self.value the value of actor.postedTime"""
+    path = ["actor", "postedTime"]
+    
+    # this is the more elegant approach 
+    #dateRE = re.compile("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}", re.IGNORECASE)
+
+    def __init__(self, json_record):
+        super(
+            field_actor_postedtime 
+            , self).__init__(json_record)
+        # self.value is a datetime string 
+        input_fmt = "%Y-%m-%dT%H:%M:%S.000Z"
+        self.value = datetime.strptime( 
+                        self.value, input_fmt 
+                        ).strftime( 
+                            self.default_t_fmt ) 
+
+
+class field_actor_lang(_field):
+    """assign to self.value the value of actor.languages"""
+    path = ["actor", "languages"]
+    
+    def __init__(self, json_record):
+        super(
+            field_actor_lang
+            , self).__init__(json_record)
+        # self.value is a list, but have only ever seen with one value, so take that one. 
+        # can simply use str( self.value ) if more than one appear someday
+        self.value = self.value[0]
+
+
+class field_actor_displayname(_field):
+    """Assign to self.value the value of actor.displayName"""
+    path = ["actor", "displayName"]
+
+
+class field_actor_preferredusername(_field):
+    """Assign to self.value the value of actor.preferredUsername"""
+    path = ["actor", "preferredUsername"]
+ 
+
+class field_actor_summary(_field):
+    """Assign to self.value the value of actor.summary"""
+    path = ["actor", "summary"]
+
+
+class field_actor_acct_link(_field):
+    """Assign to self.value the value of actor.link, a link to the user's twitter profile."""
+    path = ["actor", "link"]
+
+
+class field_actor_links(_field):
+    """
+    Assign to self.value a string repr of a list of the links contained in actor.links (so long 
+    as the corresponding dictionary isn't empty).
+    """
+    path = ["actor", "links"]
+
+    def __init__(self, json_record, limit=2):
+        super(
+            field_actor_links
+            , self).__init__(json_record)
+        # self.value is either default_value or a list of dictionaries
+        if self.value == self.default_value:
+            self.value_list = [ self.default_value ]
+        else:
+            # ignore the links that are "null" in the payload ( ==> None in the dict )
+            self.value_list = [ x["href"] for x in self.value if x["href"] is not None ] 
+            self.value_list = self.fix_length( self.value_list, limit )
+        self.value = str( self.value_list )
+
+
+class field_actor_twittertimezone(_field):
+    """Assign to self.value the value of actor.twitterTimeZone"""
+    path = ["actor", "twitterTimeZone"]
+
+
+class field_actor_utcoffset(_field):
+    """Assign to self.value a string representation of the value of actor.utcOffset."""
+    path = ["actor", "utcOffset"]
+    
+    def __init__(self, json_record):
+        super(
+            field_actor_utcoffset
+            , self).__init__(json_record)
+        # self.value is a signed integer 
+        self.value = str( self.value )
+
+
+class field_actor_utcoffset_DB(field_actor_utcoffset):
+    """Return an integer representation of actor.utcOffset (classic version is a string)."""
+    
+    def __init__(self, json_record):
+        super(
+            field_actor_utcoffset_DB
+            , self).__init__(json_record)
+        # self.value is a string representation of a signed int 
+        self.value = int( self.value )
+
+
+class field_actor_verified(_field):
+    """Assign to self.value the value of actor.verified"""
+    path = ["actor", "verified"]
+
+
+class field_actor_loc_displayname(_field):
+    """assign to self.value the value of actor.location.displayName"""
+    path = ["actor", "location", "displayName"]
+    
+
+class field_actor_followers(_field):
+    """Assign to self.value the value of actor.followersCount"""
+    path = ["actor", "followersCount"]
+    
+    def __init__(self, json_record):
+        super(
+            field_actor_followers
+            , self).__init__(json_record)
+        # self.value is an int 
+        self.value = str( self.value )
+
+
+class field_actor_followers_DB(_field):
+    """Assign to self.value the value of actor.followersCount, but store it as an integer."""
+    path = ["actor", "followersCount"]
+    # self.value is an int  
+   
+ 
+class field_actor_friends(_field):
+    """Assign to self.value the value of actor.friendsCount"""
+    path = ["actor", "friendsCount"]
+    
+    def __init__(self, json_record):
+        super(
+            field_actor_friends
+            , self).__init__(json_record)
+        # self.value is an int 
+        self.value = str( self.value )
+
+
+class field_actor_friends_DB(_field):
+    """Assign to self.value the value of actor.friendsCount, but store it as an integer."""
+    path = ["actor", "friendsCount"]
+    # self.value is an int
+
+
+class field_actor_listed(_field):
+    """Assign to self.value the value of actor.listedCount"""
+    path = ["actor", "listedCount"]
+    
+    def __init__(self, json_record):
+        super(
+            field_actor_listed
+            , self).__init__(json_record)
+        # self.value is an int 
+        self.value = str( self.value )
+
+
+class field_actor_listed_DB(_field):
+    """Assign to self.value the value of actor.listedCount, but store it as an integer"""
+    path = ["actor", "listedCount"]
+    # self.value is an int
+
+
+class field_actor_statuses(_field):
+    """Assign to self.value the value of actor.statusesCount"""
+    path = ["actor", "statusesCount"]
+    
+    def __init__(self, json_record):
+        super(
+            field_actor_statuses
+            , self).__init__(json_record)
+        # self.value is an int 
+        self.value = str( self.value )
+
+
+class field_actor_statuses_DB(_field):
+    """Assign to self.value the value of actor.statusesCount, but store it as an integer"""
+    path = ["actor", "statusesCount"]
+    # self.value is an int 
+
+
+
+
+
+
+
+########################################
 #   'gnip' fields 
-####################
-#
-# TODO: use self.walk_json(self.value) to get the second-level values (JM) 
+########################################
 
 class field_gnip_urls(_field):
     """assign to self.value the list of 'expanded_url' values within 'gnip', 'urls'"""
@@ -242,18 +407,119 @@ class field_gnip_urls(_field):
 class field_gnip_lang(_field):
     path = ["gnip","language","value"]
     
-#    def __init__(self, json_record):
-#        super(
-#            field_gnip_lang
-#            , self).__init__(json_record)
+
+#### profileLocations ####
+class field_gnip_pl_displayname(_field):
+    """
+    Assign to self.value the value of gnip.profileLocation.displayName . Currently only 
+    supports one list item, but could add support more in the future.
+    """
+    path = ["gnip", "profileLocations", "displayName"]
+    
+ 
+class field_gnip_pl_objecttype(_field):
+    """Assign to self.value the value of gnip.profileLocations.objectType"""
+    path = ["gnip", "profileLocations", "objectType"]
+    
+
+class field_gnip_pl_country(_field):
+    """Assign to self.value the value of gnip.profileLocations.address.country"""
+    path = ["gnip", "profileLocations", "address", "country"]
 
 
+class field_gnip_pl_region(_field):
+    """Assign to self.value the value of gnip.profileLocations.address.region"""
+    path = ["gnip", "profileLocations", "address", "region"]
+    
+
+class field_gnip_pl_subregion(_field):
+    """Assign to self.value the value of gnip.profileLocations.address.subRegion"""
+    path = ["gnip", "profileLocations", "address", "subRegion"]
+    
+
+class field_gnip_pl_countrycode(_field):
+    """Assign to self.value the value of gnip.profileLocations.address.countryCode"""
+    path = ["gnip", "profileLocations", "address", "countryCode"]
 
 
-####################
+class field_gnip_pl_locality(_field):
+    """Assign to self.value the value of gnip.profileLocations.address.locality"""
+    path = ["gnip", "profileLocations", "address", "locality"]
+
+
+class field_gnip_pl_geo_type(_field):
+    """Assign to self.value the value of gnip.profileLocations.geo.type"""
+    path = ["gnip", "profileLocations", "geo", "type"]
+    
+
+class field_gnip_pl_geo_coords(_field):
+    """Assign to self.value the value of gnip.profileLocations.geo.coordinates"""
+    path = ["gnip", "profileLocations", "geo", "coordinates"]
+    
+    def __init__(self, json_record):
+        super(
+           field_gnip_pl_geo_coords 
+            , self).__init__(json_record)
+        # self.value is (possibly) a list of floats: [lat, lon] 
+        if self.value != self.default_value:
+            self.value_list = self.value
+            self.value = str( self.value_list ) 
+
+
+#### klout #### 
+class field_gnip_klout_score(_field):
+    """Assign to self.value the value of gnip.klout_score"""
+    path = ["gnip", "klout_score"]
+    
+    def __init__(self, json_record):
+        super(
+            field_gnip_klout_score
+            , self).__init__(json_record)
+        # self.value is possibly an int
+        if self.value != self.default_value:
+            self.value = str( self.value )
+
+
+class field_gnip_klout_user_id(_field):
+    """Assign to self.value the value of gnip.klout_user_id"""
+    path = ["gnip", "klout_user_id"]
+    
+
+class field_gnip_klout_topics(_field):
+    """
+    Assign to self.value_list (and .value) pairs of gnip.klout_profile.displayName 
+    and .klout_topic_id . 
+    """
+    path = ["gnip", "klout_profile", "topics"]
+    
+    # write this once, update if extracting more fields from the dicts
+    field_count = 2 
+
+    def __init__(self, json_record, limit=2):
+        super(
+            field_gnip_klout_topics
+            , self).__init__(json_record)
+        # self.value is possibly a list of dicts 
+        if self.value == self.default_value or len(self.value) == 0:
+            self.value_list = [ self.default_value ]*(self.field_count*limit)  
+        else:   # found something in the list
+            tmp = []
+            [ tmp.extend( [ int( x["klout_topic_id"] ), x["displayName"] ] ) for x in self.value ]
+            self.value_list = tmp
+            current_len = len(self.value_list)
+            if current_len < self.field_count*limit:         # need to pad list
+                for _ in range( self.field_count*limit - current_len ):
+                    self.value_list += ["None", "None"]
+            elif current_len > limit:         # need to truncate list
+                self.value_list = self.value_list[:(self.field_count*limit)]
+        #
+        self.value = str( self.value_list )
+       
+
+
+########################################
 #   'twitter_entities' fields 
-####################
-
+########################################
 class _field_twitter_urls(_field):
     """
     Base class for accessing arbitrary url fields within twitter_entities.urls . Takes 
@@ -427,78 +693,26 @@ class field_twitter_media_id_url_DB(_field):
     """
     path = ["twitter_entities", "media"]
 
+    field_count = 2
+
     def __init__(self, json_record, limit=5):
         super(
             field_twitter_media_id_url_DB 
             , self).__init__(json_record)
         # self.value is possibly a list of dicts for each activity media object 
         if self.value == self.default_value or len(self.value) == 0:
-            self.value_list = [ self.default_value ]*(2*limit)
+            self.value_list = [ self.default_value ]*(self.field_count*limit)
         else:   # found something in the list
             tmp = []
             [ tmp.extend( [ x["id"], x["expanded_url"] ] ) for x in self.value ]
             self.value_list = tmp
             current_len = len(self.value_list)
-            if current_len < limit:         # need to pad list
-                for _ in range( limit - current_len):
+            if current_len < self.field_count*limit:         # need to pad list
+                for _ in range( self.field_count*limit - current_len):
                     self.value_list += ["None", "None"]
-            elif current_len > limit:         # need to truncate list
-                self.value_list = self.value_list[:limit]
+            elif current_len > self.field_count*limit:         # need to truncate list
+                self.value_list = self.value_list[:(self.field_count*limit)]
         self.value = str( self.value_list )
-
-
-####################
-#   'actor' fields 
-####################
-
-class field_actor_lang(_field):
-    """assign to self.value the value of actor.languages"""
-    path = ["actor", "languages"]
-    
-    def __init__(self, json_record):
-        super(
-            field_actor_lang
-            , self).__init__(json_record)
-        # self.value is a list, but have only ever seen with one value, so take that one. 
-        # can simply use str( self.value ) if more than one appear someday
-        self.value = self.value[0]
-
-
-class field_actor_postedtime(_field):
-    """Assign to self.value the value of actor.postedTime"""
-    path = ["actor", "postedTime"]
-    
-    def __init__(self, json_record):
-        super(
-            field_actor_postedtime 
-            , self).__init__(json_record)
-        # self.value is a datetime string 
-        input_fmt = "%Y-%m-%dT%H:%M:%S"
-        self.value = datetime.strptime( 
-                        self.value, input_fmt 
-                        ).strftime( 
-                            self.default_t_fmt ) 
-
-
-class field_actor_username(_field):
-    """assign to self.value the value of actor.preferredUsername"""
-    path = ["actor", "preferredUsername"]
-
-
-class field_actor_displayname(_field):
-    """assign to self.value the value of actor.displayName"""
-    path = ["actor", "displayName"]
-
-
-class field_actor_link(_field):
-    """assign to self.value the value of actor.link"""
-    path = ["actor", "link"]
-
-
-class field_actor_summary(_field):
-    """assign to self.value the value of actor.summary"""
-    path = ["actor", "summary"]
-
 
 
 ########
@@ -528,11 +742,6 @@ class field_geo_type(_field):
     tweet geotag."""
     path = ["geo", "type"]
     
-#    def __init__(self, json_record):
-#        super(
-#            field_geo_type
-#            , self).__init__(json_record)
-
 
 class field_geo_coords(_field):
     """
@@ -569,21 +778,11 @@ class field_geo_coords_DB(field_geo_coords):
 class field_location_type(_field):
     """assign to self.value the value of location.geo.type ."""
     path = ["location", "geo", "type"]
-    
-#    def __init__(self, json_record):
-#        super(
-#            field_location_type
-#            , self).__init__(json_record)
 
 
 class field_location_displayname(_field):
     """assign to self.value the value of 'location', 'displayName' """
     path = ["location", "displayName"]
-    
-#    def __init__(self, json_record):
-#        super(
-#            field_location_displayname
-#            , self).__init__(json_record)
 
 
 class field_location_coords(_field):
@@ -607,211 +806,11 @@ class field_location_coords(_field):
 class field_location_twittercountry(_field):
     """assign to self.value the value of 'location', 'twitter_country_code' """
     path = ["location", "twitter_country_code"]
-    
-#    def __init__(self, json_record):
-#        super(
-#            field_location_twittercountry
-#            , self).__init__(json_record)
 
-
-class field_actor_utcoffset(_field):
-    """assign to self.value the value of 'actor' 'utcOffset' """
-    path = ["actor", "utcOffset"]
-    
-    def __init__(self, json_record):
-        super(
-            field_actor_utcoffset
-            , self).__init__(json_record)
-        # self.value is a signed integer 
-        self.value = str( self.value )
-
-
-class field_actor_loc_displayname(_field):
-    """assign to self.value the value of actor.location.displayName"""
-    path = ["actor", "location", "displayName"]
-    
-#    def __init__(self, json_record):
-#        super(
-#            field_actor_loc_displayname
-#            , self).__init__(json_record)
-
-
-class field_gnip_pl_displayname(_field):
-    """
-    Assign to self.value the value of gnip.profileLocation.displayName . Currently only 
-    supports one list item, but could add support more in the future.
-    """
-    path = ["gnip", "profileLocations", "displayName"]
-    
-#    def __init__(self, json_record):
-#        super(
-#            field_gnip_pl_displayname
-#            , self).__init__(json_record)
- 
-class field_gnip_pl_objecttype(_field):
-    """Assign to self.value the value of gnip.profileLocations.objectType"""
-    path = ["gnip", "profileLocations", "objectType"]
-    
-#    def __init__(self, json_record):
-#        super(
-#            field_gnip_pl_objecttype
-#            , self).__init__(json_record)
-
-
-class field_gnip_pl_country(_field):
-    """Assign to self.value the value of gnip.profileLocations.address.country"""
-    path = ["gnip", "profileLocations", "address", "country"]
-    
-#    def __init__(self, json_record):
-#        super(
-#            field_gnip_pl_country
-#            , self).__init__(json_record)
-
-
-class field_gnip_pl_region(_field):
-    """Assign to self.value the value of gnip.profileLocations.address.region"""
-    path = ["gnip", "profileLocations", "address", "region"]
-    
-#    def __init__(self, json_record):
-#        super(
-#            field_gnip_pl_region
-#            , self).__init__(json_record)
-
-
-class field_gnip_pl_countrycode(_field):
-    """Assign to self.value the value of gnip.profileLocations.address.countryCode"""
-    path = ["gnip", "profileLocations", "address", "countryCode"]
-    
-#    def __init__(self, json_record):
-#        super(
-#            field_gnip_pl_countrycode
-#            , self).__init__(json_record)
-
-
-class field_gnip_pl_locality(_field):
-    """Assign to self.value the value of gnip.profileLocations.address.locality"""
-    path = ["gnip", "profileLocations", "address", "locality"]
-    
-#    def __init__(self, json_record):
-#        super(
-#            field_gnip_pl_locality
-#            , self).__init__(json_record)
-
-
-class field_gnip_pl_geo_type(_field):
-    """Assign to self.value the value of gnip.profileLocations.geo.type"""
-    path = ["gnip", "profileLocations", "geo", "type"]
-    
-#    def __init__(self, json_record):
-#        super(
-#            field_gnip_pl_geo_type
-#            , self).__init__(json_record)
-
-
-class field_gnip_pl_geo_coords(_field):
-    """Assign to self.value the value of gnip.profileLocations.geo.coordinates"""
-    path = ["gnip", "profileLocations", "geo", "coordinates"]
-    
-#    def __init__(self, json_record):
-#        super(
-#            field_gnip_pl_geo_coords
-#            , self).__init__(json_record)
-
-
-########
-# actor 
-class field_actor_displayname(_field):
-    """Assign to self.value the value of actor.displayName"""
-    path = ["actor", "displayName"]
-    
-#    def __init__(self, json_record):
-#        super(
-#            field_actor_displayname
-#            , self).__init__(json_record)
-
-
-class field_actor_preferredusername(_field):
-    """Assign to self.value the value of actor.preferredUsername"""
-    path = ["actor", "preferredUsername"]
-    
-#    def __init__(self, json_record):
-#        super(
-#            field_actor_preferredusername
-#            , self).__init__(json_record)
-
-
-class field_actor_id(_field):
-    """Assign to self.value the value of actor.id"""
-    path = ["actor", "id"]
-    
-    def __init__(self, json_record):
-        super(
-            field_actor_id
-            , self).__init__(json_record)
-        # self.value has an id:twitter....
-        self.value = self.value.split(":")[2]
 
 
 ########
 # influence 
-class field_gnip_kloutscore(_field):
-    """Assign to self.value the value of gnip.klout_score"""
-    path = ["gnip", "klout_score"]
-    
-    def __init__(self, json_record):
-        super(
-            field_gnip_kloutscore
-            , self).__init__(json_record)
-        # self.value is an int 
-        self.value = str( self.value )
-
-
-class field_actor_followers(_field):
-    """Assign to self.value the value of actor.followersCount"""
-    path = ["actor", "followersCount"]
-    
-    def __init__(self, json_record):
-        super(
-            field_actor_followers
-            , self).__init__(json_record)
-        # self.value is an int 
-        self.value = str( self.value )
-
-
-class field_actor_friends(_field):
-    """Assign to self.value the value of actor.friendsCount"""
-    path = ["actor", "friendsCount"]
-    
-    def __init__(self, json_record):
-        super(
-            field_actor_friends
-            , self).__init__(json_record)
-        # self.value is an int 
-        self.value = str( self.value )
-
-
-class field_actor_lists(_field):
-    """Assign to self.value the value of actor.listedCount"""
-    path = ["actor", "listedCount"]
-    
-    def __init__(self, json_record):
-        super(
-            field_actor_lists
-            , self).__init__(json_record)
-        # self.value is an int 
-        self.value = str( self.value )
-
-
-class field_actor_statuses(_field):
-    """Assign to self.value the value of actor.statusesCount"""
-    path = ["actor", "statusesCount"]
-    
-    def __init__(self, json_record):
-        super(
-            field_actor_statuses
-            , self).__init__(json_record)
-        # self.value is an int 
-        self.value = str( self.value )
 
 
 ########
@@ -1011,10 +1010,10 @@ class Twacs(acscsv.AcsCSV):
                 record.append( field_actor_displayname(d).value )  
                 record.append( field_actor_preferredusername(d).value )  
             if self.options_influence:
-                record.append( field_gnip_kloutscore(d).value )  
+                record.append( field_gnip_klout_score(d).value )  
                 record.append( field_actor_followers(d).value )  
                 record.append( field_actor_friends(d).value )  
-                record.append( field_actor_lists(d).value )  
+                record.append( field_actor_listed(d).value )  
                 record.append( field_actor_statuses(d).value )  
             if self.options_struct:
                 record.append( field_activity_type(d).value )  
@@ -1036,8 +1035,9 @@ class Twacs(acscsv.AcsCSV):
         """
         # timestamp format
         t_fmt = "%Y-%m-%d %H:%M:%S"
-        now = datetime.datetime.utcnow().strftime( t_fmt )
+        now = datetime.utcnow().strftime( t_fmt )
 
+        # the explicit .value attr reference is needed
         acs_list = [
                     # <class>.value is a string 
                     # <class>.value_list is a list 
@@ -1062,21 +1062,41 @@ class Twacs(acscsv.AcsCSV):
         ustatic_list = [
                     now 
                     , field_actor_id(d).value 
-                    , field_id(d).value         # this needs to be updated programatically in an actual app 
+                    , field_id(d).value         # needs to be updated programatically in an actual app 
+                    # in this spot, there is an updated_at timestamp in the table
                     , field_actor_postedtime(d).value 
-                    , field_actor_username(d).value 
+                    , field_actor_preferredusername(d).value 
                     , field_actor_displayname(d).value 
-                    , field_actor_link(d).value 
+                    , field_actor_acct_link(d).value 
                     , field_actor_summary(d).value 
-
-                        ]
-
-
-
-
+                    , field_actor_links(d).value 
+                    , field_actor_twittertimezone(d).value 
+#                    , field_actor_utcoffset_DB(d).value       # add this to the table in v2 
+                    , field_actor_verified(d).value 
+                    , field_actor_lang(d).value 
+                    ] \
+                    + field_gnip_pl_geo_coords(d).value_list \
+                    + [ 
+                    field_gnip_pl_countrycode(d).value
+                    , field_gnip_pl_locality(d).value
+                    , field_gnip_pl_region(d).value
+                    , field_gnip_pl_subregion(d).value
+                    , field_gnip_pl_displayname(d).value
+                    , field_gnip_klout_user_id(d).value
+                    ]
 
         udyn_list = [ 
-                    "test_udyn"
+                    field_actor_id(d).value 
+                    , field_id(d).value         # needs to be updated programatically in an actual app 
+                    # in this spot, there is an updated_at timestamp in the table
+                    , field_gnip_klout_score(d).value 
+                    ] \
+                    + field_gnip_klout_topics(d).value_list \
+                    + [
+                    field_actor_statuses_DB(d).value 
+                    , field_actor_followers_DB(d).value  
+                    , field_actor_friends_DB(d).value  
+                    , field_actor_listed_DB(d).value  
                     ]
         #
         # consider instead sending the combined list and an arbitrary list of positions to split it
