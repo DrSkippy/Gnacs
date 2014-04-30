@@ -74,9 +74,6 @@ class AcsCSV(object):
     def asString(self,l):
         if l is None:
             return None
-        # debug
-        #print >>sys.stderr, "list l={}".format(l) 
-        #
         return self.delim.join(l)
 
     def procRecord(self, cnt, x):

@@ -130,9 +130,9 @@ def main():
             if not os.path.exists(data_dir):
                 os.mkdir(data_dir)
             # open 3 file objects for use below
-            acs_f = open( data_dir + '/table_activities.csv', 'ab') 
-            ustatic_f = open( data_dir + '/table_users_static.csv', 'ab') 
-            udyn_f = open( data_dir + '/table_users_dynamic.csv', 'ab') 
+            acs_f = open( data_dir + '/table_activities.csv', 'wb') 
+            ustatic_f = open( data_dir + '/table_users_static.csv', 'wb') 
+            udyn_f = open( data_dir + '/table_users_dynamic.csv', 'wb') 
         for record in recs:
             if len(record) == 0:
                 # ignore blank lines
@@ -164,13 +164,13 @@ def main():
                     udyn_str = udyn_str.strip("|").encode('utf8')
                     #
                     # debug
-#                    sys.stdout.write("\n\n###### acs_str ######\n{}".format(acs_str) )
-#                    sys.stdout.write("\n###### ustatic_str ######\n{}".format(ustatic_str) )
-#                    sys.stdout.write("\n###### udyn_str ######\n{}".format(udyn_str) )
+                    sys.stdout.write("\n\n###### acs_str ######\n{}".format(acs_str).encode('utf8') )
+                    sys.stdout.write("\n###### ustatic_str ######\n{}".format(ustatic_str).encode('utf8') )
+                    sys.stdout.write("\n###### udyn_str ######\n{}".format(udyn_str).encode('utf8') )
                     #
-                    acs_f.write(acs_str + "\n")
-                    ustatic_f.write(ustatic_str + "\n")
-                    udyn_f.write(udyn_str + "\n")
+#                    acs_f.write(acs_str + "\n")
+#                    ustatic_f.write(ustatic_str + "\n")
+#                    udyn_f.write(udyn_str + "\n")
                 else:
                     sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
             # catch I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')

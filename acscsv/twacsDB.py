@@ -161,7 +161,21 @@ class field_id(_field):
 class field_postedtime(_field):
     """assign to self.value the value in postedTime"""
     path = ["postedTime"]
-    
+
+    # this is the more elegant approach 
+    #dateRE = re.compile("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}", re.IGNORECASE)
+
+    def __init__(self, json_record):
+        super(
+            field_postedtime 
+            , self).__init__(json_record)
+        # self.value is a datetime string 
+        input_fmt = "%Y-%m-%dT%H:%M:%S.000Z"
+        self.value = datetime.strptime( 
+                        self.value, input_fmt 
+                        ).strftime( 
+                            self.default_t_fmt ) 
+   
 
 class field_body(_field):
     """assign to self.value the value in top-level body"""
@@ -176,11 +190,6 @@ class field_link(_field):
 class field_twitter_lang(_field):
     """assign to self.value the value of top-level 'twitter_lang'"""
     path = ["twitter_lang"]
-    
-
-class field_generator_displayname(_field):
-    """assign to self.value the value in generator.displayName"""
-    path = ["generator", "displayName"]
     
 
 ####################
@@ -384,6 +393,12 @@ class field_actor_statuses_DB(_field):
 
 
 
+
+
+class field_generator_displayname(_field):
+    """assign to self.value the value in generator.displayName"""
+    path = ["generator", "displayName"]
+    
 
 
 
@@ -605,7 +620,6 @@ class field_twitter_hashtags_text(_field):
             self.value = str( self.value_list ) 
         # hashtags are an existing feature in gnacs, so extend this class for 
         #   the db-specific configuration...
-        #print >>sys.stderr, "self.value_list={} (type={})".format(self.value_list, type(self.value_list))
 
 
 class field_twitter_hashtags_text_DB(field_twitter_hashtags_text):
@@ -620,12 +634,11 @@ class field_twitter_hashtags_text_DB(field_twitter_hashtags_text):
             field_twitter_hashtags_text_DB
             , self).__init__(json_record)
         # self.value is either a list of hashtag texts for each activity hashtag or default_value
-        if self.value == self.default_value: #or len(self.value) == 0:
+        if self.value == self.default_value:    # self.value is either a list or "None" now
             self.value_list = [ self.default_value ]*limit
         else:   # value_list should be a list of 'text's 
             self.value_list = self.fix_length( self.value_list, limit ) 
-        #print >>sys.stderr, "self.value={} (type={})".format(self.value, type(self.value))
-        #print >>sys.stderr, "self.value_list={} (type={})".format(self.value_list, type(self.value_list))
+        self.value = str( self.value_list )
 
 
 class field_twitter_symbols_text_DB(_field):
@@ -641,21 +654,17 @@ class field_twitter_symbols_text_DB(_field):
             field_twitter_symbols_text_DB
             , self).__init__(json_record)
         # self.value is possibly a list of dicts for each activity symbol 
-        #print >>sys.stderr, "self.value={} (type={})".format(self.value, type(self.value))
         if self.value == self.default_value or len(self.value) == 0:
             self.value_list = [ self.default_value ]*limit
-        else:   # found something in the list
-            current_len = len(self.value)
-            if current_len < limit:         # need to pad list
-                [ self.value_list.append("None") for _ in range(limit - current_len) ]
-            elif current_len > limit:         # need to truncate list
-                #self.value = self.value[:current_len]
-                self.value_list = self.value_list[:limit]
-        # self.value is now a list of length 'limit' with 
-        #  some combination of symbol text (str) and "None"
-        self.value = str( self.value_list ) 
-        #print >>sys.stderr, "self.value={} (type={})".format(self.value, type(self.value))
-        #print >>sys.stderr, "self.value_list={} (type={})".format(self.value_list, type(self.value_list))
+        else:
+#            current_len = len(self.value)
+#            if current_len < limit:         # need to pad list
+#                [ self.value_list.append("None") for _ in range(limit - current_len) ]
+#            elif current_len > limit:         # need to truncate list
+#                self.value_list = self.value_list[:limit]
+#        self.value = str( self.value_list ) 
+            self.value_list = self.fix_length( self.value_list, limit ) 
+        self.value = str( self.value_list )
 
 
 class field_twitter_mentions_name_id_DB(_field):
