@@ -74,6 +74,27 @@ class _field(object):
         return res
 
 
+class _limited_field(_field):
+    """
+    asdf 
+    """
+    fields = None 
+
+    def __init__(self, json_record, limit=5):
+        super(
+            _limited_field 
+            , self).__init__(json_record)
+        # self.value is possibly a list of dicts for each activity media object 
+        # start with default list full of the default_values
+        self.value_list = [ self.default_value ]*( len(self.fields)*limit )
+        if self.value != self.default_value: 
+            for i,x in enumerate(self.value): 
+                if i <= limit: 
+                    for j,y in enumerate(self.fields): 
+                        print u">>> (i, x)={}, (j, y)={}".format((i,x), (j,y))
+                        self.value_list[ len( self.fields )*i + j ] = x[ self.fields[j] ] 
+        print u">>> self.value_list={}".format(self.value_list)
+        self.value = str( self.value_list )
 
 
 # TODO:
@@ -81,6 +102,7 @@ class _field(object):
 # - convert all class docstrings to consistently use the key1.key2.key3 format & fill them out 
 # - choose an ordering for the field classes that makes sense / is managable and maintainable 
 #       (organize by hierarchy of key location (actor, gnip, object, ...)
+# - use new _limited_field() class EVERYWHERE
 
 
 # notes 
@@ -667,62 +689,50 @@ class field_twitter_symbols_text_DB(_field):
         self.value = str( self.value_list )
 
 
-class field_twitter_mentions_name_id_DB(_field):
+class field_twitter_mentions_name_id_DB(_limited_field):
     """
     Assign to self.value a list of 'limit' twitter_entities.user_mentions.screen_name and .id pairs 
     (in order, but in a flat list).
     """
     path = ["twitter_entities", "user_mentions"]
 
-    def __init__(self, json_record, limit=5):
-        super(
-            field_twitter_mentions_name_id_DB
-            , self).__init__(json_record)
-        # self.value is possibly a list of dicts for each activity user mention 
-        if self.value == self.default_value or len(self.value) == 0:
-            self.value_list = [ self.default_value ]*(2*limit)
-        else:   # found something in the list
-            #self.value = [ [ x["screen_name"], x["id_str"] ]  for x in self.value ]
-            # couldn't get the nesting correct with inline list comp on self.value... (JM)
-            tmp = []
-            [ tmp.extend( [ x["screen_name"], x["id_str"] ] ) for x in self.value ]
-            self.value_list = tmp
-            current_len = len(self.value_list)
-            if current_len < limit:         # need to pad list
-                for _ in range( limit - current_len):
-                    self.value_list += ["None", "None"]
-            elif current_len > limit:         # need to truncate list
-                self.value_list = self.value_list[:limit]
-        self.value = str( self.value_list )
+    fields = ["screen_name", "id_str"]
+
+#    def __init__(self, json_record, limit=5):
+#        super(
+#            field_twitter_mentions_name_id_DB
+#            , self).__init__(json_record)
+#        # self.value is possibly a list of dicts for each activity user mention 
+#        if self.value == self.default_value or len(self.value) == 0:
+#            self.value_list = [ self.default_value ]*(2*limit)
+#        else:   # found something in the list
+#            #self.value = [ [ x["screen_name"], x["id_str"] ]  for x in self.value ]
+#            # couldn't get the nesting correct with inline list comp on self.value... (JM)
+#            tmp = []
+#            [ tmp.extend( [ x["screen_name"], x["id_str"] ] ) for x in self.value ]
+#            self.value_list = tmp
+#            current_len = len(self.value_list)
+#            if current_len < limit:         # need to pad list
+#                for _ in range( limit - current_len):
+#                    self.value_list += ["None", "None"]
+#            elif current_len > limit:         # need to truncate list
+#                self.value_list = self.value_list[:limit]
+#        self.value = str( self.value_list )
 
 
-class field_twitter_media_id_url_DB(_field):
+class field_twitter_media_id_url_DB(_limited_field):
     """
     Assign to self.value a list of twitter_entities.media.id and .expanded_url pairs
     """
     path = ["twitter_entities", "media"]
 
-    field_count = 2
+    fields = ["id", "expanded_url"]
 
     def __init__(self, json_record, limit=5):
         super(
             field_twitter_media_id_url_DB 
-            , self).__init__(json_record)
-        # self.value is possibly a list of dicts for each activity media object 
-        if self.value == self.default_value or len(self.value) == 0:
-            self.value_list = [ self.default_value ]*(self.field_count*limit)
-        else:   # found something in the list
-            tmp = []
-            [ tmp.extend( [ x["id"], x["expanded_url"] ] ) for x in self.value ]
-            self.value_list = tmp
-            current_len = len(self.value_list)
-            if current_len < self.field_count*limit:         # need to pad list
-                for _ in range( self.field_count*limit - current_len):
-                    self.value_list += ["None", "None"]
-            elif current_len > self.field_count*limit:         # need to truncate list
-                self.value_list = self.value_list[:(self.field_count*limit)]
-        self.value = str( self.value_list )
-
+            , self).__init__(json_record, limit)
+       
 
 ########
 # rules 
