@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-__author__="Scott Hendrickson, Josh Montague, Fiona Pigot"
+__author__="Scott Hendrickson"
 __license__="Simplified BSD"
 
 import sys
@@ -12,35 +12,33 @@ import re
 # move to acscsv?
 class _field(object):
     """
-    Base class for finding the appropriate key-value pairs in a JSON Activity Streams payload.
-    Common default value (for e.g. missing values) is "None", but child subclasses can override
-    this default when needed. Subclasses should also define the keypath to the desired location
-    by overwriting the "path" list. 
+    Base class for finding the desired value at the end of a string of keys in a JSON Activity 
+    Streams payload. Set the application-wide default value (for e.g. missing values) here, 
+    but also use child classes to override when necessary. Subclasses also need to define the 
+    key-path (path) to the desired location by overwriting the path attr.
     """
     # default values, can be overwritten in custom classes 
     default_t_fmt = "%Y-%m-%d %H:%M:%S"
     #default_value = "None"
-    default_value = "\\N"
-    value = None
-    value_list = []
+    default_value = "\\N"   # escaped \N ==> MySQL NULL
+    value = None            # always a str representation of the field, incl str( self.value_list ) 
+    value_list = []         # overwritten when the desired value is most appropriately a list 
     path = []
 
     def __init__(self, json_record):
         self.value = self.walk_path(json_record)
 
     def __repr__(self):
-        # should this be doing some unicode encoding?
         return self.value
 
     def walk_path(self, json_record):
         res = json_record
         for k in self.path:
-            #if k not in json_record:
             if k not in res:
                 return self.default_value
             res = res[k]
-        # handle the special case where the walk_path found null (JSON) ==> None (Python)
-        #   and don't put "None" in the value unless you really want it (via self.default_value)
+        # handle the special case where the walk_path found null (JSON) which converts to 
+        # a Python None. Only use "None" (str version) if it's assigned to self.default_value 
         res = res if res is not None else self.default_value
         return res
 
@@ -104,14 +102,15 @@ class _limited_field(_field):
             _limited_field 
             , self).__init__(json_record)
         # self.value is possibly a list of dicts for each activity media object 
-        # start with default list full of the default_values
-        self.value_list = [ self.default_value ]*( len(self.fields)*limit )
-        if self.value != self.default_value: 
-            for i,x in enumerate(self.value):   # iterate over the dicts in the list
-                if i < limit:                   # ... up until you reach limit 
-                    for j,y in enumerate(self.fields):      # iterate over the dict keys 
-                        self.value_list[ len( self.fields )*i + j ] = x[ self.fields[j] ] 
-        self.value = str( self.value_list )
+        if fields:
+            # start with default list full of the default_values
+            self.value_list = [ self.default_value ]*( len(self.fields)*limit )
+            if self.value != self.default_value: 
+                for i,x in enumerate(self.value):   # iterate over the dicts in the list
+                    if i < limit:                   # ... up until you reach limit 
+                        for j,y in enumerate(self.fields):      # iterate over the dict keys 
+                            self.value_list[ len( self.fields )*i + j ] = x[ self.fields[j] ] 
+            self.value = str( self.value_list )
 
 
 # TODO:
@@ -120,36 +119,30 @@ class _limited_field(_field):
 # - choose an ordering for the field classes that makes sense / is managable and maintainable 
 #       (organize by hierarchy of key location (actor, gnip, object, ...)
 # - use new _limited_field() class EVERYWHERE
-
-
-# notes 
-#
-# - on subclassing...
-# most classes should inherit from the _field class, which does the JSON walk and sets the initial
-# self.value. the first round of subclasses inherit from _field and update self.value to be backward
-# compatible to older gnacs. in order to do further processing or create custom output, you can also 
-# subclass the existing field_* classes and add your processing in the class constructor. this should 
-# allows us to follow the "unix philosophy" and keep building on these classes. 
-#
-# - on self.value types...
-# my current thought is that self.value should always return a string representation of the 
-# corresponding field (such that it is consistent with classic gnacs), and self.value_list should be 
-# a Python list. This should make it easier to read the code that assembles the pieces for output. 
-# For example, self.value will often simply be set to str( self.value_list ).
+# - consolidate _limited_field() & fix_length()
+# - revisit & improve the example class 
 
  
-class example_class(_field):
+class example_user_rainbows(_field):
     """
-    Assign to self.value the value of zig.zag . This is the dictionary created by the user's chosen
-    values of zig and zag (at the time of account creation. 
+    In this ficticious example, takes a dict and assigns to self.value a pipe-delimited list of 
+    the users's rainbow color choices. Values are extracted from the dictionary at the end of the 
+    gnip.zig.zag key-path. 
 
     Your real class should begin with 'field_' in order to be included in the test suite. It should 
     also try to strike a balance between being user-friendly (can the next user figure out what it
     does without reading too much code?) and being 500 characters long. 
+    
+    ===
+    >>> example_user_rainbows(data).value
+    blue|red|green 
+
+    >>> example_user_rainbows(data).value_list
+    ["blue", "red", "green"]
     """
-    # each new class should overwrite the self.path variable with a list of the appropriate keys
+    # your new classes should overwrite the self.path variable with a list of the appropriate keys
     #   that lead to the field of interest
-    path = ["zig", "zag"]               
+    path = ["gnip", "zig", "zag"]               
 
     # if the final result to be used in the custom csv function is most appropriately a list, 
     #   reassign self.value_list so the code is easier to read in the assembly/output portion 
@@ -158,54 +151,52 @@ class example_class(_field):
     def __init__(self, json_record):
         """
         Calls parent constructor, which walks the specified dict path to find appropriate value
-        to store in self.value. This __init__() only needs to be included if there is further 
-        processing to be done on self.value e.g. slicing a list/string/other computations."""
+        to store in self.value.         
+
+        Note that the explicit inclusion of this constructor is only necessary if additional 
+        processing is being done on self.value or .value_list. If the end value is e.g. simply
+        the correct string, just inheriting from the parent class (ie. _field ) will assign 
+        self.value. 
+        """
         super(
-                example_class
+                example_class 
                 , self).__init__(json_record)
-        # include a helpful note here for the next user that describes what self.value becomes, 
-        #   and then again at the final state
+        #
+        # include a short note here for the next user that describes what self.value becomes, 
+        #   and then again at the final state, if helpful
+        #
         # self.value is now a dictionary of magical unicorns 
         self.value = "|".join( [ x["rainbows"] for x in self.value ] )
-        # self.value is now a pipe-delimited string of the values corresponding to the 'rainbow' keys 
-
+        # self.value is now a pipe-delimited str of values corresponding to the unicorns' 'rainbow' keys 
         self.value_list = self.value.split("|")
         # self.value_list is now a list of the 'rainbow' keys (as an example)
 
 
-####################
+########################################
 #   top-level keys 
-####################
+########################################
 
 class field_verb(_field):
-    """assign to self.value the value of top-level 'verb' key"""
-    # specify path to desired field as a list of dict keys 
+    """
+    Takes a dictionary, assigns to self.value the value in the top-level verb key.
+    """ 
     path = ["verb"]
-    # if needed, overwrite default_value
+    # overwrite this default value because records missing this field should be called out (badness) 
     default_value = "Unidentified meta message"
     
 
 class field_id(_field):
-    """assign to self.value the value in id"""
+    """
+    Takes a dictionary, assigns to self.value the value in the top-level id key.
+    """ 
     path = ["id"]
     
     def __init__(self, json_record):
         super(
             field_id
             , self).__init__(json_record)
-        # self.value starts with tag:search.twitter..... remove all but the actual id 
+        # self.value is a str beginning w/ tag:search.twitter..... remove all but the actual id 
         self.value = self.value.split(":")[2]
-
-
-## for loading tables, this shouldn't be necessary
-#class field_id_DB(field_id):
-#    """Converts self.value from field_id class to an int."""
-#    
-#    def __init__(self, json_record):
-#        super(
-#            field_id_DB
-#            , self).__init__(json_record)
-#        self.value = int( self.value )
 
 
 class field_postedtime(_field):
