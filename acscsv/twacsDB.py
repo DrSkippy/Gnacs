@@ -719,9 +719,6 @@ class field_twitter_hashtags_text_DB(field_twitter_hashtags_text):
         else:   # value_list should be a list of 'text's 
             self.value_list = self.fix_length( self.value_list, limit ) 
         self.value = str( self.value_list )
-        #
-        # debug
-        #print >>sys.stdout, "\nhashtags, self.value_list={} (( len={} ))".format(self.value_list, len(self.value_list))
 
 
 #class field_twitter_symbols_text_DB(_field):
@@ -755,12 +752,17 @@ class field_twitter_mentions_id_name_DB(_limited_field):
     """
     path = ["twitter_entities", "user_mentions"]
 
-    fields = ["id_str", "screen_name"]
+    #fields = ["id_str", "screen_name"]
+    fields = ["id", "screen_name"]
 
     def __init__(self, json_record, limit=5):
         super(
             field_twitter_mentions_id_name_DB
             , self).__init__(json_record)
+        #
+        # debug
+#        print >>sys.stdout, "\n***** mentions. self.value_list={} (( len={} ))".format(self.value_list, len(self.value_list))
+#        print >>sys.stdout, "\n***** id_str={}, screen_name={}".format(self.value_list[0], self.value_list[1])
 
 
 
