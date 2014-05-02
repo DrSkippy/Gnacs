@@ -163,9 +163,9 @@ def main():
                     udyn_str = udyn_str.strip("|")
                     #
                     # debug
-                    sys.stdout.write(u"\n\n###### acs_str ######\n{}".format(acs_str) )
-                    sys.stdout.write(u"\n###### ustatic_str ######\n{}".format(ustatic_str) )
-                    sys.stdout.write(u"\n###### udyn_str ######\n{}".format(udyn_str) )
+#                    sys.stdout.write(u"\n\n###### acs_str ######\n{}".format(acs_str) )
+#                    sys.stdout.write(u"\n###### ustatic_str ######\n{}".format(ustatic_str) )
+#                    sys.stdout.write(u"\n###### udyn_str ######\n{}".format(udyn_str) )
                     #
                     acs_f.write(acs_str + "\n")
                     ustatic_f.write(ustatic_str + "\n")

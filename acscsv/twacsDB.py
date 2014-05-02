@@ -19,7 +19,8 @@ class _field(object):
     """
     # default values, can be overwritten in custom classes 
     default_t_fmt = "%Y-%m-%d %H:%M:%S"
-    default_value = "None"
+    #default_value = "None"
+    default_value = "\\N"
     value = None
     value_list = []
     path = []
@@ -38,6 +39,9 @@ class _field(object):
             if k not in res:
                 return self.default_value
             res = res[k]
+        # handle the special case where the walk_path found null (JSON) ==> None (Python)
+        #   and don't put "None" in the value unless you really want it (via self.default_value)
+        res = res if res is not None else self.default_value
         return res
 
 
@@ -57,6 +61,7 @@ class _field(object):
             # no limits on the length of the result, so just return the original iterable
             res = iterable
         else:
+            #if len(iterable) == 0:
             if iterable == self.default_value or len(iterable) == 0:
                 # if walk_path() finds the final key, but the value is an empty list 
                 #   (common for e.g. the contents of twitter_entities) 
@@ -75,8 +80,22 @@ class _field(object):
 
 
 class _limited_field(_field):
+    # TODO:
+    # this is specifically about extracting multiple values from keys in an iterable
+    # the truncating could use fix_length(), above.
     """
-    asdf 
+    Takes a JSON record (in python dict form) and optionally a maximum length (limit, 
+    with default length=5). Uses parent class _field() to assign the appropriate value 
+    to self.value. When self.value is a list of dictionaries, 
+    inheriting from _limited_field() class allows for the extraction and combination of 
+    an arbitrary number of fields within self.value into self.value_list.
+
+    Ex: if your class would lead to having 
+    self.value = [ {'a': 1, 'b': 2, 'c': 3}, {'a': 4, 'b': 5, 'c': 6} ], and what you'd like 
+    is a list that looks like [ 1, 2, 4, 5 ], inheriting from _limited_field() allows you 
+    to overwrite the fields list ( fields=["a", "b"] ) and have result in 
+    self.value_list=[ 1, 2, 4, 5 ]. Finally, self.value is set to a string representation of  
+    the final self.value_list.
     """
     fields = None 
 
@@ -88,12 +107,10 @@ class _limited_field(_field):
         # start with default list full of the default_values
         self.value_list = [ self.default_value ]*( len(self.fields)*limit )
         if self.value != self.default_value: 
-            for i,x in enumerate(self.value): 
-                if i <= limit: 
-                    for j,y in enumerate(self.fields): 
-                        print u">>> (i, x)={}, (j, y)={}".format((i,x), (j,y))
+            for i,x in enumerate(self.value):   # iterate over the dicts in the list
+                if i < limit:                   # ... up until you reach limit 
+                    for j,y in enumerate(self.fields):      # iterate over the dict keys 
                         self.value_list[ len( self.fields )*i + j ] = x[ self.fields[j] ] 
-        print u">>> self.value_list={}".format(self.value_list)
         self.value = str( self.value_list )
 
 
@@ -178,6 +195,17 @@ class field_id(_field):
             , self).__init__(json_record)
         # self.value starts with tag:search.twitter..... remove all but the actual id 
         self.value = self.value.split(":")[2]
+
+
+## for loading tables, this shouldn't be necessary
+#class field_id_DB(field_id):
+#    """Converts self.value from field_id class to an int."""
+#    
+#    def __init__(self, json_record):
+#        super(
+#            field_id_DB
+#            , self).__init__(json_record)
+#        self.value = int( self.value )
 
 
 class field_postedtime(_field):
@@ -320,20 +348,27 @@ class field_actor_utcoffset(_field):
         self.value = str( self.value )
 
 
-class field_actor_utcoffset_DB(field_actor_utcoffset):
-    """Return an integer representation of actor.utcOffset (classic version is a string)."""
-    
-    def __init__(self, json_record):
-        super(
-            field_actor_utcoffset_DB
-            , self).__init__(json_record)
-        # self.value is a string representation of a signed int 
-        self.value = int( self.value )
+#class field_actor_utcoffset_DB(field_actor_utcoffset):
+#    """Return an integer representation of actor.utcOffset (classic version is a string)."""
+#    
+#    def __init__(self, json_record):
+#        super(
+#            field_actor_utcoffset_DB
+#            , self).__init__(json_record)
+#        # self.value is a string representation of a signed int 
 
 
 class field_actor_verified(_field):
     """Assign to self.value the value of actor.verified"""
     path = ["actor", "verified"]
+    default_value = False
+
+    def __init__(self, json_record):
+        super(
+            field_actor_verified
+            , self).__init__(json_record)
+        # self.value is possibly boolean 
+        self.value = int( self.value )
 
 
 class field_actor_loc_displayname(_field):
@@ -498,15 +533,22 @@ class field_gnip_pl_geo_coords(_field):
            field_gnip_pl_geo_coords 
             , self).__init__(json_record)
         # self.value is (possibly) a list of floats: [lat, lon] 
-        if self.value != self.default_value:
+        if self.value == self.default_value:
+            self.value_list = [ self.default_value, self.default_value ]
+            #self.value_list = [ "", "" ]
+        else:
             self.value_list = self.value
-            self.value = str( self.value_list ) 
+        self.value = str( self.value_list ) 
+        #
+        # debug
+        #print >> sys.stderr, "***** self.value_list={}, self.value={}".format(self.value_list, self.value)
 
 
 #### klout #### 
 class field_gnip_klout_score(_field):
     """Assign to self.value the value of gnip.klout_score"""
     path = ["gnip", "klout_score"]
+    default_value = 0
     
     def __init__(self, json_record):
         super(
@@ -541,12 +583,12 @@ class field_gnip_klout_topics(_field):
             self.value_list = [ self.default_value ]*(self.field_count*limit)  
         else:   # found something in the list
             tmp = []
-            [ tmp.extend( [ int( x["klout_topic_id"] ), x["displayName"] ] ) for x in self.value ]
+            [ tmp.extend( [ x["klout_topic_id"], x["displayName"] ] ) for x in self.value ]
             self.value_list = tmp
             current_len = len(self.value_list)
             if current_len < self.field_count*limit:         # need to pad list
                 for _ in range( self.field_count*limit - current_len ):
-                    self.value_list += ["None", "None"]
+                    self.value_list += [ self.default_value, self.default_value ]
             elif current_len > limit:         # need to truncate list
                 self.value_list = self.value_list[:(self.field_count*limit)]
         #
@@ -588,7 +630,7 @@ class _field_twitter_urls(_field):
             self.value = str( [ self.default_value ] )
         #
         self.value_list = eval( self.value )
-
+    
 
 class field_twitter_urls_url(_field_twitter_urls):
     """
@@ -613,6 +655,22 @@ class field_twitter_urls_expanded_url(_field_twitter_urls):
         super(
             field_twitter_urls_expanded_url
             , self).__init__(json_record, "expanded_url")
+
+
+#
+# WIP -- if this works, replace all twitter_entities urls classes with this approach
+#
+class field_twitter_urls_tco_expanded_DB(_limited_field):
+    """
+    """
+    path = ["twitter_entities", "urls"]
+    fields = ["url", "expanded_url"] 
+
+    def __init__(self, json_record, limit=5):
+        super(
+            field_twitter_urls_tco_expanded_DB 
+            , self).__init__(json_record)
+
 
 
 class field_twitter_urls_display_url(_field_twitter_urls):
@@ -661,9 +719,13 @@ class field_twitter_hashtags_text_DB(field_twitter_hashtags_text):
         else:   # value_list should be a list of 'text's 
             self.value_list = self.fix_length( self.value_list, limit ) 
         self.value = str( self.value_list )
+        #
+        # debug
+        #print >>sys.stdout, "\nhashtags, self.value_list={} (( len={} ))".format(self.value_list, len(self.value_list))
 
 
-class field_twitter_symbols_text_DB(_field):
+#class field_twitter_symbols_text_DB(_field):
+class field_twitter_symbols_text_DB(_limited_field):
     """
     Assign to self.value a list of twitter_entities.symbols 'text's.
     This one is a little experimental... haven't seen it in the wild (Activity Streams) yet, 
@@ -671,36 +733,40 @@ class field_twitter_symbols_text_DB(_field):
     """
     path = ["twitter_entities", "symbols"]
 
+    fields = ["text"]
+
     def __init__(self, json_record, limit=5):
         super(
             field_twitter_symbols_text_DB
             , self).__init__(json_record)
         # self.value is possibly a list of dicts for each activity symbol 
-        if self.value == self.default_value or len(self.value) == 0:
-            self.value_list = [ self.default_value ]*limit
-        else:
-#            current_len = len(self.value)
-#            if current_len < limit:         # need to pad list
-#                [ self.value_list.append("None") for _ in range(limit - current_len) ]
-#            elif current_len > limit:         # need to truncate list
-#                self.value_list = self.value_list[:limit]
-#        self.value = str( self.value_list ) 
-            self.value_list = self.fix_length( self.value_list, limit ) 
-        self.value = str( self.value_list )
+
+#        if self.value == self.default_value or len(self.value) == 0:
+#            self.value_list = [ self.default_value ]*limit
+#        else:
+#            self.value_list = self.fix_length( self.value_list, limit ) 
+#        self.value = str( self.value_list )
 
 
-class field_twitter_mentions_name_id_DB(_limited_field):
+class field_twitter_mentions_id_name_DB(_limited_field):
     """
     Assign to self.value a list of 'limit' twitter_entities.user_mentions.screen_name and .id pairs 
     (in order, but in a flat list).
     """
     path = ["twitter_entities", "user_mentions"]
 
-    fields = ["screen_name", "id_str"]
+    fields = ["id_str", "screen_name"]
+
+    def __init__(self, json_record, limit=5):
+        super(
+            field_twitter_mentions_id_name_DB
+            , self).__init__(json_record)
+
+
 
 #    def __init__(self, json_record, limit=5):
 #        super(
-#            field_twitter_mentions_name_id_DB
+#            field_twitter_mentions_id_name_DB
 #            , self).__init__(json_record)
 #        # self.value is possibly a list of dicts for each activity user mention 
 #        if self.value == self.default_value or len(self.value) == 0:
@@ -732,6 +798,9 @@ class field_twitter_media_id_url_DB(_limited_field):
         super(
             field_twitter_media_id_url_DB 
             , self).__init__(json_record, limit)
+        #
+        # debug
+        #print >>sys.stderr, "media self.value_list={} (( len={} ))".format(self.value_list, len(self.value_list))
        
 
 ########
@@ -773,25 +842,35 @@ class field_geo_coords(_field):
         super(
             field_geo_coords
             , self).__init__(json_record)
-        self.value = str( self.value )
-
-
-class field_geo_coords_DB(field_geo_coords):
-    """
-    Modify self.value assigned in the field_geo_coords class. Assign self.value_list to a list 
-    of either  [lat, long] or 2x self.default_value. 
-    """
-    
-    def __init__(self, json_record):
-        super(
-            field_geo_coords_DB
-            , self).__init__(json_record)
-        # self.value is a str of either default_value or '[lat, lon]' 
         if self.value == self.default_value:
             self.value_list = [ self.default_value, self.default_value ]
-        else:
-            self.value_list = eval( self.value )
-        #print >>sys.stderr, "field_geo_coords_DB.value_list={} (type={})".format(self.value_list, type(self.value_list))
+        else: 
+            self.value_list = self.value
+        self.value = str( self.value )
+
+#
+# do we have to get the format exactly correct on the way in?
+#
+#class field_geo_coords_DB(field_geo_coords):
+#    """
+#    Modify self.value assigned in the field_geo_coords class. Assign self.value_list to a list 
+#    of either  [lat, long] or 2x self.default_value. 
+#    """
+#    # MySQL DECIMAL syntax is (M,D), where M is the max number of digits (precision) and 
+#    #   D is the number of digits to the right of the decimal point (scale) 
+#    # these are set in the table schema
+#    m = 10
+#    d = 7
+#    
+#    def __init__(self, json_record):
+#        super(
+#            field_geo_coords_DB
+#            , self).__init__(json_record)
+#        # self.value is a str of either default_value or '[lat, lon]' 
+#        if self.value == self.default_value:
+#            self.value_list = [ self.default_value, self.default_value ]
+#        else:
+#            self.value_list = eval( self.value )
  
 
 class field_location_type(_field):
@@ -1058,8 +1137,6 @@ class Twacs(acscsv.AcsCSV):
 
         # the explicit .value attr reference is needed
         acs_list = [
-                    # <class>.value is a string 
-                    # <class>.value_list is a list 
                     field_id(d).value 
                     , field_gnip_rules(d).value 
                     , now 
@@ -1072,11 +1149,16 @@ class Twacs(acscsv.AcsCSV):
                     , field_link(d).value 
                     , field_generator_displayname(d).value 
                     ] \
-                    + field_geo_coords_DB(d).value_list \
+                    + field_geo_coords(d).value_list \
                     + field_twitter_hashtags_text_DB(d).value_list \
                     + field_twitter_symbols_text_DB(d).value_list \
-                    + field_twitter_mentions_name_id_DB(d).value_list \
+                    + field_twitter_mentions_id_name_DB(d).value_list \
+                    + field_twitter_urls_tco_expanded_DB(d).value_list \
                     + field_twitter_media_id_url_DB(d).value_list 
+#        print >>sys.stderr, "***** field_geo_coords(d).value_list={}, len={}".format(
+#                                field_geo_coords(d).value_list
+#                                , len( field_geo_coords(d).value_list ) 
+#                                )
 
         ustatic_list = [
                     now 
@@ -1088,9 +1170,11 @@ class Twacs(acscsv.AcsCSV):
                     , field_actor_displayname(d).value 
                     , field_actor_acct_link(d).value 
                     , field_actor_summary(d).value 
-                    , field_actor_links(d).value 
-                    , field_actor_twittertimezone(d).value 
-#                    , field_actor_utcoffset_DB(d).value       # add this to the table in v2 
+                    ] \
+                    + field_actor_links(d).value_list \
+                    + [ 
+                    field_actor_twittertimezone(d).value 
+                    , field_actor_utcoffset(d).value 
                     , field_actor_verified(d).value 
                     , field_actor_lang(d).value 
                     ] \
