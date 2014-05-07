@@ -45,7 +45,7 @@ class _field(object):
 
     def fix_length(self, iterable, limit=None):
         """
-        Takes an iterable (typically a list) and an optional maximum length (limit). 
+        Take an iterable (typically a list) and an optional maximum length (limit). 
         If limit is not given, and the input iterable is not equal to self.default_value
         (typically "None"), the input iterable is returned. If limit is given, the return
         value is a list that is either truncated to the first limit items, or padded 
@@ -82,7 +82,7 @@ class _limited_field(_field):
     # this is specifically about extracting multiple values from keys in an iterable
     # the truncating could use fix_length(), above.
     """
-    Takes a JSON record (in python dict form) and optionally a maximum length (limit, 
+    Takes JSON record (in python dict form) and optionally a maximum length (limit, 
     with default length=5). Uses parent class _field() to assign the appropriate value 
     to self.value. When self.value is a list of dictionaries, 
     inheriting from _limited_field() class allows for the extraction and combination of 
@@ -125,9 +125,9 @@ class _limited_field(_field):
  
 class example_user_rainbows(_field):
     """
-    In this ficticious example, takes a dict and assigns to self.value a pipe-delimited list of 
-    the users's rainbow color choices. Values are extracted from the dictionary at the end of the 
-    gnip.zig.zag key-path. 
+    In this ficticious example, take a dict (data) and assign to self.value a pipe-delimited list 
+    of the users's rainbow color choices. Values are extracted from the dictionary at the end of 
+    the gnip.zig.zag key-path. 
 
     Your real class should begin with 'field_' in order to be included in the test suite. It should 
     also try to strike a balance between being user-friendly (can the next user figure out what it
@@ -150,8 +150,8 @@ class example_user_rainbows(_field):
 
     def __init__(self, json_record):
         """
-        Calls parent constructor, which walks the specified dict path to find appropriate value
-        to store in self.value.         
+        Call the parent constructor which walks the specified dict path to find 
+        appropriate value to store in self.value.         
 
         Note that the explicit inclusion of this constructor is only necessary if additional 
         processing is being done on self.value or .value_list. If the end value is e.g. simply
@@ -177,18 +177,14 @@ class example_user_rainbows(_field):
 ########################################
 
 class field_verb(_field):
-    """
-    Takes a dictionary, assigns to self.value the value in the top-level verb key.
-    """ 
+    """Take a dict, assign to self.value the value in the top-level verb key.""" 
     path = ["verb"]
     # overwrite this default value because records missing this field should be called out (badness) 
     default_value = "Unidentified meta message"
     
 
 class field_id(_field):
-    """
-    Takes a dictionary, assigns to self.value the value in the top-level id key.
-    """ 
+    """Take a dict, assign to self.value the value in the top-level id key.""" 
     path = ["id"]
     
     def __init__(self, json_record):
@@ -200,10 +196,10 @@ class field_id(_field):
 
 
 class field_postedtime(_field):
-    """assign to self.value the value in postedTime"""
+    """Take a dict, assign to self.value the value in the top-level postedTime key."""
     path = ["postedTime"]
 
-    # this is the more elegant approach 
+    # this is the more elegant approach -- replace someday, if needed 
     #dateRE = re.compile("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}", re.IGNORECASE)
 
     def __init__(self, json_record):
@@ -219,19 +215,24 @@ class field_postedtime(_field):
    
 
 class field_body(_field):
-    """assign to self.value the value in top-level body"""
+    """Take a dict, assign to self.value the value in top-level body key."""
     path = ["body"]
     
 
 class field_link(_field):
-    """assign to self.value the value in top-level link"""
+    """Take a dict, assign to self.value the value in top-level link key."""
     path = ["link"]
     
 
 class field_twitter_lang(_field):
-    """assign to self.value the value of top-level 'twitter_lang'"""
+    """Take a dict, assign to self.value the value of top-level twitter_lang key."""
     path = ["twitter_lang"]
     
+
+#
+# WIP - updating docstrings & comments, 2014-05-07, JM
+#
+
 
 ####################
 #   'actor' fields 
@@ -253,7 +254,7 @@ class field_actor_postedtime(_field):
     """Assign to self.value the value of actor.postedTime"""
     path = ["actor", "postedTime"]
     
-    # this is the more elegant approach 
+    # this is the more elegant approach -- convert someday, if needed 
     #dateRE = re.compile("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}", re.IGNORECASE)
 
     def __init__(self, json_record):
@@ -263,9 +264,11 @@ class field_actor_postedtime(_field):
         # self.value is a datetime string 
         input_fmt = "%Y-%m-%dT%H:%M:%S.000Z"
         self.value = datetime.strptime( 
-                        self.value, input_fmt 
+                        self.value
+                        , input_fmt 
                         ).strftime( 
-                            self.default_t_fmt ) 
+                            self.default_t_fmt 
+                            ) 
 
 
 class field_actor_lang(_field):
@@ -337,16 +340,6 @@ class field_actor_utcoffset(_field):
             , self).__init__(json_record)
         # self.value is a signed integer 
         self.value = str( self.value )
-
-
-#class field_actor_utcoffset_DB(field_actor_utcoffset):
-#    """Return an integer representation of actor.utcOffset (classic version is a string)."""
-#    
-#    def __init__(self, json_record):
-#        super(
-#            field_actor_utcoffset_DB
-#            , self).__init__(json_record)
-#        # self.value is a string representation of a signed int 
 
 
 class field_actor_verified(_field):
