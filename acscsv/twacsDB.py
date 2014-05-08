@@ -12,18 +12,18 @@ import re
 # move to acscsv?
 class _field(object):
     """
-    Base class for finding the desired value at the end of a string of keys in a JSON Activity 
+    Base class for extracting the desired value at the end of a series of keys in a JSON Activity 
     Streams payload. Set the application-wide default value (for e.g. missing values) here, 
     but also use child classes to override when necessary. Subclasses also need to define the 
     key-path (path) to the desired location by overwriting the path attr.
     """
-    # default values, can be overwritten in custom classes 
+    # set some default values; these can be overwritten in custom classes 
     default_t_fmt = "%Y-%m-%d %H:%M:%S"
     #default_value = "None"
-    default_value = "\\N"   # escaped \N ==> MySQL NULL
-    value = None            # always a str representation of the field, incl str( self.value_list ) 
-    value_list = []         # overwritten when the desired value is most appropriately a list 
-    path = []
+    default_value = "\\N"           # escaped \N ==> MySQL NULL
+    value = None                    # str representation of the field, often = str( self.value_list ) 
+    value_list = [ self.default_value ]         # overwrite when value is most appropriately a list 
+    path = []                       # dict key-path to follow for desired value
 
     def __init__(self, json_record):
         self.value = self.walk_path(json_record)
@@ -78,9 +78,8 @@ class _field(object):
 
 
 class _limited_field(_field):
-    # TODO:
-    # this is specifically about extracting multiple values from keys in an iterable
-    # the truncating could use fix_length(), above.
+    #TODO: is there a better way that this class and the fix_length() method in _field class
+    #       could be combined?
     """
     Takes JSON record (in python dict form) and optionally a maximum length (limit, 
     with default length=5). Uses parent class _field() to assign the appropriate value 
@@ -91,9 +90,8 @@ class _limited_field(_field):
     Ex: if your class would lead to having 
     self.value = [ {'a': 1, 'b': 2, 'c': 3}, {'a': 4, 'b': 5, 'c': 6} ], and what you'd like 
     is a list that looks like [ 1, 2, 4, 5 ], inheriting from _limited_field() allows you 
-    to overwrite the fields list ( fields=["a", "b"] ) and have result in 
-    self.value_list=[ 1, 2, 4, 5 ]. Finally, self.value is set to a string representation of  
-    the final self.value_list.
+    to overwrite the fields list ( fields=["a", "b"] ) to obtain this result. 
+    Finally, self.value is set to a string representation of the final self.value_list.
     """
     fields = None 
 
@@ -110,6 +108,7 @@ class _limited_field(_field):
                     if i < limit:                   # ... up until you reach limit 
                         for j,y in enumerate(self.fields):      # iterate over the dict keys 
                             self.value_list[ len( self.fields )*i + j ] = x[ self.fields[j] ] 
+            # finally, str-ify the list
             self.value = str( self.value_list )
 
 
@@ -172,8 +171,43 @@ class example_user_rainbows(_field):
         # self.value_list is now a list of the 'rainbow' keys (as an example)
 
 
+
 ########################################
-#   top-level keys 
+#   activity type 
+########################################
+
+class field_activity_type(_field):
+    """Assign to self.value the appropriate value of Tweet, Retweet, or Reply"""
+    path = []
+    
+    def __init__(self, json_record):
+        super(
+            #field_structure_type
+            field_activity_type
+            , self).__init__(json_record)
+        # self.value is None
+        verb = field_verb(json_record).value 
+        inReplyTo = "None"
+        obj_objtype = "None"
+        if "inReplyTo" in json_record:
+            # possible KeyError? (JM)
+            inReplyTo = json_record["inReplyTo"]["link"]
+        if "object" in json_record:
+            obj = json_record["object"]
+            if "objectType" in obj:
+                obj_objtype = obj["objectType"]
+        # now we can determine self.value
+        if verb == "share" and obj_objtype == "activity":
+            self.value = "Retweet"
+        elif inReplyTo == "None":
+            self.value = "Tweet"
+        else:
+            self.value = "Reply"
+
+
+
+########################################
+#   top-level fields 
 ########################################
 
 class field_verb(_field):
@@ -196,7 +230,10 @@ class field_id(_field):
 
 
 class field_postedtime(_field):
-    """Take a dict, assign to self.value the value in the top-level postedTime key."""
+    """
+    Take a dict, assign to self.value the value in the top-level postedTime key. Timestamp is 
+    formatted according to input_fmt, which is set in the constructor.
+    """
     path = ["postedTime"]
 
     # this is the more elegant approach -- replace someday, if needed 
@@ -229,17 +266,15 @@ class field_twitter_lang(_field):
     path = ["twitter_lang"]
     
 
-#
-# WIP - updating docstrings & comments, 2014-05-07, JM
-#
-
-
-####################
+########################################
 #   'actor' fields 
-####################
+########################################
 
 class field_actor_id(_field):
-    """Assign to self.value the value of actor.id"""
+    """
+    Assign to self.value the numerical value of actor.id (after stripping off 
+    the leading 'id:twitter...' characters.
+    """
     path = ["actor", "id"]
     
     def __init__(self, json_record):
@@ -251,36 +286,34 @@ class field_actor_id(_field):
 
 
 class field_actor_postedtime(_field):
-    """Assign to self.value the value of actor.postedTime"""
+    """
+    Assign to self.value the value of actor.postedTime (input format is defined in the 
+    constructor, output format is default unless overwritten).
+    """ 
     path = ["actor", "postedTime"]
     
-    # this is the more elegant approach -- convert someday, if needed 
+    # this is a more elegant approach -- convert someday, if needed 
     #dateRE = re.compile("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}", re.IGNORECASE)
 
     def __init__(self, json_record):
         super(
             field_actor_postedtime 
             , self).__init__(json_record)
-        # self.value is a datetime string 
+        # self.value is a string (of a timestamp) 
         input_fmt = "%Y-%m-%dT%H:%M:%S.000Z"
-        self.value = datetime.strptime( 
-                        self.value
-                        , input_fmt 
-                        ).strftime( 
-                            self.default_t_fmt 
-                            ) 
+        self.value = datetime.strptime(self.value, input_fmt).strftime(self.default_t_fmt) 
 
 
 class field_actor_lang(_field):
-    """assign to self.value the value of actor.languages"""
+    """Assign to self.value the first value in the list at actor.languages"""
     path = ["actor", "languages"]
     
     def __init__(self, json_record):
         super(
             field_actor_lang
             , self).__init__(json_record)
-        # self.value is a list, but have only ever seen with one value, so take that one. 
-        # can simply use str( self.value ) if more than one appear someday
+        # self.value is a list, but have only ever seen it with one value, so take that one. 
+        # can use str( self.value ) if more than one appear someday
         self.value = self.value[0]
 
 
@@ -300,14 +333,15 @@ class field_actor_summary(_field):
 
 
 class field_actor_acct_link(_field):
-    """Assign to self.value the value of actor.link, a link to the user's twitter profile."""
+    """Assign to self.value the value of actor.link"""
     path = ["actor", "link"]
 
 
 class field_actor_links(_field):
     """
-    Assign to self.value a string repr of a list of the links contained in actor.links (so long 
-    as the corresponding dictionary isn't empty).
+    Assign to self.value a string repr of a list of the links contained in actor.links (or 
+    default_value if the corresponding dict is empty). The number of links included in the 
+    list is optionally specified in the constructor. 
     """
     path = ["actor", "links"]
 
@@ -315,14 +349,10 @@ class field_actor_links(_field):
         super(
             field_actor_links
             , self).__init__(json_record)
-        # self.value is either default_value or a list of dictionaries
-        if self.value == self.default_value:
-            self.value_list = [ self.default_value ]
-        else:
+        if self.value != self.default_value:
             # ignore the links that are "null" in the payload ( ==> None in the dict )
             self.value_list = [ x["href"] for x in self.value if x["href"] is not None ] 
             self.value_list = self.fix_length( self.value_list, limit )
-        self.value = str( self.value_list )
 
 
 class field_actor_twittertimezone(_field):
@@ -330,20 +360,29 @@ class field_actor_twittertimezone(_field):
     path = ["actor", "twitterTimeZone"]
 
 
-class field_actor_utcoffset(_field):
-    """Assign to self.value a string representation of the value of actor.utcOffset."""
+class field_actor_utcoffset_DB(_field):
+    """Assign to self.value the value of actor.utcOffset."""
     path = ["actor", "utcOffset"]
     
+
+class field_actor_utcoffset(field_actor_utcoffset_DB):
+    """
+    Assign to self.value a string repr of the value of actor.utcOffset. Ensures backward 
+    compatibility with classic, stringy, gnacs.py output.
+    """
+   
     def __init__(self, json_record):
         super(
             field_actor_utcoffset
             , self).__init__(json_record)
-        # self.value is a signed integer 
+        # self.value is a signed integer - str-ify for backward compatibility 
         self.value = str( self.value )
 
 
 class field_actor_verified(_field):
-    """Assign to self.value the value of actor.verified"""
+    """
+    Assign to self.value a 0/1 boolean repr of the value of actor.verified. Default is False (0).
+    """
     path = ["actor", "verified"]
     default_value = False
 
@@ -352,7 +391,10 @@ class field_actor_verified(_field):
             field_actor_verified
             , self).__init__(json_record)
         # self.value is possibly boolean 
-        self.value = int( self.value )
+        try:
+            self.value = int( self.value )
+        except ValueError, e:
+            sys.stderr.write("Unable to convert Verified field, error={}".format(e))
 
 
 class field_actor_loc_displayname(_field):
@@ -360,9 +402,14 @@ class field_actor_loc_displayname(_field):
     path = ["actor", "location", "displayName"]
     
 
-class field_actor_followers(_field):
-    """Assign to self.value the value of actor.followersCount"""
+class field_actor_followers_DB(_field):
+    """Assign to self.value the value of actor.followersCount."""
     path = ["actor", "followersCount"]
+    # self.value is an int  
+ 
+
+class field_actor_followers(field_actor_followers_DB):
+    """Assign to self.value a str-ified repr of the value of actor.followersCount"""
     
     def __init__(self, json_record):
         super(
@@ -370,17 +417,16 @@ class field_actor_followers(_field):
             , self).__init__(json_record)
         # self.value is an int 
         self.value = str( self.value )
-
-
-class field_actor_followers_DB(_field):
-    """Assign to self.value the value of actor.followersCount, but store it as an integer."""
-    path = ["actor", "followersCount"]
-    # self.value is an int  
-   
+  
  
-class field_actor_friends(_field):
-    """Assign to self.value the value of actor.friendsCount"""
+class field_actor_friends_DB(_field):
+    """Assign to self.value the value of actor.friendsCount."""
     path = ["actor", "friendsCount"]
+    # self.value is an int
+
+
+class field_actor_friends(field_actor_friends_DB):
+    """Assign to self.value a str-ified repr of the value of actor.friendsCount."""
     
     def __init__(self, json_record):
         super(
@@ -390,15 +436,14 @@ class field_actor_friends(_field):
         self.value = str( self.value )
 
 
-class field_actor_friends_DB(_field):
-    """Assign to self.value the value of actor.friendsCount, but store it as an integer."""
-    path = ["actor", "friendsCount"]
+class field_actor_listed_DB(_field):
+    """Assign to self.value the value of actor.listedCount"""
+    path = ["actor", "listedCount"]
     # self.value is an int
 
 
-class field_actor_listed(_field):
-    """Assign to self.value the value of actor.listedCount"""
-    path = ["actor", "listedCount"]
+class field_actor_listed(field_actor_listed_DB):
+    """Assign to self.value a str-ified repr of the value of actor.listedCount"""
     
     def __init__(self, json_record):
         super(
@@ -408,15 +453,14 @@ class field_actor_listed(_field):
         self.value = str( self.value )
 
 
-class field_actor_listed_DB(_field):
-    """Assign to self.value the value of actor.listedCount, but store it as an integer"""
-    path = ["actor", "listedCount"]
-    # self.value is an int
-
-
-class field_actor_statuses(_field):
+class field_actor_statuses_DB(_field):
     """Assign to self.value the value of actor.statusesCount"""
     path = ["actor", "statusesCount"]
+    # self.value is an int 
+
+
+class field_actor_statuses(field_actor_statuses_DB):
+    """Assign to self.value a str-ified repr of the value of actor.statusesCount"""
     
     def __init__(self, json_record):
         super(
@@ -426,90 +470,99 @@ class field_actor_statuses(_field):
         self.value = str( self.value )
 
 
-class field_actor_statuses_DB(_field):
-    """Assign to self.value the value of actor.statusesCount, but store it as an integer"""
-    path = ["actor", "statusesCount"]
-    # self.value is an int 
 
-
-
-
-
+########################################
+#   'generator' fields 
+########################################
 
 class field_generator_displayname(_field):
-    """assign to self.value the value in generator.displayName"""
+    """Assign to self.value the value of generator.displayName"""
     path = ["generator", "displayName"]
     
-
 
 
 ########################################
 #   'gnip' fields 
 ########################################
 
+class field_gnip_rules(_field):
+    """assign to self.value the value of 'gnip', 'matching_rules'"""
+    path = ["gnip", "matching_rules"]
+    
+    def __init__(self, json_record):
+        super(
+            field_gnip_rules
+            , self).__init__(json_record)
+        # if matching_rules exists, self.value is a list of dicts 
+        #   to be consistent with old code, want a list of [rule (tag), ... ]
+        if self.value != self.default_value:
+            self.value = [ "{} ({})".format( d["value"], d["tag"] ) for d in self.value ]
+        else:
+            self.value = [ self.default_value ]
+        self.value = str( self.value )
+
+
 class field_gnip_urls(_field):
-    """assign to self.value the list of 'expanded_url' values within 'gnip', 'urls'"""
+    """Assign to self.value the list of 'expanded_url' values within 'gnip', 'urls'"""
     path = ["gnip", "urls"]
     
     def __init__(self, json_record):
         super(
             field_gnip_urls
             , self).__init__(json_record)
-        # self.value is (possibly) a list of url & expanded url dicts
+        # self.value is possibly a list of url & expanded url dicts
         if self.value != self.default_value:
-            self.value = str( [ x["expanded_url"] for x in self.value ] ) 
+            self.value_list = [ x["expanded_url"] for x in self.value ]
+            self.value = str( self.value_list ) 
 
 
 class field_gnip_lang(_field):
     path = ["gnip","language","value"]
     
 
-#### profileLocations ####
+# profileLocations 
 class field_gnip_pl_displayname(_field):
-    """
-    Assign to self.value the value of gnip.profileLocation.displayName . Currently only 
-    supports one list item, but could add support more in the future.
-    """
+    """Assign to self.value the value of gnip.profileLocation.displayName."""
     path = ["gnip", "profileLocations", "displayName"]
     
  
 class field_gnip_pl_objecttype(_field):
-    """Assign to self.value the value of gnip.profileLocations.objectType"""
+    """Assign to self.value the value of gnip.profileLocations.objectType."""
     path = ["gnip", "profileLocations", "objectType"]
     
 
 class field_gnip_pl_country(_field):
-    """Assign to self.value the value of gnip.profileLocations.address.country"""
+    """Assign to self.value the value of gnip.profileLocations.address.country."""
     path = ["gnip", "profileLocations", "address", "country"]
 
 
 class field_gnip_pl_region(_field):
-    """Assign to self.value the value of gnip.profileLocations.address.region"""
+    """Assign to self.value the value of gnip.profileLocations.address.region."""
     path = ["gnip", "profileLocations", "address", "region"]
     
 
 class field_gnip_pl_subregion(_field):
-    """Assign to self.value the value of gnip.profileLocations.address.subRegion"""
+    """Assign to self.value the value of gnip.profileLocations.address.subRegion."""
     path = ["gnip", "profileLocations", "address", "subRegion"]
     
 
 class field_gnip_pl_countrycode(_field):
-    """Assign to self.value the value of gnip.profileLocations.address.countryCode"""
+    """Assign to self.value the value of gnip.profileLocations.address.countryCode."""
     path = ["gnip", "profileLocations", "address", "countryCode"]
 
 
 class field_gnip_pl_locality(_field):
-    """Assign to self.value the value of gnip.profileLocations.address.locality"""
+    """Assign to self.value the value of gnip.profileLocations.address.locality."""
     path = ["gnip", "profileLocations", "address", "locality"]
 
 
 class field_gnip_pl_geo_type(_field):
-    """Assign to self.value the value of gnip.profileLocations.geo.type"""
+    """Assign to self.value the value of gnip.profileLocations.geo.type."""
     path = ["gnip", "profileLocations", "geo", "type"]
     
 
 class field_gnip_pl_geo_coords(_field):
-    """Assign to self.value the value of gnip.profileLocations.geo.coordinates"""
+    """Assign to self.value the coordinate list in gnip.profileLocations.geo.coordinates."""
     path = ["gnip", "profileLocations", "geo", "coordinates"]
     
     def __init__(self, json_record):
@@ -518,19 +571,18 @@ class field_gnip_pl_geo_coords(_field):
             , self).__init__(json_record)
         # self.value is (possibly) a list of floats: [lat, lon] 
         if self.value == self.default_value:
-            self.value_list = [ self.default_value, self.default_value ]
-            #self.value_list = [ "", "" ]
+            # might as well use the helper method...
+            self.value_list = self.fix_length( [], limit=2) 
+            #self.value_list = [ self.default_value, self.default_value ]
         else:
             self.value_list = self.value
         self.value = str( self.value_list ) 
-        #
-        # debug
-        #print >> sys.stderr, "***** self.value_list={}, self.value={}".format(self.value_list, self.value)
 
 
-#### klout #### 
+# klout 
+
 class field_gnip_klout_score(_field):
-    """Assign to self.value the value of gnip.klout_score"""
+    """Assign to self.value the value of gnip.klout_score."""
     path = ["gnip", "klout_score"]
     default_value = 0
     
@@ -548,12 +600,14 @@ class field_gnip_klout_user_id(_field):
     path = ["gnip", "klout_user_id"]
     
 
-class field_gnip_klout_topics(_field):
+#class field_gnip_klout_topics(_field):
+class field_gnip_klout_topics(_limited_field):
     """
     Assign to self.value_list (and .value) pairs of gnip.klout_profile.displayName 
-    and .klout_topic_id . 
+    and .klout_topic_id. Up to limit number of these combinations. 
     """
     path = ["gnip", "klout_profile", "topics"]
+    fields = ["klout_topic_id", "displayName"]
     
     # write this once, update if extracting more fields from the dicts
     field_count = 2 
@@ -561,91 +615,74 @@ class field_gnip_klout_topics(_field):
     def __init__(self, json_record, limit=2):
         super(
             field_gnip_klout_topics
-            , self).__init__(json_record)
-        # self.value is possibly a list of dicts 
-        if self.value == self.default_value or len(self.value) == 0:
-            self.value_list = [ self.default_value ]*(self.field_count*limit)  
-        else:   # found something in the list
-            tmp = []
-            [ tmp.extend( [ x["klout_topic_id"], x["displayName"] ] ) for x in self.value ]
-            self.value_list = tmp
-            current_len = len(self.value_list)
-            if current_len < self.field_count*limit:         # need to pad list
-                for _ in range( self.field_count*limit - current_len ):
-                    self.value_list += [ self.default_value, self.default_value ]
-            elif current_len > limit:         # need to truncate list
-                self.value_list = self.value_list[:(self.field_count*limit)]
+            , self).__init__(json_record, limit)
+        # rewrite in terms of _limited_field class
         #
-        self.value = str( self.value_list )
+#        # self.value is possibly a list of dicts 
+#        if self.value == self.default_value or len(self.value) == 0:
+#            self.value_list = [ self.default_value ]*(self.field_count*limit)  
+#        else:   # found something in the list
+#            tmp = []
+#            [ tmp.extend( [ x["klout_topic_id"], x["displayName"] ] ) for x in self.value ]
+#            self.value_list = tmp
+#            current_len = len(self.value_list)
+#            if current_len < self.field_count*limit:         # need to pad list
+#                for _ in range( self.field_count*limit - current_len ):
+#                    self.value_list += [ self.default_value, self.default_value ]
+#            elif current_len > limit:         # need to truncate list
+#                self.value_list = self.value_list[:(self.field_count*limit)]
+#        #
+#        self.value = str( self.value_list )
        
 
 
 ########################################
 #   'twitter_entities' fields 
 ########################################
-class _field_twitter_urls(_field):
-    """
-    Base class for accessing arbitrary url fields within twitter_entities.urls . Takes 
-    a key that addresses the particular value within twitter_entities_urls . Assigns 
-    to self.value_list a string representation of the corresponding url list (or the 
-    default value in a list). 
-    """
-    # nb: there are 3x urls in twitter_entities 
-    path = ["twitter_entities", "urls"]
-    
-    def __init__(self, json_record, key):
-        super(
-            _field_twitter_urls
-            , self).__init__(json_record)
-        # self.value is a list. can be empty or list of dicts 
-        if key is not None and isinstance(self.value, list) and len(self.value) > 0:
-            for d in self.value:
-                try:
-                    # previous TypeError exception in case d isn't a dict? (JM) 
-                    if key in d["urls"] and d["urls"][key] is not None: 
-                        url_list.append( d["urls"][key] )
-                    else:
-                        url_list.append( self.default_value ) 
-                except TypeError:
-                    url_list = [ self.default_value ]
-            #self.value = url_list
-            self.value = str( url_list )
-        else:
-            self.value = str( [ self.default_value ] )
-        #
-        self.value_list = eval( self.value )
-    
 
-class field_twitter_urls_url(_field_twitter_urls):
+# URLs
+
+# JM 2014-05-08 
+# refactor the urls classes to use the padding functionality of _limited_field
+class field_twitter_urls_url(_limited_field):
     """
-    assign to self.value the list of 'url' values within 'twitter_entities', 'urls' dict.
-    Inherits from _filed_twitter_urls class.
     """
-    
-    def __init__(self, json_record, limit=None):
+    path = ["twitter_entities", "urls"]
+    fields = ["url"]
+
+    def __init__(self, json_record, limit=5):
         super(
             field_twitter_urls_url
-            , self).__init__(json_record, "url")
-        if limit is not None:
-            self.value = self.fix_length( self.value, limit )
+            , self).__init__(json_record, limit)
+ 
 
-
-class field_twitter_urls_expanded_url(_field_twitter_urls):
-    """assign to self.value the list of 'expanded_url' values within 'twitter_entities', 
-    'urls' dict. Inherits from _filed_twitter_urls class.
+class field_twitter_urls_expanded_url(_limited_field):
+    """    
     """
+    path = ["twitter_entities", "urls"]
+    fields = ["expanded_url"]
 
-    def __init__(self, json_record):
+    def __init__(self, json_record, limit=5):
         super(
             field_twitter_urls_expanded_url
-            , self).__init__(json_record, "expanded_url")
+            , self).__init__(json_record, limit)
 
 
-#
-# WIP -- if this works, replace all twitter_entities urls classes with this approach
-#
+class field_twitter_urls_display_url(_limited_field):
+    """
+    """
+    path = ["twitter_entities", "urls"]
+    fields = ["display_url"]
+
+    def __init__(self, json_record, limit=5):
+        super(
+            field_twitter_urls_display_url
+            , self).__init__(json_record, limit)
+
+
 class field_twitter_urls_tco_expanded_DB(_limited_field):
     """
+    combination of two classes above
     """
     path = ["twitter_entities", "urls"]
     fields = ["url", "expanded_url"] 
@@ -653,20 +690,93 @@ class field_twitter_urls_tco_expanded_DB(_limited_field):
     def __init__(self, json_record, limit=5):
         super(
             field_twitter_urls_tco_expanded_DB 
-            , self).__init__(json_record)
+            , self).__init__(json_record, limit)
 
+#
+# refactor WIP, replacement code ^
+#
 
+#class _field_twitter_urls(_field):
+#    """
+#    Base class for accessing arbitrary url fields within twitter_entities.urls. Takes 
+#    a key that addresses the particular value within twitter_entities_urls . Assigns 
+#    to self.value_list a string representation of the corresponding url list (or the 
+#    default value in a list). 
+#    """
+#    # nb: there are 3x urls in twitter_entities 
+#    path = ["twitter_entities", "urls"]
+#    
+#    def __init__(self, json_record, key=None):
+#        super(
+#            _field_twitter_urls
+#            , self).__init__(json_record)
+#        # self.value is a list. can be empty or list of dicts 
+#        if key is not None and isinstance(self.value, list) and len(self.value) > 0:
+#            for d in self.value:
+#                try:
+#                    # previous TypeError exception in case d isn't a dict? (JM) 
+#                    if key in d["urls"] and d["urls"][key] is not None: 
+#                        url_list.append( d["urls"][key] )
+#                    else:
+#                        url_list.append( self.default_value ) 
+#                except TypeError:
+#                    url_list = [ self.default_value ]
+#            #self.value = url_list
+#            self.value = str( url_list )
+#        else:
+#            self.value = str( [ self.default_value ] )
+#        #
+#        self.value_list = eval( self.value )
+#    
+#
+#class field_twitter_urls_url(_field_twitter_urls):
+#    """
+#    assign to self.value the list of 'url' values within 'twitter_entities', 'urls' dict.
+#    Inherits from _filed_twitter_urls class.
+#    """
+#    
+#    def __init__(self, json_record, limit=None):
+#        super(
+#            field_twitter_urls_url
+#            , self).__init__(json_record, key="url")
+#        if limit is not None:
+#            self.value = self.fix_length( self.value, limit )
+#
+#
+#class field_twitter_urls_expanded_url(_field_twitter_urls):
+#    """assign to self.value the list of 'expanded_url' values within 'twitter_entities', 
+#    'urls' dict. Inherits from _filed_twitter_urls class.
+#    """
+#
+#    def __init__(self, json_record):
+#        super(
+#            field_twitter_urls_expanded_url
+#            , self).__init__(json_record, key="expanded_url")
+#
+#
+#class field_twitter_urls_display_url(_field_twitter_urls):
+#    """assign to self.value the list of 'display_url' values within 'twitter_entities', 
+#    'urls' dict. Inherits from _filed_twitter_urls class.
+#    """
+#
+#    def __init__(self, json_record):
+#        super(
+#            field_twitter_urls_display_url
+#            , self).__init__(json_record, key="display_url")
+#
+#
+#class field_twitter_urls_tco_expanded_DB(_limited_field):
+#    """
+#    """
+#    path = ["twitter_entities", "urls"]
+#    fields = ["url", "expanded_url"] 
+#
+#    def __init__(self, json_record, limit=5):
+#        super(
+#            field_twitter_urls_tco_expanded_DB 
+#            , self).__init__(json_record)
 
-class field_twitter_urls_display_url(_field_twitter_urls):
-    """assign to self.value the list of 'display_url' values within 'twitter_entities', 
-    'urls' dict. Inherits from _filed_twitter_urls class.
-    """
-
-    def __init__(self, json_record):
-        super(
-            field_twitter_urls_display_url
-            , self).__init__(json_record, "display_url")
-
+# hashtags
 
 class field_twitter_hashtags_text(_field):
     """Assign to self.value a list of twitter_entities.hashtags 'texts'"""
@@ -686,24 +796,30 @@ class field_twitter_hashtags_text(_field):
         #   the db-specific configuration...
 
 
-class field_twitter_hashtags_text_DB(field_twitter_hashtags_text):
+# use the padding & limiting of _limited_field class
+#class field_twitter_hashtags_text_DB(field_twitter_hashtags_text):
+class field_twitter_hashtags_text_DB(_limited_field):
     """
     Combine the first 'limit' hashtags found in the payload into a list and assign to 
     self.value. If there are less than 'limit', the list is padded with 
     self.default_value 
     """
+    path = ["twitter_entities", "hashtags"]
+    fields = ["text"]
 
     def __init__(self, json_record, limit=5):
         super(
             field_twitter_hashtags_text_DB
-            , self).__init__(json_record)
-        # self.value is either a list of hashtag texts for each activity hashtag or default_value
-        if self.value == self.default_value:    # self.value is either a list or "None" now
-            self.value_list = [ self.default_value ]*limit
-        else:   # value_list should be a list of 'text's 
-            self.value_list = self.fix_length( self.value_list, limit ) 
-        self.value = str( self.value_list )
+            , self).__init__(json_record, limit)
+#        # self.value is either a list of hashtag texts for each activity hashtag or default_value
+#        if self.value == self.default_value:    # self.value is either a list or "None" now
+#            self.value_list = [ self.default_value ]*limit
+#        else:   # value_list should be a list of 'text's 
+#            self.value_list = self.fix_length( self.value_list, limit ) 
+#        self.value = str( self.value_list )
 
+
+# symbols
 
 #class field_twitter_symbols_text_DB(_field):
 class field_twitter_symbols_text_DB(_limited_field):
@@ -713,7 +829,6 @@ class field_twitter_symbols_text_DB(_limited_field):
     so using https://blog.twitter.com/2013/symbols-entities-tweets as the template.
     """
     path = ["twitter_entities", "symbols"]
-
     fields = ["text"]
 
     def __init__(self, json_record, limit=5):
@@ -721,13 +836,13 @@ class field_twitter_symbols_text_DB(_limited_field):
             field_twitter_symbols_text_DB
             , self).__init__(json_record)
         # self.value is possibly a list of dicts for each activity symbol 
-
 #        if self.value == self.default_value or len(self.value) == 0:
 #            self.value_list = [ self.default_value ]*limit
 #        else:
 #            self.value_list = self.fix_length( self.value_list, limit ) 
 #        self.value = str( self.value_list )
 
+# mentions
 
 class field_twitter_mentions_id_name_DB(_limited_field):
     """
@@ -735,91 +850,40 @@ class field_twitter_mentions_id_name_DB(_limited_field):
     (in order, but in a flat list).
     """
     path = ["twitter_entities", "user_mentions"]
-
-    #fields = ["id_str", "screen_name"]
     fields = ["id", "screen_name"]
 
     def __init__(self, json_record, limit=5):
         super(
             field_twitter_mentions_id_name_DB
-            , self).__init__(json_record)
-        #
-        # debug
-#        print >>sys.stdout, "\n***** mentions. self.value_list={} (( len={} ))".format(self.value_list, len(self.value_list))
-#        print >>sys.stdout, "\n***** id_str={}, screen_name={}".format(self.value_list[0], self.value_list[1])
+            , self).__init__(json_record, limit)
 
-
-
-#    def __init__(self, json_record, limit=5):
-#        super(
-#            field_twitter_mentions_id_name_DB
-#            , self).__init__(json_record)
-#        # self.value is possibly a list of dicts for each activity user mention 
-#        if self.value == self.default_value or len(self.value) == 0:
-#            self.value_list = [ self.default_value ]*(2*limit)
-#        else:   # found something in the list
-#            #self.value = [ [ x["screen_name"], x["id_str"] ]  for x in self.value ]
-#            # couldn't get the nesting correct with inline list comp on self.value... (JM)
-#            tmp = []
-#            [ tmp.extend( [ x["screen_name"], x["id_str"] ] ) for x in self.value ]
-#            self.value_list = tmp
-#            current_len = len(self.value_list)
-#            if current_len < limit:         # need to pad list
-#                for _ in range( limit - current_len):
-#                    self.value_list += ["None", "None"]
-#            elif current_len > limit:         # need to truncate list
-#                self.value_list = self.value_list[:limit]
-#        self.value = str( self.value_list )
-
+# media
 
 class field_twitter_media_id_url_DB(_limited_field):
     """
     Assign to self.value a list of twitter_entities.media.id and .expanded_url pairs
     """
     path = ["twitter_entities", "media"]
-
     fields = ["id", "expanded_url"]
 
     def __init__(self, json_record, limit=5):
         super(
             field_twitter_media_id_url_DB 
             , self).__init__(json_record, limit)
-        #
-        # debug
-        #print >>sys.stderr, "media self.value_list={} (( len={} ))".format(self.value_list, len(self.value_list))
        
 
-########
-# rules 
-class field_gnip_rules(_field):
-    """assign to self.value the value of 'gnip', 'matching_rules'"""
-    path = ["gnip", "matching_rules"]
-    
-    def __init__(self, json_record):
-        super(
-            field_gnip_rules
-            , self).__init__(json_record)
-        # if matching_rules exists, self.value is a list of dicts 
-        #   to be consistent with old code, want a list of [rule (tag), ... ]
-        if self.value != self.default_value:
-            self.value = [ "{} ({})".format( d["value"], d["tag"] ) for d in self.value ]
-        else:
-            self.value = [ self.default_value ]
-        self.value = str( self.value )
+########################################
+#   'geo' & 'location' fields (related) 
+########################################
 
-
-########
-# geo
 class field_geo_type(_field):
-    """
-    Assign to self.value the value of geo.type . this is the type of user-enabled 
-    tweet geotag."""
+    """Assign to self.value the value of geo.type."""
     path = ["geo", "type"]
     
 
 class field_geo_coords(_field):
     """
-    Assign to self.value the value of geo.coordinates . this is the coordinate pair 
+    Assign to self.value the value of geo.coordinates. This is the coordinate pair 
     of the user-enabled tweet geotag.
     """
     path = ["geo", "coordinates"]
@@ -829,43 +893,20 @@ class field_geo_coords(_field):
             field_geo_coords
             , self).__init__(json_record)
         if self.value == self.default_value:
-            self.value_list = [ self.default_value, self.default_value ]
+            #self.value_list = [ self.default_value, self.default_value ]
+            self.value_list = self.fix_length([], limit=2) 
         else: 
             self.value_list = self.value
         self.value = str( self.value )
 
-#
-# do we have to get the format exactly correct on the way in?
-#
-#class field_geo_coords_DB(field_geo_coords):
-#    """
-#    Modify self.value assigned in the field_geo_coords class. Assign self.value_list to a list 
-#    of either  [lat, long] or 2x self.default_value. 
-#    """
-#    # MySQL DECIMAL syntax is (M,D), where M is the max number of digits (precision) and 
-#    #   D is the number of digits to the right of the decimal point (scale) 
-#    # these are set in the table schema
-#    m = 10
-#    d = 7
-#    
-#    def __init__(self, json_record):
-#        super(
-#            field_geo_coords_DB
-#            , self).__init__(json_record)
-#        # self.value is a str of either default_value or '[lat, lon]' 
-#        if self.value == self.default_value:
-#            self.value_list = [ self.default_value, self.default_value ]
-#        else:
-#            self.value_list = eval( self.value )
- 
 
 class field_location_type(_field):
-    """assign to self.value the value of location.geo.type ."""
+    """Assign to self.value the value of location.geo.type."""
     path = ["location", "geo", "type"]
 
 
 class field_location_displayname(_field):
-    """assign to self.value the value of 'location', 'displayName' """
+    """Assign to self.value the value of location.displayName"""
     path = ["location", "displayName"]
 
 
@@ -888,79 +929,33 @@ class field_location_coords(_field):
 
 
 class field_location_twittercountry(_field):
-    """assign to self.value the value of 'location', 'twitter_country_code' """
+    """Assign to self.value the value of location.twitter_country_code."""
     path = ["location", "twitter_country_code"]
 
 
 
-########
-# influence 
-
-
-########
-# influence 
-class field_activity_type(_field):
-    """Assign to self.value the appropriate value of Tweet, Retweet, or Reply"""
-    path = []
-    
-    def __init__(self, json_record):
-        super(
-            #field_structure_type
-            field_activity_type
-            , self).__init__(json_record)
-        # self.value is None
-        verb = field_verb(json_record).value 
-        inReplyTo = "None"
-        obj_objtype = "None"
-        if "inReplyTo" in json_record:
-            # possible KeyError? (JM)
-            inReplyTo = json_record["inReplyTo"]["link"]
-        if "object" in json_record:
-            obj = json_record["object"]
-            if "objectType" in obj:
-                obj_objtype = obj["objectType"]
-        # now we can determine self.value
-        if verb == "share" and obj_objtype == "activity":
-            self.value = "Retweet"
-        elif inReplyTo == "None":
-            self.value = "Tweet"
-        else:
-            self.value = "Reply"
-
+########################################
+#   other top-level fields 
+########################################
 
 class field_inreplyto_link(_field):
     """Assign to self.value the value of inReplyTo.link"""
     path = ["inReplyTo", "link"]
     
-#    def __init__(self, json_record):
-#        super(
-#            field_inreplyto_link
-#            , self).__init__(json_record)
-
 
 class field_object_id(_field):
     """Assign to self.value the value of object.id"""
     path = ["object", "id"]
     
-#    def __init__(self, json_record):
-#        super(
-#            field_object_id
-#            , self).__init__(json_record)
 
 
 class field_object_postedtime(_field):
     """Assign to self.value the value of object.postedTime"""
     path = ["object", "postedTime"]
     
-#    def __init__(self, json_record):
-#        super(
-#            field_object_postedtime
-#            , self).__init__(json_record)
-
 
 
 ############################
-#class TwacsCSV(acscsv.AcsCSV):
 class Twacs(acscsv.AcsCSV):
     def __init__(self
             , delim
@@ -1157,10 +1152,10 @@ class Twacs(acscsv.AcsCSV):
                     , field_actor_acct_link(d).value 
                     , field_actor_summary(d).value 
                     ] \
-                    + field_actor_links(d).value_list \
+                    + field_actor_links(d, limit=2).value_list \
                     + [ 
                     field_actor_twittertimezone(d).value 
-                    , field_actor_utcoffset(d).value 
+                    , field_actor_utcoffset_DB(d).value 
                     , field_actor_verified(d).value 
                     , field_actor_lang(d).value 
                     ] \
