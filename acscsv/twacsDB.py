@@ -22,7 +22,7 @@ class _field(object):
     #default_value = "None"
     default_value = "\\N"           # escaped \N ==> MySQL NULL
     value = None                    # str representation of the field, often = str( self.value_list ) 
-    value_list = [ self.default_value ]         # overwrite when value is most appropriately a list 
+    value_list = [ default_value ]  # overwrite when value is most appropriately a list 
     path = []                       # dict key-path to follow for desired value
 
     def __init__(self, json_record):
@@ -34,8 +34,12 @@ class _field(object):
     def walk_path(self, json_record):
         res = json_record
         for k in self.path:
+#            print >>sys.stdout, "key={}".format(k)
             if k not in res:
                 return self.default_value
+            # debug 
+#            else:
+#                print >>sys.stdout, "self.path key={}, value={}".format(k, res[k])
             res = res[k]
         # handle the special case where the walk_path found null (JSON) which converts to 
         # a Python None. Only use "None" (str version) if it's assigned to self.default_value 
@@ -95,12 +99,12 @@ class _limited_field(_field):
     """
     fields = None 
 
-    def __init__(self, json_record, limit=5):
+    def __init__(self, json_record, limit=1):
         super(
             _limited_field 
             , self).__init__(json_record)
         # self.value is possibly a list of dicts for each activity media object 
-        if fields:
+        if self.fields:
             # start with default list full of the default_values
             self.value_list = [ self.default_value ]*( len(self.fields)*limit )
             if self.value != self.default_value: 
@@ -108,19 +112,21 @@ class _limited_field(_field):
                     if i < limit:                   # ... up until you reach limit 
                         for j,y in enumerate(self.fields):      # iterate over the dict keys 
                             self.value_list[ len( self.fields )*i + j ] = x[ self.fields[j] ] 
+#                            print >>sys.stdout, "** value={}".format(x[ self.fields[j] ])
+#                            #
             # finally, str-ify the list
             self.value = str( self.value_list )
 
 
 # TODO:
-# - remove the super() call if only overwriting 'path'
-# - convert all class docstrings to consistently use the key1.key2.key3 format & fill them out 
-# - choose an ordering for the field classes that makes sense / is managable and maintainable 
-#       (organize by hierarchy of key location (actor, gnip, object, ...)
 # - use new _limited_field() class EVERYWHERE
 # - consolidate _limited_field() & fix_length()
-# - revisit & improve the example class 
+# - replace 2-level dict traversal (eg profileLocation base class) with acscsv.walk_path()
 
+
+########################################
+#   example class 
+########################################
  
 class example_user_rainbows(_field):
     """
@@ -457,6 +463,7 @@ class field_actor_statuses_DB(_field):
     """Assign to self.value the value of actor.statusesCount"""
     path = ["actor", "statusesCount"]
     # self.value is an int 
+    # nb: for file output, this distinction may not be necessary (JM) 
 
 
 class field_actor_statuses(field_actor_statuses_DB):
@@ -520,63 +527,185 @@ class field_gnip_lang(_field):
     path = ["gnip","language","value"]
     
 
-# profileLocations 
-class field_gnip_pl_displayname(_field):
+# profileLocations
+#   -nb: 'profileLocations' value is a list 
+
+###### <pL refactor>
+#
+# WIP
+#
+
+#class _field_gnip_pl_address_base(_limited_field):
+#    """
+#    Abstract a bunch of the boilerplate needed to check for and extract the values contained  
+#    in gnip.profileLocations.address
+#    """
+#    path = ["gnip", "profileLocations"]
+#    fields = ["address"]
+#    subfield = None    # use this to look for the next-level key
+#
+#    def __init__(self, json_record):
+#        super(
+#            _field_gnip_pl_address_base 
+#            , self).__init__(json_record)
+#        # self.value is possibly a dict
+#        if self.value != self.default_value \
+#                and self.subfield is not None \
+#                and self.subfield in self.value:
+#            self.value = self.value[subfield] 
+#        else:
+#            self.value = self.default_value
+
+class field_gnip_pl_displayname(_limited_field):
     """Assign to self.value the value of gnip.profileLocation.displayName."""
-    path = ["gnip", "profileLocations", "displayName"]
-    
- 
-class field_gnip_pl_objecttype(_field):
+    path = ["gnip", "profileLocations"]
+    fields = ["displayName"]
+    # use default limit=1 in _limited_field constructor
+
+
+class field_gnip_pl_objecttype(_limited_field):
     """Assign to self.value the value of gnip.profileLocations.objectType."""
-    path = ["gnip", "profileLocations", "objectType"]
-    
+    path = ["gnip", "profileLocations"]
+    fields = ["objectType"]
 
-class field_gnip_pl_country(_field):
+
+class _field_gnip_pl_base(_limited_field):
+    """
+    Abstract a bunch of the boilerplate needed to check for and extract the things in 
+    in gnip.profileLocations. 
+    """
+    path = ["gnip", "profileLocations"]
+    fields = None 
+    subfield = None    # use this to look for the next-level key
+
+    def __init__(self, json_record):
+        super(
+            _field_gnip_pl_base 
+            , self).__init__(json_record)
+        # self.value is possibly a dict
+        if self.value != self.default_value \
+                and self.fields is not None \
+                and self.subfield is not None \
+                and self.subfield in self.value:
+            self.value = self.value[self.subfield] 
+        else:
+            self.value = self.default_value
+#        #
+#        print >>sys.stdout, ">>>> self.fields={}, self.subfield={}".format(self.fields, self.subfield)
+
+
+class field_gnip_pl_country(_field_gnip_pl_base):
     """Assign to self.value the value of gnip.profileLocations.address.country."""
-    path = ["gnip", "profileLocations", "address", "country"]
+    fields = ["address"]
+    subfield = "country"
 
 
-class field_gnip_pl_region(_field):
+class field_gnip_pl_region(_field_gnip_pl_base):
     """Assign to self.value the value of gnip.profileLocations.address.region."""
-    path = ["gnip", "profileLocations", "address", "region"]
-    
+    fields = ["address"]
+    subfield = "region"
 
-class field_gnip_pl_subregion(_field):
+
+class field_gnip_pl_subregion(_field_gnip_pl_base):
     """Assign to self.value the value of gnip.profileLocations.address.subRegion."""
-    path = ["gnip", "profileLocations", "address", "subRegion"]
+    fields = ["address"]
+    subfield = "subRegion"
     
 
-class field_gnip_pl_countrycode(_field):
+class field_gnip_pl_countrycode(_field_gnip_pl_base):
     """Assign to self.value the value of gnip.profileLocations.address.countryCode."""
-    path = ["gnip", "profileLocations", "address", "countryCode"]
+    fields = ["address"]
+    subfield = "countryCode"
 
 
-class field_gnip_pl_locality(_field):
+class field_gnip_pl_locality(_field_gnip_pl_base):
     """Assign to self.value the value of gnip.profileLocations.address.locality."""
-    path = ["gnip", "profileLocations", "address", "locality"]
+    fields = ["address"]
+    subfield = "locality"
 
 
-class field_gnip_pl_geo_type(_field):
+class field_gnip_pl_geo_type(_field_gnip_pl_base):
     """Assign to self.value the value of gnip.profileLocations.geo.type."""
-    path = ["gnip", "profileLocations", "geo", "type"]
-    
+    fields = ["geo"]
+    subfield = "type" 
 
-class field_gnip_pl_geo_coords(_field):
+
+class field_gnip_pl_geo_coords(_field_gnip_pl_base):
     """Assign to self.value the coordinate list in gnip.profileLocations.geo.coordinates."""
-    path = ["gnip", "profileLocations", "geo", "coordinates"]
+    fields = ["geo"]
+    subfield = "coordinates"
     
     def __init__(self, json_record):
         super(
-           field_gnip_pl_geo_coords 
+            field_gnip_pl_geo_coords 
             , self).__init__(json_record)
-        # self.value is (possibly) a list of floats: [lat, lon] 
+        # self.value is possibly a list 
         if self.value == self.default_value:
-            # might as well use the helper method...
             self.value_list = self.fix_length( [], limit=2) 
-            #self.value_list = [ self.default_value, self.default_value ]
         else:
             self.value_list = self.value
         self.value = str( self.value_list ) 
+    
+
+
+###### </refactor>
+
+#class field_gnip_pl_displayname(_field):
+#    """Assign to self.value the value of gnip.profileLocation.displayName."""
+#    path = ["gnip", "profileLocations", "displayName"]
+    
+ 
+#class field_gnip_pl_objecttype(_field):
+#    """Assign to self.value the value of gnip.profileLocations.objectType."""
+#    path = ["gnip", "profileLocations", "objectType"]
+    
+
+#class field_gnip_pl_country(_field):
+#    """Assign to self.value the value of gnip.profileLocations.address.country."""
+#    path = ["gnip", "profileLocations", "address", "country"]
+
+
+#class field_gnip_pl_region(_field):
+#    """Assign to self.value the value of gnip.profileLocations.address.region."""
+#    path = ["gnip", "profileLocations", "address", "region"]
+    
+
+#class field_gnip_pl_subregion(_field):
+#    """Assign to self.value the value of gnip.profileLocations.address.subRegion."""
+#    path = ["gnip", "profileLocations", "address", "subRegion"]
+    
+
+#class field_gnip_pl_countrycode(_field):
+#    """Assign to self.value the value of gnip.profileLocations.address.countryCode."""
+#    path = ["gnip", "profileLocations", "address", "countryCode"]
+
+
+#class field_gnip_pl_locality(_field):
+#    """Assign to self.value the value of gnip.profileLocations.address.locality."""
+#    path = ["gnip", "profileLocations", "address", "locality"]
+
+
+#class field_gnip_pl_geo_type(_field):
+#    """Assign to self.value the value of gnip.profileLocations.geo.type."""
+#    path = ["gnip", "profileLocations", "geo", "type"]
+    
+
+#class field_gnip_pl_geo_coords(_field):
+#    """Assign to self.value the coordinate list in gnip.profileLocations.geo.coordinates."""
+#    path = ["gnip", "profileLocations", "geo", "coordinates"]
+#    
+#    def __init__(self, json_record):
+#        super(
+#           field_gnip_pl_geo_coords 
+#            , self).__init__(json_record)
+#        # self.value is (possibly) a list of floats: [lat, lon] 
+#        if self.value == self.default_value:
+#            # might as well use the helper method...
+#            self.value_list = self.fix_length( [], limit=2) 
+#            #self.value_list = [ self.default_value, self.default_value ]
+#        else:
+#            self.value_list = self.value
+#        self.value = str( self.value_list ) 
 
 
 # klout 
@@ -600,7 +729,6 @@ class field_gnip_klout_user_id(_field):
     path = ["gnip", "klout_user_id"]
     
 
-#class field_gnip_klout_topics(_field):
 class field_gnip_klout_topics(_limited_field):
     """
     Assign to self.value_list (and .value) pairs of gnip.klout_profile.displayName 
@@ -609,31 +737,11 @@ class field_gnip_klout_topics(_limited_field):
     path = ["gnip", "klout_profile", "topics"]
     fields = ["klout_topic_id", "displayName"]
     
-    # write this once, update if extracting more fields from the dicts
-    field_count = 2 
-
     def __init__(self, json_record, limit=2):
         super(
             field_gnip_klout_topics
-            , self).__init__(json_record, limit)
-        # rewrite in terms of _limited_field class
-        #
-#        # self.value is possibly a list of dicts 
-#        if self.value == self.default_value or len(self.value) == 0:
-#            self.value_list = [ self.default_value ]*(self.field_count*limit)  
-#        else:   # found something in the list
-#            tmp = []
-#            [ tmp.extend( [ x["klout_topic_id"], x["displayName"] ] ) for x in self.value ]
-#            self.value_list = tmp
-#            current_len = len(self.value_list)
-#            if current_len < self.field_count*limit:         # need to pad list
-#                for _ in range( self.field_count*limit - current_len ):
-#                    self.value_list += [ self.default_value, self.default_value ]
-#            elif current_len > limit:         # need to truncate list
-#                self.value_list = self.value_list[:(self.field_count*limit)]
-#        #
-#        self.value = str( self.value_list )
-       
+            , self).__init__(json_record, limit=limit)
+      
 
 
 ########################################
@@ -653,7 +761,7 @@ class field_twitter_urls_url(_limited_field):
     def __init__(self, json_record, limit=5):
         super(
             field_twitter_urls_url
-            , self).__init__(json_record, limit)
+            , self).__init__(json_record, limit=limit)
  
 
 class field_twitter_urls_expanded_url(_limited_field):
@@ -665,7 +773,7 @@ class field_twitter_urls_expanded_url(_limited_field):
     def __init__(self, json_record, limit=5):
         super(
             field_twitter_urls_expanded_url
-            , self).__init__(json_record, limit)
+            , self).__init__(json_record, limit=limit)
 
 
 class field_twitter_urls_display_url(_limited_field):
@@ -677,7 +785,7 @@ class field_twitter_urls_display_url(_limited_field):
     def __init__(self, json_record, limit=5):
         super(
             field_twitter_urls_display_url
-            , self).__init__(json_record, limit)
+            , self).__init__(json_record, limit=limit)
 
 
 class field_twitter_urls_tco_expanded_DB(_limited_field):
@@ -690,7 +798,7 @@ class field_twitter_urls_tco_expanded_DB(_limited_field):
     def __init__(self, json_record, limit=5):
         super(
             field_twitter_urls_tco_expanded_DB 
-            , self).__init__(json_record, limit)
+            , self).__init__(json_record, limit=limit)
 
 #
 # refactor WIP, replacement code ^
@@ -810,7 +918,7 @@ class field_twitter_hashtags_text_DB(_limited_field):
     def __init__(self, json_record, limit=5):
         super(
             field_twitter_hashtags_text_DB
-            , self).__init__(json_record, limit)
+            , self).__init__(json_record, limit=limit)
 #        # self.value is either a list of hashtag texts for each activity hashtag or default_value
 #        if self.value == self.default_value:    # self.value is either a list or "None" now
 #            self.value_list = [ self.default_value ]*limit
@@ -834,7 +942,7 @@ class field_twitter_symbols_text_DB(_limited_field):
     def __init__(self, json_record, limit=5):
         super(
             field_twitter_symbols_text_DB
-            , self).__init__(json_record)
+            , self).__init__(json_record, limit=limit)
         # self.value is possibly a list of dicts for each activity symbol 
 #        if self.value == self.default_value or len(self.value) == 0:
 #            self.value_list = [ self.default_value ]*limit
@@ -855,7 +963,7 @@ class field_twitter_mentions_id_name_DB(_limited_field):
     def __init__(self, json_record, limit=5):
         super(
             field_twitter_mentions_id_name_DB
-            , self).__init__(json_record, limit)
+            , self).__init__(json_record, limit=limit)
 
 # media
 
@@ -869,7 +977,7 @@ class field_twitter_media_id_url_DB(_limited_field):
     def __init__(self, json_record, limit=5):
         super(
             field_twitter_media_id_url_DB 
-            , self).__init__(json_record, limit)
+            , self).__init__(json_record, limit=limit)
        
 
 ########################################
