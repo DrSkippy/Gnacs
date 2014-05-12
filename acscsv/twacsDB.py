@@ -1141,27 +1141,7 @@ class Twacs(acscsv.AcsCSV):
             record.append( field_id(d).value )
             record.append( field_postedtime(d).value )
             record.append( field_body(d).value )
-            ### reverting my earlier inclination here and removing this code
-#            # add some handling so calling gnacs without a pub is still useful
-#            #   -put more-specific fields at the beginning to catch them 
-#            #   -stocktwits is native, so no 'verb' to get here
-#            obj = d["object"]
-#            if d["id"].rfind("getglue") != -1 : # getglue 
-#                record.append( field_verb(d).value ) 
-#            elif "foursquareCategories" in obj or "foursquareCheckinOffset" in obj:      # fsq
-#                record.append(str(obj["geo"]["coordinates"]))
-#            elif "wpBlogId" in obj:     # wp
-#                record.append(str(obj["wpBlogId"]))
-#            elif "tumblrType" in obj:   # tumblr
-#                record.append(obj["tumblrType"])
-#            elif "body" in d:           # tw, disqus, stocktw,  
-#                record.append( field_body(d).value  )       
-#            elif "link" in d:           # ng
-#                record.append(d["link"])
-#            else:                       # ? 
-#                record.append("None")
-            #
-            ### begin command line options
+            # begin command line options
             if self.options_urls:
                 record.append( field_gnip_urls(d).value ) 
                 record.append( field_twitter_urls_url(d).value ) 

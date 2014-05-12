@@ -109,10 +109,18 @@ def main():
         data_dir = os.environ['HOME'] + "/gnacs_db"
         if not os.path.exists(data_dir):
             os.mkdir(data_dir)
-        # open 3 file objects for use below
+        #
+        # this section is dependent on the particular output choice / table schema! 
+        #
+        # open file objects for writing below 
         acs_f = codecs.open( data_dir + '/table_activities.csv', 'wb', 'utf8') 
         ustatic_f = codecs.open( data_dir + '/table_users_static.csv', 'wb', 'utf8') 
         udyn_f = codecs.open( data_dir + '/table_users_dynamic.csv', 'wb', 'utf8') 
+        hash_f = codecs.open( data_dir + '/table_hashtags.csv', 'wb', 'utf8') 
+        sym_f = codecs.open( data_dir + '/table_symbols.csv', 'wb', 'utf8') 
+        mentions_f = codecs.open( data_dir + '/table_mentions.csv', 'wb', 'utf8') 
+        urls_f = codecs.open( data_dir + '/table_urls.csv', 'wb', 'utf8') 
+        media_f = codecs.open( data_dir + '/table_media.csv', 'wb', 'utf8') 
     #
     cnt = 0
     first_geo = True 
@@ -156,11 +164,16 @@ def main():
                         continue
                     # otherwise, write to appropriate file objects (from above)
                     flag = "GNIPSPLIT"      # also hardcoded in twacsDB.py
-                    acs_str, ustatic_str, udyn_str = tmp_combined_rec.split(flag) 
+                    acs_str, ustatic_str, udyn_str, hash_str, sym_str, mentions_str, urls_str, media_str = tmp_combined_rec.split(flag) 
                     # clean up any leading/trailing pipes 
                     acs_str = acs_str.strip("|")
                     ustatic_str = ustatic_str.strip("|")
                     udyn_str = udyn_str.strip("|")
+                    hash_str = hash_str.strip("|")
+                    sym_str = sym_str.strip("|")
+                    mentions_str = mentions_str.strip("|")
+                    urls_str = urls_str.strip("|")
+                    media_str = media_str.strip("|")
                     #
                     # debug
 #                    sys.stdout.write(u"\n\n###### acs_str ######\n{}".format(acs_str) )
@@ -170,6 +183,11 @@ def main():
                     acs_f.write(acs_str + "\n")
                     ustatic_f.write(ustatic_str + "\n")
                     udyn_f.write(udyn_str + "\n")
+                    hash_f.write(hash_str + "\n")
+                    sym_f.write(sym_str + "\n")
+                    mentions_f.write(mentions_str + "\n")
+                    urls_f.write(urls_str + "\n")
+                    media_f.write(media_str + "\n")
                 else:
                     sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
             # catch I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
