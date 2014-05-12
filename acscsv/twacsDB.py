@@ -27,6 +27,9 @@ class _field(object):
 
     def __init__(self, json_record):
         self.value = self.walk_path(json_record)
+        #
+        #print >>sys.stdout, "+++++ _field self.value={}".format(self.value)
+        #
 
     def __repr__(self):
         return self.value
@@ -34,12 +37,8 @@ class _field(object):
     def walk_path(self, json_record):
         res = json_record
         for k in self.path:
-#            print >>sys.stdout, "key={}".format(k)
             if k not in res:
                 return self.default_value
-            # debug 
-#            else:
-#                print >>sys.stdout, "self.path key={}, value={}".format(k, res[k])
             res = res[k]
         # handle the special case where the walk_path found null (JSON) which converts to 
         # a Python None. Only use "None" (str version) if it's assigned to self.default_value 
@@ -119,9 +118,10 @@ class _limited_field(_field):
 
 
 # TODO:
-# - use new _limited_field() class EVERYWHERE
-# - consolidate _limited_field() & fix_length()
-# - replace 2-level dict traversal (eg profileLocation base class) with acscsv.walk_path()
+# - use new _limited_field() class everywhere appropriate 
+# - consolidate _limited_field() & fix_length() 
+# - replace 2-level dict traversal (eg profileLocation base class) with acscsv.walk_path() or 
+#       similar helper method 
 
 
 ########################################
@@ -527,40 +527,24 @@ class field_gnip_lang(_field):
     path = ["gnip","language","value"]
     
 
-# profileLocations
-#   -nb: 'profileLocations' value is a list 
 
-###### <pL refactor>
-#
-# WIP
-#
-
-#class _field_gnip_pl_address_base(_limited_field):
-#    """
-#    Abstract a bunch of the boilerplate needed to check for and extract the values contained  
-#    in gnip.profileLocations.address
-#    """
-#    path = ["gnip", "profileLocations"]
-#    fields = ["address"]
-#    subfield = None    # use this to look for the next-level key
-#
-#    def __init__(self, json_record):
-#        super(
-#            _field_gnip_pl_address_base 
-#            , self).__init__(json_record)
-#        # self.value is possibly a dict
-#        if self.value != self.default_value \
-#                and self.subfield is not None \
-#                and self.subfield in self.value:
-#            self.value = self.value[subfield] 
-#        else:
-#            self.value = self.default_value
+###### <pL refactor - WIP>
+# -- since pL is a list (possibly support multiple items in the future), use the _limited_field
+#       class to access top-level keys in the corresponding dict (with default limit=1).
+# -- _limited_field makes self.value a str repr of self.value_list
 
 class field_gnip_pl_displayname(_limited_field):
     """Assign to self.value the value of gnip.profileLocation.displayName."""
     path = ["gnip", "profileLocations"]
     fields = ["displayName"]
     # use default limit=1 in _limited_field constructor
+    def __init__(self, json_record):
+        super(
+            field_gnip_pl_displayname 
+            , self).__init__(json_record)
+        # self.value is possibly a str repr of self.value_list
+        if self.value != self.default_value:
+            self.value = self.value_list[0]
 
 
 class field_gnip_pl_objecttype(_limited_field):
@@ -568,7 +552,7 @@ class field_gnip_pl_objecttype(_limited_field):
     path = ["gnip", "profileLocations"]
     fields = ["objectType"]
 
-
+# for nested dicts, use one-level deeper "subfield" 
 class _field_gnip_pl_base(_limited_field):
     """
     Abstract a bunch of the boilerplate needed to check for and extract the things in 
@@ -587,11 +571,16 @@ class _field_gnip_pl_base(_limited_field):
                 and self.fields is not None \
                 and self.subfield is not None \
                 and self.subfield in self.value:
+            # _limited_field constructor builds self.value_list
+            self.value = self.value_list[0]
+#            #
+#            print >>sys.stderr, ">>>> self.value={}, \
+#                                self.fields={}, \
+#                                self.subfield={}".format(self.value, self.fields, self.subfield)
+#            #
             self.value = self.value[self.subfield] 
         else:
             self.value = self.default_value
-#        #
-#        print >>sys.stdout, ">>>> self.fields={}, self.subfield={}".format(self.fields, self.subfield)
 
 
 class field_gnip_pl_country(_field_gnip_pl_base):
@@ -641,10 +630,13 @@ class field_gnip_pl_geo_coords(_field_gnip_pl_base):
             , self).__init__(json_record)
         # self.value is possibly a list 
         if self.value == self.default_value:
-            self.value_list = self.fix_length( [], limit=2) 
+            self.value_list = self.fix_length( [], limit=2 ) 
         else:
             self.value_list = self.value
         self.value = str( self.value_list ) 
+        #
+        #print >>sys.stderr, ">>>> pl_geo_coords self.value={}".format(self.value)
+        #
     
 
 
@@ -1276,6 +1268,12 @@ class Twacs(acscsv.AcsCSV):
                     , field_gnip_pl_displayname(d).value
                     , field_gnip_klout_user_id(d).value
                     ]
+#
+#   debug
+#
+#        print >>sys.stdout, "***** field_gnip_pl_displayname(d).value={}".format(
+#            field_gnip_pl_displayname(d).value
+#            )
 
         udyn_list = [ 
                     field_actor_id(d).value 
