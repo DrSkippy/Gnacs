@@ -552,7 +552,7 @@ class field_gnip_pl_objecttype(_limited_field):
     path = ["gnip", "profileLocations"]
     fields = ["objectType"]
 
-# for nested dicts, use one-level deeper "subfield" 
+# for nested dicts, use one-level-deeper "subfield" 
 class _field_gnip_pl_base(_limited_field):
     """
     Abstract a bunch of the boilerplate needed to check for and extract the things in 
@@ -700,6 +700,7 @@ class field_gnip_pl_geo_coords(_field_gnip_pl_base):
 #        self.value = str( self.value_list ) 
 
 
+
 # klout 
 
 class field_gnip_klout_score(_field):
@@ -718,7 +719,15 @@ class field_gnip_klout_score(_field):
 
 class field_gnip_klout_user_id(_field):
     """Assign to self.value the value of gnip.klout_user_id"""
-    path = ["gnip", "klout_user_id"]
+    path = ["gnip", "klout_profile"]
+    
+    def __init__(self, json_record):
+        super(
+            field_gnip_klout_user_id 
+            , self).__init__(json_record)
+        # self.value is possibly a dict of klouty things 
+        if self.value != self.default_value and "klout_user_id" in self.value:
+            self.value = self.value["klout_user_id"]
     
 
 class field_gnip_klout_topics(_limited_field):
@@ -1206,11 +1215,40 @@ class Twacs(acscsv.AcsCSV):
             record.append(acscsv.gnipRemove)
             return record
 
+
+
+
     def multi_file_DB(self, d, record):
+        """
+        Custom output format designed for loading multiple database tables.
+        Creates ?
+
+        Creates N separate lists of activity fields, joins them on a GNIPSPLIT to be split 
+        at the gnacs.py level and written to separate files.      
+        """
+        # timestamp format
+        t_fmt = "%Y-%m-%d %H:%M:%S"
+        now = datetime.utcnow().strftime( t_fmt )
+
+        # the explicit .value attr reference is needed
+        acs_list = [
+                    field_id(d).value 
+                    ]
+
+
+
+
+
+
+
+    def multi_file_DB_1(self, d, record):
         """
         Custom output format designed for loading multiple database tables.
         Creates 3 separate lists of activity fields, joins them on a GNIPSPLIT to be split 
         at the gnacs.py level and written to separate files.      
+    
+        Superceded 2014-05-12 for more star-schema approach of e.g. hashtag/mention/link/... tables
+        (JM) 
         """
         # timestamp format
         t_fmt = "%Y-%m-%d %H:%M:%S"
@@ -1236,16 +1274,11 @@ class Twacs(acscsv.AcsCSV):
                     + field_twitter_mentions_id_name_DB(d).value_list \
                     + field_twitter_urls_tco_expanded_DB(d).value_list \
                     + field_twitter_media_id_url_DB(d).value_list 
-#        print >>sys.stderr, "***** field_geo_coords(d).value_list={}, len={}".format(
-#                                field_geo_coords(d).value_list
-#                                , len( field_geo_coords(d).value_list ) 
-#                                )
 
         ustatic_list = [
                     now 
                     , field_actor_id(d).value 
                     , field_id(d).value         # needs to be updated programatically in an actual app 
-                    # in this spot, there is an updated_at timestamp in the table
                     , field_actor_postedtime(d).value 
                     , field_actor_preferredusername(d).value 
                     , field_actor_displayname(d).value 
@@ -1268,17 +1301,10 @@ class Twacs(acscsv.AcsCSV):
                     , field_gnip_pl_displayname(d).value
                     , field_gnip_klout_user_id(d).value
                     ]
-#
-#   debug
-#
-#        print >>sys.stdout, "***** field_gnip_pl_displayname(d).value={}".format(
-#            field_gnip_pl_displayname(d).value
-#            )
 
         udyn_list = [ 
                     field_actor_id(d).value 
                     , field_id(d).value         # needs to be updated programatically in an actual app 
-                    # in this spot, there is an updated_at timestamp in the table
                     , field_gnip_klout_score(d).value 
                     ] \
                     + field_gnip_klout_topics(d).value_list \
@@ -1299,5 +1325,9 @@ class Twacs(acscsv.AcsCSV):
         combined_list.extend(udyn_list)
         #
         return combined_list 
+
+
+
+
 
 
