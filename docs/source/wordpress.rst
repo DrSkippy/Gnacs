@@ -1,5 +1,5 @@
-Atomattic Wordpress Model
-=========================
+Automattic Wordpress Model
+==========================
 
     .. automodule:: acscsv.wpacscsv
         :members:
