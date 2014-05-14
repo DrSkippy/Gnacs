@@ -97,6 +97,9 @@ class _limited_field(_field):
     Finally, self.value is set to a string representation of the final self.value_list.
     """
     fields = None 
+    
+    #TODO: set limit=None by default and just return as many as there are, otherwise (by specifying 
+    #    limit), return a maximum of limit.
 
     def __init__(self, json_record, limit=1):
         super(
@@ -111,8 +114,6 @@ class _limited_field(_field):
                     if i < limit:                   # ... up until you reach limit 
                         for j,y in enumerate(self.fields):      # iterate over the dict keys 
                             self.value_list[ len( self.fields )*i + j ] = x[ self.fields[j] ] 
-#                            print >>sys.stdout, "** value={}".format(x[ self.fields[j] ])
-#                            #
             # finally, str-ify the list
             self.value = str( self.value_list )
 
@@ -527,11 +528,7 @@ class field_gnip_lang(_field):
     path = ["gnip","language","value"]
     
 
-
-###### <pL refactor - WIP>
-# -- since pL is a list (possibly support multiple items in the future), use the _limited_field
-#       class to access top-level keys in the corresponding dict (with default limit=1).
-# -- _limited_field makes self.value a str repr of self.value_list
+# profileLocations
 
 class field_gnip_pl_displayname(_limited_field):
     """Assign to self.value the value of gnip.profileLocation.displayName."""
@@ -572,13 +569,8 @@ class _field_gnip_pl_base(_limited_field):
                 and self.subfield is not None \
                 and self.subfield in self.value:
             # _limited_field constructor builds self.value_list
-            self.value = self.value_list[0]
-#            #
-#            print >>sys.stderr, ">>>> self.value={}, \
-#                                self.fields={}, \
-#                                self.subfield={}".format(self.value, self.fields, self.subfield)
-#            #
-            self.value = self.value[self.subfield] 
+            self.value = self.value_list[0][self.subfield]
+            #self.value = self.value[self.subfield] 
         else:
             self.value = self.default_value
 
@@ -634,71 +626,6 @@ class field_gnip_pl_geo_coords(_field_gnip_pl_base):
         else:
             self.value_list = self.value
         self.value = str( self.value_list ) 
-        #
-        #print >>sys.stderr, ">>>> pl_geo_coords self.value={}".format(self.value)
-        #
-    
-
-
-###### </refactor>
-
-#class field_gnip_pl_displayname(_field):
-#    """Assign to self.value the value of gnip.profileLocation.displayName."""
-#    path = ["gnip", "profileLocations", "displayName"]
-    
- 
-#class field_gnip_pl_objecttype(_field):
-#    """Assign to self.value the value of gnip.profileLocations.objectType."""
-#    path = ["gnip", "profileLocations", "objectType"]
-    
-
-#class field_gnip_pl_country(_field):
-#    """Assign to self.value the value of gnip.profileLocations.address.country."""
-#    path = ["gnip", "profileLocations", "address", "country"]
-
-
-#class field_gnip_pl_region(_field):
-#    """Assign to self.value the value of gnip.profileLocations.address.region."""
-#    path = ["gnip", "profileLocations", "address", "region"]
-    
-
-#class field_gnip_pl_subregion(_field):
-#    """Assign to self.value the value of gnip.profileLocations.address.subRegion."""
-#    path = ["gnip", "profileLocations", "address", "subRegion"]
-    
-
-#class field_gnip_pl_countrycode(_field):
-#    """Assign to self.value the value of gnip.profileLocations.address.countryCode."""
-#    path = ["gnip", "profileLocations", "address", "countryCode"]
-
-
-#class field_gnip_pl_locality(_field):
-#    """Assign to self.value the value of gnip.profileLocations.address.locality."""
-#    path = ["gnip", "profileLocations", "address", "locality"]
-
-
-#class field_gnip_pl_geo_type(_field):
-#    """Assign to self.value the value of gnip.profileLocations.geo.type."""
-#    path = ["gnip", "profileLocations", "geo", "type"]
-    
-
-#class field_gnip_pl_geo_coords(_field):
-#    """Assign to self.value the coordinate list in gnip.profileLocations.geo.coordinates."""
-#    path = ["gnip", "profileLocations", "geo", "coordinates"]
-#    
-#    def __init__(self, json_record):
-#        super(
-#           field_gnip_pl_geo_coords 
-#            , self).__init__(json_record)
-#        # self.value is (possibly) a list of floats: [lat, lon] 
-#        if self.value == self.default_value:
-#            # might as well use the helper method...
-#            self.value_list = self.fix_length( [], limit=2) 
-#            #self.value_list = [ self.default_value, self.default_value ]
-#        else:
-#            self.value_list = self.value
-#        self.value = str( self.value_list ) 
-
 
 
 # klout 
@@ -801,97 +728,15 @@ class field_twitter_urls_tco_expanded_DB(_limited_field):
             field_twitter_urls_tco_expanded_DB 
             , self).__init__(json_record, limit=limit)
 
-#
-# refactor WIP, replacement code ^
-#
-
-#class _field_twitter_urls(_field):
-#    """
-#    Base class for accessing arbitrary url fields within twitter_entities.urls. Takes 
-#    a key that addresses the particular value within twitter_entities_urls . Assigns 
-#    to self.value_list a string representation of the corresponding url list (or the 
-#    default value in a list). 
-#    """
-#    # nb: there are 3x urls in twitter_entities 
-#    path = ["twitter_entities", "urls"]
-#    
-#    def __init__(self, json_record, key=None):
-#        super(
-#            _field_twitter_urls
-#            , self).__init__(json_record)
-#        # self.value is a list. can be empty or list of dicts 
-#        if key is not None and isinstance(self.value, list) and len(self.value) > 0:
-#            for d in self.value:
-#                try:
-#                    # previous TypeError exception in case d isn't a dict? (JM) 
-#                    if key in d["urls"] and d["urls"][key] is not None: 
-#                        url_list.append( d["urls"][key] )
-#                    else:
-#                        url_list.append( self.default_value ) 
-#                except TypeError:
-#                    url_list = [ self.default_value ]
-#            #self.value = url_list
-#            self.value = str( url_list )
-#        else:
-#            self.value = str( [ self.default_value ] )
-#        #
-#        self.value_list = eval( self.value )
-#    
-#
-#class field_twitter_urls_url(_field_twitter_urls):
-#    """
-#    assign to self.value the list of 'url' values within 'twitter_entities', 'urls' dict.
-#    Inherits from _filed_twitter_urls class.
-#    """
-#    
-#    def __init__(self, json_record, limit=None):
-#        super(
-#            field_twitter_urls_url
-#            , self).__init__(json_record, key="url")
-#        if limit is not None:
-#            self.value = self.fix_length( self.value, limit )
-#
-#
-#class field_twitter_urls_expanded_url(_field_twitter_urls):
-#    """assign to self.value the list of 'expanded_url' values within 'twitter_entities', 
-#    'urls' dict. Inherits from _filed_twitter_urls class.
-#    """
-#
-#    def __init__(self, json_record):
-#        super(
-#            field_twitter_urls_expanded_url
-#            , self).__init__(json_record, key="expanded_url")
-#
-#
-#class field_twitter_urls_display_url(_field_twitter_urls):
-#    """assign to self.value the list of 'display_url' values within 'twitter_entities', 
-#    'urls' dict. Inherits from _filed_twitter_urls class.
-#    """
-#
-#    def __init__(self, json_record):
-#        super(
-#            field_twitter_urls_display_url
-#            , self).__init__(json_record, key="display_url")
-#
-#
-#class field_twitter_urls_tco_expanded_DB(_limited_field):
-#    """
-#    """
-#    path = ["twitter_entities", "urls"]
-#    fields = ["url", "expanded_url"] 
-#
-#    def __init__(self, json_record, limit=5):
-#        super(
-#            field_twitter_urls_tco_expanded_DB 
-#            , self).__init__(json_record)
 
 # hashtags
 
 class field_twitter_hashtags_text(_field):
-    """Assign to self.value a list of twitter_entities.hashtags 'texts'"""
+    """
+    Assign to self.value a list of twitter_entities.hashtags.text. This class maintains 
+    consistency with classic Gnacs behavior.
+    """
     path = ["twitter_entities", "hashtags"]
-
-    # consider abstracting the path to a parent class and subclassing for specific fields
 
     def __init__(self, json_record):
         super(
@@ -905,8 +750,6 @@ class field_twitter_hashtags_text(_field):
         #   the db-specific configuration...
 
 
-# use the padding & limiting of _limited_field class
-#class field_twitter_hashtags_text_DB(field_twitter_hashtags_text):
 class field_twitter_hashtags_text_DB(_limited_field):
     """
     Combine the first 'limit' hashtags found in the payload into a list and assign to 
@@ -920,17 +763,9 @@ class field_twitter_hashtags_text_DB(_limited_field):
         super(
             field_twitter_hashtags_text_DB
             , self).__init__(json_record, limit=limit)
-#        # self.value is either a list of hashtag texts for each activity hashtag or default_value
-#        if self.value == self.default_value:    # self.value is either a list or "None" now
-#            self.value_list = [ self.default_value ]*limit
-#        else:   # value_list should be a list of 'text's 
-#            self.value_list = self.fix_length( self.value_list, limit ) 
-#        self.value = str( self.value_list )
-
 
 # symbols
 
-#class field_twitter_symbols_text_DB(_field):
 class field_twitter_symbols_text_DB(_limited_field):
     """
     Assign to self.value a list of twitter_entities.symbols 'text's.
@@ -944,12 +779,6 @@ class field_twitter_symbols_text_DB(_limited_field):
         super(
             field_twitter_symbols_text_DB
             , self).__init__(json_record, limit=limit)
-        # self.value is possibly a list of dicts for each activity symbol 
-#        if self.value == self.default_value or len(self.value) == 0:
-#            self.value_list = [ self.default_value ]*limit
-#        else:
-#            self.value_list = self.fix_length( self.value_list, limit ) 
-#        self.value = str( self.value_list )
 
 # mentions
 
@@ -1134,6 +963,24 @@ class Twacs(acscsv.AcsCSV):
         #
         return self.csv(d, record)
 
+    def combine_lists(self, *args):
+        """
+        Takes an arbitrary number of lists to be combined into a single string for passing back 
+        to main gnacs.py and subsequent splitting. The special delimiter for parsing the string 
+        back into separate lists is defined in here.
+        """
+        flag = "GNIPSPLIT"
+        #
+        # append flag to the end of all but last list
+        [ x.append(flag) for i,x in enumerate(args) if i < (len(args) - 1) ]
+        # combine the lists into one
+        combined_list = []
+        [ combined_list.extend(x) for x in args ] 
+        #
+        # this feels like the right approach, but won't pass through procRecord without
+        #   some more effort (JM)
+        #return ( combined_list, flag )
+        return combined_list
 
     def csv(self, d, record):
         try:                            # KeyError exception at EOF
@@ -1196,26 +1043,121 @@ class Twacs(acscsv.AcsCSV):
             return record
 
 
-
-
     def multi_file_DB(self, d, record):
         """
-        Custom output format designed for loading multiple database tables.
-        Creates ?
-
-        Creates N separate lists of activity fields, joins them on a GNIPSPLIT to be split 
-        at the gnacs.py level and written to separate files.      
+        Custom output format designed for loading multiple database tables. Creates N separate 
+        lists of activity fields, joins them on a GNIPSPLIT to be split at the gnacs.py level 
+        and written to separate files.      
         """
         # timestamp format
         t_fmt = "%Y-%m-%d %H:%M:%S"
         now = datetime.utcnow().strftime( t_fmt )
 
-        # the explicit .value attr reference is needed
+        default_value = _field({}).default_value
+
+        # hash_list will be [ id, tag1, id, tag2, ... ] and will be split in gnacs.py
+        hash_list = [] 
+        for i in field_twitter_hashtags_text_DB(d).value_list:
+            if i != default_value:      # temporary hack to exclude all the "NULL" values
+                hash_list.extend( [ field_id(d).value, i ] ) 
+
         acs_list = [
                     field_id(d).value 
+                    , field_gnip_rules(d).value 
+                    , now 
+                    , field_postedtime(d).value 
+                    , field_verb(d).value 
+                    , field_actor_id(d).value 
+                    , field_body(d).value 
+                    , field_twitter_lang(d).value 
+                    , field_gnip_lang(d).value 
+                    , field_link(d).value 
+                    , field_generator_displayname(d).value 
+                    ] \
+                    + field_geo_coords(d).value_list \
+                    + field_twitter_symbols_text_DB(d).value_list \
+                    + field_twitter_mentions_id_name_DB(d).value_list \
+                    + field_twitter_urls_tco_expanded_DB(d).value_list \
+                    + field_twitter_media_id_url_DB(d).value_list 
+
+        ustatic_list = [
+                    now 
+                    , field_actor_id(d).value 
+                    , field_id(d).value         # needs to be updated programatically in an actual app 
+                    , field_actor_postedtime(d).value 
+                    , field_actor_preferredusername(d).value 
+                    , field_actor_displayname(d).value 
+                    , field_actor_acct_link(d).value 
+                    , field_actor_summary(d).value 
+                    ] \
+                    + field_actor_links(d, limit=2).value_list \
+                    + [ 
+                    field_actor_twittertimezone(d).value 
+                    , field_actor_utcoffset_DB(d).value 
+                    , field_actor_verified(d).value 
+                    , field_actor_lang(d).value 
+                    ] \
+                    + field_gnip_pl_geo_coords(d).value_list \
+                    + [ 
+                    field_gnip_pl_countrycode(d).value
+                    , field_gnip_pl_locality(d).value
+                    , field_gnip_pl_region(d).value
+                    , field_gnip_pl_subregion(d).value
+                    , field_gnip_pl_displayname(d).value
+                    , field_gnip_klout_user_id(d).value
                     ]
 
+        udyn_list = [ 
+                    field_actor_id(d).value 
+                    , field_id(d).value         # needs to be updated programatically in an actual app 
+                    , field_gnip_klout_score(d).value 
+                    ] \
+                    + field_gnip_klout_topics(d).value_list \
+                    + [
+                    field_actor_statuses_DB(d).value 
+                    , field_actor_followers_DB(d).value  
+                    , field_actor_friends_DB(d).value  
+                    , field_actor_listed_DB(d).value  
+                    ]
 
+        return self.combine_lists(
+                    acs_list
+                    , ustatic_list
+                    , udyn_list
+                    , hash_list 
+                    )
+       
+
+#TODO: possible future extension of ^
+#        # this is the acs_list if all twitter entities are stripped out into separate tables
+#        acs_list = [
+#                    field_id(d).value 
+#                    , field_gnip_rules(d).value 
+#                    , now 
+#                    , field_postedtime(d).value 
+#                    , field_verb(d).value 
+#                    , field_actor_id(d).value 
+#                    , field_body(d).value 
+#                    , field_twitter_lang(d).value 
+#                    , field_gnip_lang(d).value 
+#                    , field_link(d).value 
+#                    , field_generator_displayname(d).value 
+#                    ] \
+#                    + field_geo_coords(d).value_list \
+#
+#
+#        #
+#        sym_list = []
+#        for i in field_twitter_symbols_text_DB(d).value_list:
+#            sym_list.extend( [ field_id(d).value, i ] ) 
+#        #
+#        # nb: this isn't going to work yet. need to split out the actId, uid, uname triplets
+#        mentions_list = []
+#        for i in field_twitter_mentions_id_name_DB(d).value_list: 
+#            mentions_list.extend( [ field_id(d).value, i ] ) 
+#        #
+#        urls_list = []
+#        media_list = []
 
 
 
@@ -1294,6 +1236,8 @@ class Twacs(acscsv.AcsCSV):
                     , field_actor_friends_DB(d).value  
                     , field_actor_listed_DB(d).value  
                     ]
+        #
+        #TODO: replace with combine_lists() method above
         #
         # consider instead sending the combined list and an arbitrary list of positions to split it
         flag = "GNIPSPLIT"  # this is hardcoded into gnacs.py, as well. change both if needed!
