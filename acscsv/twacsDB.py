@@ -27,9 +27,6 @@ class _field(object):
 
     def __init__(self, json_record):
         self.value = self.walk_path(json_record)
-        #
-        #print >>sys.stdout, "+++++ _field self.value={}".format(self.value)
-        #
 
     def __repr__(self):
         return self.value
@@ -119,8 +116,7 @@ class _limited_field(_field):
 
 
 # TODO:
-# - use new _limited_field() class everywhere appropriate 
-# - consolidate _limited_field() & fix_length() 
+# - consolidate _limited_field() & fix_length() if possible 
 # - replace 2-level dict traversal (eg profileLocation base class) with acscsv.walk_path() or 
 #       similar helper method 
 
@@ -678,8 +674,6 @@ class field_gnip_klout_topics(_limited_field):
 
 # URLs
 
-# JM 2014-05-08 
-# refactor the urls classes to use the padding functionality of _limited_field
 class field_twitter_urls_url(_limited_field):
     """
     """
@@ -907,7 +901,7 @@ class Twacs(acscsv.AcsCSV):
             , options_struct
             , options_db
             ):
-        super(Twacs, self).__init__(delim, options_keypath, options_db)
+        super(Twacs, self).__init__(delim, options_keypath)
         self.options_geo = options_geo 
         self.options_user = options_user
         self.options_rules = options_rules
@@ -1249,9 +1243,5 @@ class Twacs(acscsv.AcsCSV):
         combined_list.extend(udyn_list)
         #
         return combined_list 
-
-
-
-
 
 

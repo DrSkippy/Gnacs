@@ -100,11 +100,15 @@ def main():
     elif options.pub.lower().startswith("news") or options.pub.lower().startswith("ng"):
         processing_obj = ngacscsv.NGacsCSV(delim, options.keypath, options.urls, options.user)
     else:
-        # pre-DB default option
-        #processing_obj = twacscsv.TwacsCSV(delim, options.keypath, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
-        # refactored twacs code -- should run identically to twacscsv (new option may break e.g. TaSS) 
-        processing_obj = twacsDB.Twacs(delim, options.keypath, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct, options.db)
+        processing_obj = twacscsv.TwacsCSV(delim, options.keypath, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
     if options.db:
+        # replace twacs object with the new code. note that twacsDB has the necessary method 
+        #   in place to create classic gnacs output ( csv() ), with only small differences.
+        #   these include possibly different default values (NULL or \N instead of "None"),
+        #   and replacement of some single-item lists with the contents of the list. i 
+        #   imaging that we can consolidate the twacscsv.TwacsCSV and twacsDB.Twacs objects
+        #   in the future for easier management of the code. (JM)
+        processing_obj = twacsDB.Twacs(delim, options.keypath, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct, options.db)
         # create a new data directory (change as needed)
         data_dir = os.environ['HOME'] + "/gnacs_db"
         if not os.path.exists(data_dir):

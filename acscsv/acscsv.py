@@ -30,13 +30,12 @@ class TestAcsCSV(unittest.TestCase):
         self.assertEquals(b.cleanField(a), "None")
 
 class AcsCSV(object):
-    def __init__(self, delim, options_keypath, options_db):
+    def __init__(self, delim, options_keypath):
         self.delim = delim
         if delim == "":
             print >>sys.stderr, "Warning - Output has Null delimiter"
         self.cnt = None
         self.options_keypath = options_keypath
-        self.options_db = options_db
 
     def cleanField(self,f):
         try:
