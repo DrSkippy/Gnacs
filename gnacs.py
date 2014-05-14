@@ -10,6 +10,8 @@ except pkg_resources.DistributionNotFound:
 import sys
 import codecs
 import fileinput
+import re
+import os
 from optparse import OptionParser
 from acscsv import *
 # ujson is 20% faster
@@ -60,6 +62,8 @@ def main():
             default="twitter", help="Publisher (default is twitter), twitter, newsgator, disqus, wordpress, wpcomments, tumblr, foursquare, getglue, stocktwits, stocktwits-native")
     parser.add_option("-k","--keypath", dest="keypath", 
             default=None, help="returns a value from a path of the form 'key:value'")
+    parser.add_option("-D","--database", action="store_true", dest="db", 
+            default=False, help="directs stdout to file objects for uploading to mysql db tables")
     (options, args) = parser.parse_args()
     #
     if options.ver:
@@ -97,6 +101,26 @@ def main():
         processing_obj = ngacscsv.NGacsCSV(delim, options.keypath, options.urls, options.user)
     else:
         processing_obj = twacscsv.TwacsCSV(delim, options.keypath, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct)
+    if options.db:
+        # replace twacs object with the new code. note that twacsDB has the necessary method 
+        #   in place to create classic gnacs output ( csv() ), with only small differences.
+        #   these include possibly different default values (NULL or \N instead of "None"),
+        #   and replacement of some single-item lists with the contents of the list. i 
+        #   imaging that we can consolidate the twacscsv.TwacsCSV and twacsDB.Twacs objects
+        #   in the future for easier management of the code. (JM)
+        processing_obj = twacsDB.Twacs(delim, options.keypath, options.geo, options.user, options.rules, options.urls, options.lang, options.influence, options.struct, options.db)
+        # create a new data directory (change as needed)
+        data_dir = os.environ['HOME'] + "/gnacs_db"
+        if not os.path.exists(data_dir):
+            os.mkdir(data_dir)
+        #
+        # this section is dependent on the particular output choice / table schema! 
+        #
+        # open file objects for writing below 
+        acs_f = codecs.open( data_dir + '/table_activities.csv', 'wb', 'utf8') 
+        ustatic_f = codecs.open( data_dir + '/table_users_static.csv', 'wb', 'utf8') 
+        udyn_f = codecs.open( data_dir + '/table_users_dynamic.csv', 'wb', 'utf8') 
+        hash_f = codecs.open( data_dir + '/table_hashtags.csv', 'wb', 'utf8') 
     #
     cnt = 0
     first_geo = True 
@@ -118,12 +142,12 @@ def main():
             continue 
         for record in recs:
             if len(record) == 0:
+                # ignore blank lines
                 continue
             try:
                 if options.explain:
                     record = reflect_json.reflect_json(record)
                     sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
-                #
                 elif options.geojson:
                     # geo-tag coords
                     geo_rec = processing_obj.asGeoJSON(cnt, record)
@@ -132,6 +156,32 @@ def main():
                             sys.stdout.write(",")
                         sys.stdout.write(json.dumps(geo_rec))
                         first_geo = False
+                elif options.db:
+                    compRE = re.compile(r"GNIPREMOVE") 
+                    tmp_combined_rec = processing_obj.procRecord(cnt, record)
+                    if compRE.search(tmp_combined_rec): 
+                        sys.stderr.write("Skipping compliance activity: ({}) {}\n".format(cnt, tmp_combined_rec) ) 
+                        continue
+                    # otherwise, write to appropriate file objects (from above)
+                    flag = "GNIPSPLIT"      # also hardcoded in twacsDB.py
+                    acs_str, ustatic_str, udyn_str, hash_str = tmp_combined_rec.split(flag) 
+                    # clean up any leading/trailing pipes 
+                    acs_str = acs_str.strip("|")
+                    ustatic_str = ustatic_str.strip("|")
+                    udyn_str = udyn_str.strip("|")
+                    hash_str = hash_str.strip("|")                  # id|tag1|id|tag2|...
+                    hash_list = re.findall("[^|]+\|[^|]+", hash_str)       # [ 'id|tag1', 'id|tag2', ... ] 
+                    #
+                    # debug
+#                    sys.stdout.write(u"\n\n###### acs_str ######\n{}".format(acs_str) )
+#                    sys.stdout.write(u"\n###### ustatic_str ######\n{}".format(ustatic_str) )
+#                    sys.stdout.write(u"\n###### udyn_str ######\n{}".format(udyn_str) )
+                    # 
+                    acs_f.write(acs_str + "\n")
+                    ustatic_f.write(ustatic_str + "\n")
+                    udyn_f.write(udyn_str + "\n")
+                    [ hash_f.write(x + "\n") for x in hash_list ] 
+                    #
                 else:
                     sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
             # catch I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
@@ -146,7 +196,9 @@ def main():
                     pass
                 break
             except UnicodeEncodeError, e:
-                sys.stderr.write("Bad unicode uncoding: record (%d): %s\n"%(cnt, e))
+                sys.stderr.write("UnicodeEncodeError: error={} ({})\n".format(e, cnt))
+                # use this if you want to see the full troublesome records  
+                #sys.stderr.write("Bad unicode encoding: error={} ({}), record={}\n".format(e, cnt, record))
 
     if options.geojson:
         # sys.stdout.write(json.dumps(geo_d) + "\n")

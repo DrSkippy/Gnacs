@@ -47,7 +47,11 @@ class AcsCSV(object):
             pass
         except TypeError:
             f = "None"
-        return f.strip().replace("\n"," ").replace("\r"," ").replace(self.delim, " ")
+        return f.strip(
+                ).replace("\n"," "
+                ).replace("\r"," "
+                ).replace(self.delim, " "
+                )
 
     def buildListString(self,l):
         # unicode output of list (without u's)
@@ -76,6 +80,9 @@ class AcsCSV(object):
         source_list = self.procRecordToList(x)
         if self.options_keypath:
             source_list.append(self.keyPath(x))
+        # ensure no pipes, newlines, etc
+        #TODO: remove calls to cleanField() in submodules
+        source_list = [ self.cleanField(x) for x in source_list ]
         return self.asString(source_list)
 
     def asGeoJSON(self, cnt, x):
