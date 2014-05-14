@@ -6,6 +6,7 @@ import sys
 import acscsv
 
 class WPacsCSV(acscsv.AcsCSV):
+    """Word press activites"""
     def __init__(self, delim, options_keypath, options_user, options_rules, options_lang, options_struct):
         super(WPacsCSV, self).__init__(delim,options_keypath)
         self.options_user = options_user
@@ -14,6 +15,7 @@ class WPacsCSV(acscsv.AcsCSV):
         self.options_struct = options_struct
 
     def procRecordToList(self, d):
+        """Creates the list of output fields."""
         record = []
         try:
             if "verb" in d:

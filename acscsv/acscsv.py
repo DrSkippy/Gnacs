@@ -12,6 +12,7 @@ gnipRemove = "GNIPREMOVE"
 gnipDateTime = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 class TestAcsCSV(unittest.TestCase):
+    """Unit tests ofr common CSV utility functions"""
     def setUp(self):
         pass
 
@@ -30,6 +31,7 @@ class TestAcsCSV(unittest.TestCase):
         self.assertEquals(b.cleanField(a), "None")
 
 class AcsCSV(object):
+    """Base class for all delimited list objects. Basic delimited list utility functions"""
     def __init__(self, delim, options_keypath):
         self.delim = delim
         if delim == "":
@@ -38,6 +40,7 @@ class AcsCSV(object):
         self.options_keypath = options_keypath
 
     def cleanField(self,f):
+        """Clean fields of new lines and delmiter."""
         try:
             # odd edge case that f is a number
             # then can't call string functions
@@ -54,6 +57,7 @@ class AcsCSV(object):
                 )
 
     def buildListString(self,l):
+        """Genereic list builder returns a string represenation of list"""
         # unicode output of list (without u's)
         res = '['
         for r in l:
@@ -64,6 +68,7 @@ class AcsCSV(object):
         return res
 
     def splitId(self, x, index=1):
+        """Generic functions for splitting id parts"""
         tmp = x.split("/")
         if len(tmp) > index:
             return tmp[index]
@@ -71,11 +76,13 @@ class AcsCSV(object):
             return x
 
     def asString(self,l):
+        """Returns a delimited list object as a properly delimited string."""
         if l is None:
             return None
         return self.delim.join(l)
 
     def procRecord(self, cnt, x):
+        """Wrapper for the core activity parsing function."""
         self.cnt = cnt
         source_list = self.procRecordToList(x)
         if self.options_keypath:
@@ -86,6 +93,7 @@ class AcsCSV(object):
         return self.asString(source_list)
 
     def asGeoJSON(self, cnt, x):
+        """Get results as GeoJSON representation."""
         recordList = self.procRecordToList(x)
         if self.__class__.__name__ == "TwacsCSV" and self.options_geo:
             if self.geoCoordsList is None:
@@ -98,6 +106,7 @@ class AcsCSV(object):
         return {"type": "Feature", "geometry": { "type": "Point", "coordinates": lon_lat }, "properties": {"id": recordList[0]} }
     
     def keyPath(self,d):
+        """Get a generic key path specified at run time."""
         key_list = self.options_keypath.split(":")
         key_stack = self.options_keypath.split(":")
         x = d

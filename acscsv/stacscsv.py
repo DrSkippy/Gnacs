@@ -6,6 +6,7 @@ import sys
 import acscsv
 
 class StacsCSV(acscsv.AcsCSV):
+    """Normalized stocktwits activities"""
     def __init__(self, delim, options_user,options_struct,options_influence):
         super(StacsCSV, self).__init__(delim)
         self.options_user = options_user
@@ -13,6 +14,7 @@ class StacsCSV(acscsv.AcsCSV):
         self.options_influence = options_influence
 
     def procRecordToList(self, d):
+        """Creates the field list according to options selected."""
         record = []
         try:
             record.append(d['object']['id'])

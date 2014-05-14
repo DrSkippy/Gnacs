@@ -6,6 +6,7 @@ import sys
 import acscsv
 
 class TblracsCSV(acscsv.AcsCSV):
+    """Tumblr activities"""
     def __init__(self, delim, options_keypath, options_user, options_rules, options_lang, options_struct):
         super(TblracsCSV, self).__init__(delim,options_keypath)
         self.options_user = options_user

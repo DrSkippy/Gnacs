@@ -6,6 +6,7 @@ import sys
 import acscsv
 
 class StntvCSV(acscsv.AcsCSV):
+    """Native stocktwits actvities."""
     def __init__(self, delim, options_keypath,options_user,options_struct,options_influence):
         super(StntvCSV, self).__init__(delim,options_keypath)
         self.options_user = options_user
@@ -13,6 +14,7 @@ class StntvCSV(acscsv.AcsCSV):
         self.options_influence = options_influence
 
     def procRecordToList(self, d):
+        """Creates the ordered field list as specified by options."""
         record = []
         try:
             user = d["user"]

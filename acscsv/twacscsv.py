@@ -5,6 +5,8 @@ import sys
 import acscsv
 
 class TwacsCSV(acscsv.AcsCSV):
+    """Subset of Twitter fields with specified delimiter.  Please see help for options"""
+
     def __init__(self, delim, options_keypath, options_geo, options_user, options_rules, options_urls, options_lang, options_influence, options_struct):
         super(TwacsCSV, self).__init__(delim,options_keypath)
         self.options_geo = options_geo 
@@ -16,6 +18,7 @@ class TwacsCSV(acscsv.AcsCSV):
         self.options_struct = options_struct
         
     def procRecordToList(self,d):
+        """Builds the list of output fields in determined order according to input options"""
         record = []
         try:
             if "verb" in d:
