@@ -13,6 +13,11 @@ If you don't have a c complier:
      `sudo pip install gnacs --no-deps` 
      `sudo pip install gnacs --no-deps --upgrade` (if you have installed before)
 
+In order to regenerate the documentation, also use:
+
+     `sudo pip install sphinx autodoc ghp-import` 
+   
+
 ### Supported publishers:
 * Twitter
 * Disqus
