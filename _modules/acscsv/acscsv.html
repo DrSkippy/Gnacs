@@ -1,0 +1,221 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>acscsv.acscsv &mdash; gnacs 0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="gnacs 0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">gnacs 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for acscsv.acscsv</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># -*- coding: UTF-8 -*-</span>
+<span class="n">__author__</span><span class="o">=</span><span class="s">&quot;Scott Hendrickson&quot;</span>
+<span class="n">__license__</span><span class="o">=</span><span class="s">&quot;Simplified BSD&quot;</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="n">gnipError</span> <span class="o">=</span> <span class="s">&quot;GNIPERROR&quot;</span>
+<span class="n">gnipRemove</span> <span class="o">=</span> <span class="s">&quot;GNIPREMOVE&quot;</span>
+<span class="n">gnipDateTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s">T%H:%M:%S.000Z&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TestAcsCSV"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.TestAcsCSV">[docs]</a><span class="k">class</span> <span class="nc">TestAcsCSV</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Unit tests ofr common CSV utility functions&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">testCleanField</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">AcsCSV</span><span class="p">(</span><span class="s">&quot;|&quot;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">cleanField</span><span class="p">(</span><span class="s">&quot;laksjflasjdfl;a&quot;</span><span class="p">),</span> <span class="s">&quot;laksjflasjdfl;a&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">cleanField</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\r\n</span><span class="s"> </span><span class="se">\n\r</span><span class="s"> </span><span class="se">\r\r</span><span class="s"> </span><span class="se">\n\n</span><span class="s">&quot;</span><span class="p">),</span> <span class="s">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">cleanField</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\r\n</span><span class="s">a </span><span class="se">\n\r</span><span class="s"> </span><span class="se">\r\r</span><span class="s"> a</span><span class="se">\n\n</span><span class="s">&quot;</span><span class="p">),</span> <span class="s">&quot;a       a&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">cleanField</span><span class="p">(</span><span class="s">&quot;asdf|asdf,,adsf|asdf&quot;</span><span class="p">),</span> <span class="s">&quot;asdf asdf,,adsf asdf&quot;</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">AcsCSV</span><span class="p">(</span><span class="s">&quot;,&quot;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">cleanField</span><span class="p">(</span><span class="s">&quot;asdf|asdf,,adsf|asdf&quot;</span><span class="p">),</span> <span class="s">&quot;asdf|asdf  adsf|asdf&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">cleanField</span><span class="p">(</span><span class="mi">245</span><span class="p">),</span> <span class="s">&quot;245&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">cleanField</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="s">&quot;None&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="AcsCSV"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV">[docs]</a><span class="k">class</span> <span class="nc">AcsCSV</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for all delimited list objects. Basic delimited list utility functions&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delim</span><span class="p">,</span> <span class="n">options_keypath</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delim</span> <span class="o">=</span> <span class="n">delim</span>
+        <span class="k">if</span> <span class="n">delim</span> <span class="o">==</span> <span class="s">&quot;&quot;</span><span class="p">:</span>
+            <span class="k">print</span> <span class="o">&gt;&gt;</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Warning - Output has Null delimiter&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cnt</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_keypath</span> <span class="o">=</span> <span class="n">options_keypath</span>
+
+<div class="viewcode-block" id="AcsCSV.cleanField"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV.cleanField">[docs]</a>    <span class="k">def</span> <span class="nf">cleanField</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">f</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clean fields of new lines and delmiter.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c"># odd edge case that f is a number</span>
+            <span class="c"># then can&#39;t call string functions</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+        <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="s">&quot; &quot;</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\r</span><span class="s">&quot;</span><span class="p">,</span><span class="s">&quot; &quot;</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delim</span><span class="p">,</span> <span class="s">&quot; &quot;</span>
+                <span class="p">)</span>
+</div>
+<div class="viewcode-block" id="AcsCSV.buildListString"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV.buildListString">[docs]</a>    <span class="k">def</span> <span class="nf">buildListString</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">l</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Genereic list builder returns a string represenation of list&quot;&quot;&quot;</span>
+        <span class="c"># unicode output of list (without u&#39;s)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="s">&#39;[&#39;</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">l</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">+=</span> <span class="s">&quot;&#39;&quot;</span> <span class="o">+</span> <span class="n">r</span> <span class="o">+</span> <span class="s">&quot;&#39;,&quot;</span>
+        <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">res</span> <span class="o">+=</span> <span class="s">&#39;]&#39;</span>
+        <span class="k">return</span> <span class="n">res</span>
+</div>
+<div class="viewcode-block" id="AcsCSV.splitId"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV.splitId">[docs]</a>    <span class="k">def</span> <span class="nf">splitId</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generic functions for splitting id parts&quot;&quot;&quot;</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">index</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">tmp</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x</span>
+</div>
+<div class="viewcode-block" id="AcsCSV.asString"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV.asString">[docs]</a>    <span class="k">def</span> <span class="nf">asString</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">l</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a delimited list object as a properly delimited string.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">l</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">delim</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="AcsCSV.procRecord"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV.procRecord">[docs]</a>    <span class="k">def</span> <span class="nf">procRecord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cnt</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Wrapper for the core activity parsing function.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cnt</span> <span class="o">=</span> <span class="n">cnt</span>
+        <span class="n">source_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">procRecordToList</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_keypath</span><span class="p">:</span>
+            <span class="n">source_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keyPath</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="c"># ensure no pipes, newlines, etc</span>
+        <span class="c">#TODO: remove calls to cleanField() in submodules</span>
+        <span class="n">source_list</span> <span class="o">=</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">cleanField</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">source_list</span> <span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">asString</span><span class="p">(</span><span class="n">source_list</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="AcsCSV.asGeoJSON"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV.asGeoJSON">[docs]</a>    <span class="k">def</span> <span class="nf">asGeoJSON</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cnt</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get results as GeoJSON representation.&quot;&quot;&quot;</span>
+        <span class="n">recordList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">procRecordToList</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;TwacsCSV&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_geo</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">geoCoordsList</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="n">lon_lat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geoCoordsList</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;FsqacsCSV&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_geo</span><span class="p">:</span>
+            <span class="n">lon_lat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geo_coords_list</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s">&quot;Error&quot;</span><span class="p">:</span><span class="s">&quot;This publisher doesn&#39;t have geo&quot;</span><span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;Feature&quot;</span><span class="p">,</span> <span class="s">&quot;geometry&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;Point&quot;</span><span class="p">,</span> <span class="s">&quot;coordinates&quot;</span><span class="p">:</span> <span class="n">lon_lat</span> <span class="p">},</span> <span class="s">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="n">recordList</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span> <span class="p">}</span>
+    </div>
+<div class="viewcode-block" id="AcsCSV.keyPath"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV.keyPath">[docs]</a>    <span class="k">def</span> <span class="nf">keyPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">d</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a generic key path specified at run time.&quot;&quot;&quot;</span>
+        <span class="n">key_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_keypath</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;:&quot;</span><span class="p">)</span>
+        <span class="n">key_stack</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_keypath</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;:&quot;</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">d</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">key_stack</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="n">key_stack</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="c"># keys are ascii strings</span>
+                    <span class="n">idx</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;Keypath error at </span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">%</span><span class="n">k</span><span class="p">)</span>
+                <span class="k">return</span> <span class="s">&quot;PATH_EMPTY&quot;</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</div></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">gnacs 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Scott Hendrickson, Josh Montague.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

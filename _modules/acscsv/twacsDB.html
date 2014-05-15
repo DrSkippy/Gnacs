@@ -1,0 +1,1338 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>acscsv.twacsDB &mdash; gnacs 0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="gnacs 0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">gnacs 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for acscsv.twacsDB</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: UTF-8 -*-</span>
+<span class="n">__author__</span><span class="o">=</span><span class="s">&quot;Scott Hendrickson&quot;</span>
+<span class="n">__license__</span><span class="o">=</span><span class="s">&quot;Simplified BSD&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">acscsv</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="c"># move to acscsv?</span>
+<span class="k">class</span> <span class="nc">_field</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for extracting the desired value at the end of a series of keys in a JSON Activity </span>
+<span class="sd">    Streams payload. Set the application-wide default value (for e.g. missing values) here, </span>
+<span class="sd">    but also use child classes to override when necessary. Subclasses also need to define the </span>
+<span class="sd">    key-path (path) to the desired location by overwriting the path attr.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># set some default values; these can be overwritten in custom classes </span>
+    <span class="n">default_t_fmt</span> <span class="o">=</span> <span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s"> %H:%M:%S&quot;</span>
+    <span class="c">#default_value = &quot;None&quot;</span>
+    <span class="n">default_value</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\\</span><span class="s">N&quot;</span>           <span class="c"># escaped \N ==&gt; MySQL NULL</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="bp">None</span>                    <span class="c"># str representation of the field, often = str( self.value_list ) </span>
+    <span class="n">value_list</span> <span class="o">=</span> <span class="p">[</span> <span class="n">default_value</span> <span class="p">]</span>  <span class="c"># overwrite when value is most appropriately a list </span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[]</span>                       <span class="c"># dict key-path to follow for desired value</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">walk_path</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">walk_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">json_record</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">res</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="c"># handle the special case where the walk_path found null (JSON) which converts to </span>
+        <span class="c"># a Python None. Only use &quot;None&quot; (str version) if it&#39;s assigned to self.default_value </span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="k">if</span> <span class="n">res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+
+    <span class="k">def</span> <span class="nf">fix_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iterable</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Take an iterable (typically a list) and an optional maximum length (limit). </span>
+<span class="sd">        If limit is not given, and the input iterable is not equal to self.default_value</span>
+<span class="sd">        (typically &quot;None&quot;), the input iterable is returned. If limit is given, the return</span>
+<span class="sd">        value is a list that is either truncated to the first limit items, or padded </span>
+<span class="sd">        with self.default_value until it is of size limit. Note: strings are iterables, </span>
+<span class="sd">        so if you pass this function a string, it will (optionally) truncate the </span>
+<span class="sd">        number of characters in the string according to limit. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span> 
+
+        <span class="k">if</span> <span class="n">limit</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c"># no limits on the length of the result, so just return the original iterable</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">iterable</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c">#if len(iterable) == 0:</span>
+            <span class="k">if</span> <span class="n">iterable</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c"># if walk_path() finds the final key, but the value is an empty list </span>
+                <span class="c">#   (common for e.g. the contents of twitter_entities) </span>
+                <span class="c">#   overwrite self.value with a list of self.default_value and of length limit</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span> <span class="p">]</span><span class="o">*</span><span class="n">limit</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># found something useful in the iterable, either pad the list or truncate </span>
+                <span class="c">#   to end up with something of the proper length </span>
+                <span class="n">current_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span> <span class="n">iterable</span> <span class="p">)</span> 
+                <span class="k">if</span> <span class="n">current_length</span> <span class="o">&lt;</span> <span class="n">limit</span><span class="p">:</span>
+                    <span class="n">res</span> <span class="o">=</span> <span class="n">iterable</span> <span class="o">+</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span> 
+                                        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">limit</span> <span class="o">-</span> <span class="n">current_length</span><span class="p">)</span> <span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>  
+                    <span class="n">res</span> <span class="o">=</span> <span class="n">iterable</span><span class="p">[:</span><span class="n">limit</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+
+<span class="k">class</span> <span class="nc">_limited_field</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="c">#TODO: is there a better way that this class and the fix_length() method in _field class</span>
+    <span class="c">#       could be combined?</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes JSON record (in python dict form) and optionally a maximum length (limit, </span>
+<span class="sd">    with default length=5). Uses parent class _field() to assign the appropriate value </span>
+<span class="sd">    to self.value. When self.value is a list of dictionaries, </span>
+<span class="sd">    inheriting from _limited_field() class allows for the extraction and combination of </span>
+<span class="sd">    an arbitrary number of fields within self.value into self.value_list.</span>
+
+<span class="sd">    Ex: if your class would lead to having </span>
+<span class="sd">    self.value = [ {&#39;a&#39;: 1, &#39;b&#39;: 2, &#39;c&#39;: 3}, {&#39;a&#39;: 4, &#39;b&#39;: 5, &#39;c&#39;: 6} ], and what you&#39;d like </span>
+<span class="sd">    is a list that looks like [ 1, 2, 4, 5 ], inheriting from _limited_field() allows you </span>
+<span class="sd">    to overwrite the fields list ( fields=[&quot;a&quot;, &quot;b&quot;] ) to obtain this result. </span>
+<span class="sd">    Finally, self.value is set to a string representation of the final self.value_list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="bp">None</span> 
+    
+    <span class="c">#TODO: set limit=None by default and just return as many as there are, otherwise (by specifying </span>
+    <span class="c">#    limit), return a maximum of limit.</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">_limited_field</span> 
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is possibly a list of dicts for each activity media object </span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+            <span class="c"># start with default list full of the default_values</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span> <span class="o">=</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span> <span class="p">]</span><span class="o">*</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">)</span><span class="o">*</span><span class="n">limit</span> <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span> 
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">):</span>   <span class="c"># iterate over the dicts in the list</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">limit</span><span class="p">:</span>                   <span class="c"># ... up until you reach limit </span>
+                        <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">y</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">):</span>      <span class="c"># iterate over the dict keys </span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span><span class="p">[</span> <span class="nb">len</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span> <span class="p">)</span><span class="o">*</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="p">]</span> 
+            <span class="c"># finally, str-ify the list</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span> <span class="p">)</span>
+
+
+<span class="c"># TODO:</span>
+<span class="c"># - consolidate _limited_field() &amp; fix_length() if possible </span>
+<span class="c"># - replace 2-level dict traversal (eg profileLocation base class) with acscsv.walk_path() or </span>
+<span class="c">#       similar helper method </span>
+
+
+<span class="c">########################################</span>
+<span class="c">#   example class </span>
+<span class="c">########################################</span>
+ 
+<div class="viewcode-block" id="example_user_rainbows"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.example_user_rainbows">[docs]</a><span class="k">class</span> <span class="nc">example_user_rainbows</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    In this ficticious example, take a dict (data) and assign to self.value a pipe-delimited list </span>
+<span class="sd">    of the users&#39;s rainbow color choices. Values are extracted from the dictionary at the end of </span>
+<span class="sd">    the gnip.zig.zag key-path. </span>
+
+<span class="sd">    Your real class should begin with &#39;field_&#39; in order to be included in the test suite. It should </span>
+<span class="sd">    also try to strike a balance between being user-friendly (can the next user figure out what it</span>
+<span class="sd">    does without reading too much code?) and being 500 characters long. </span>
+<span class="sd">    </span>
+<span class="sd">    ===</span>
+<span class="sd">    &gt;&gt;&gt; example_user_rainbows(data).value</span>
+<span class="sd">    blue|red|green </span>
+
+<span class="sd">    &gt;&gt;&gt; example_user_rainbows(data).value_list</span>
+<span class="sd">    [&quot;blue&quot;, &quot;red&quot;, &quot;green&quot;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># your new classes should overwrite the self.path variable with a list of the appropriate keys</span>
+    <span class="c">#   that lead to the field of interest</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;gnip&quot;</span><span class="p">,</span> <span class="s">&quot;zig&quot;</span><span class="p">,</span> <span class="s">&quot;zag&quot;</span><span class="p">]</span>               
+
+    <span class="c"># if the final result to be used in the custom csv function is most appropriately a list, </span>
+    <span class="c">#   reassign self.value_list so the code is easier to read in the assembly/output portion </span>
+    <span class="n">value_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Call the parent constructor which walks the specified dict path to find </span>
+<span class="sd">        appropriate value to store in self.value.         </span>
+
+<span class="sd">        Note that the explicit inclusion of this constructor is only necessary if additional </span>
+<span class="sd">        processing is being done on self.value or .value_list. If the end value is e.g. simply</span>
+<span class="sd">        the correct string, just inheriting from the parent class (ie. _field ) will assign </span>
+<span class="sd">        self.value. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span>
+                <span class="n">example_class</span> 
+                <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c">#</span>
+        <span class="c"># include a short note here for the next user that describes what self.value becomes, </span>
+        <span class="c">#   and then again at the final state, if helpful</span>
+        <span class="c">#</span>
+        <span class="c"># self.value is now a dictionary of magical unicorns </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s">&quot;|&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="n">x</span><span class="p">[</span><span class="s">&quot;rainbows&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="p">]</span> <span class="p">)</span>
+        <span class="c"># self.value is now a pipe-delimited str of values corresponding to the unicorns&#39; &#39;rainbow&#39; keys </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;|&quot;</span><span class="p">)</span>
+        <span class="c"># self.value_list is now a list of the &#39;rainbow&#39; keys (as an example)</span>
+
+
+
+<span class="c">########################################</span>
+<span class="c">#   activity type </span>
+<span class="c">########################################</span>
+</div>
+<div class="viewcode-block" id="field_activity_type"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_activity_type">[docs]</a><span class="k">class</span> <span class="nc">field_activity_type</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the appropriate value of Tweet, Retweet, or Reply&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="c">#field_structure_type</span>
+            <span class="n">field_activity_type</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is None</span>
+        <span class="n">verb</span> <span class="o">=</span> <span class="n">field_verb</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+        <span class="n">inReplyTo</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+        <span class="n">obj_objtype</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+        <span class="k">if</span> <span class="s">&quot;inReplyTo&quot;</span> <span class="ow">in</span> <span class="n">json_record</span><span class="p">:</span>
+            <span class="c"># possible KeyError? (JM)</span>
+            <span class="n">inReplyTo</span> <span class="o">=</span> <span class="n">json_record</span><span class="p">[</span><span class="s">&quot;inReplyTo&quot;</span><span class="p">][</span><span class="s">&quot;link&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s">&quot;object&quot;</span> <span class="ow">in</span> <span class="n">json_record</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">json_record</span><span class="p">[</span><span class="s">&quot;object&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s">&quot;objectType&quot;</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">:</span>
+                <span class="n">obj_objtype</span> <span class="o">=</span> <span class="n">obj</span><span class="p">[</span><span class="s">&quot;objectType&quot;</span><span class="p">]</span>
+        <span class="c"># now we can determine self.value</span>
+        <span class="k">if</span> <span class="n">verb</span> <span class="o">==</span> <span class="s">&quot;share&quot;</span> <span class="ow">and</span> <span class="n">obj_objtype</span> <span class="o">==</span> <span class="s">&quot;activity&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s">&quot;Retweet&quot;</span>
+        <span class="k">elif</span> <span class="n">inReplyTo</span> <span class="o">==</span> <span class="s">&quot;None&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s">&quot;Tweet&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s">&quot;Reply&quot;</span>
+
+
+
+<span class="c">########################################</span>
+<span class="c">#   top-level fields </span>
+<span class="c">########################################</span>
+</div>
+<div class="viewcode-block" id="field_verb"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_verb">[docs]</a><span class="k">class</span> <span class="nc">field_verb</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value in the top-level verb key.&quot;&quot;&quot;</span> 
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;verb&quot;</span><span class="p">]</span>
+    <span class="c"># overwrite this default value because records missing this field should be called out (badness) </span>
+    <span class="n">default_value</span> <span class="o">=</span> <span class="s">&quot;Unidentified meta message&quot;</span>
+    
+</div>
+<div class="viewcode-block" id="field_id"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_id">[docs]</a><span class="k">class</span> <span class="nc">field_id</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value in the top-level id key.&quot;&quot;&quot;</span> 
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;id&quot;</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_id</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is a str beginning w/ tag:search.twitter..... remove all but the actual id </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;:&quot;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="field_postedtime"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_postedtime">[docs]</a><span class="k">class</span> <span class="nc">field_postedtime</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Take a dict, assign to self.value the value in the top-level postedTime key. Timestamp is </span>
+<span class="sd">    formatted according to input_fmt, which is set in the constructor.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;postedTime&quot;</span><span class="p">]</span>
+
+    <span class="c"># this is the more elegant approach -- replace someday, if needed </span>
+    <span class="c">#dateRE = re.compile(&quot;[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}&quot;, re.IGNORECASE)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_postedtime</span> 
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is a datetime string </span>
+        <span class="n">input_fmt</span> <span class="o">=</span> <span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s">T%H:%M:%S.000Z&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span> 
+                        <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">input_fmt</span> 
+                        <span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span> 
+                            <span class="bp">self</span><span class="o">.</span><span class="n">default_t_fmt</span> <span class="p">)</span> 
+   
+</div>
+<div class="viewcode-block" id="field_body"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_body">[docs]</a><span class="k">class</span> <span class="nc">field_body</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value in top-level body key.&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;body&quot;</span><span class="p">]</span>
+    
+</div>
+<div class="viewcode-block" id="field_link"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_link">[docs]</a><span class="k">class</span> <span class="nc">field_link</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value in top-level link key.&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;link&quot;</span><span class="p">]</span>
+    
+</div>
+<div class="viewcode-block" id="field_twitter_lang"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_twitter_lang">[docs]</a><span class="k">class</span> <span class="nc">field_twitter_lang</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of top-level twitter_lang key.&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;twitter_lang&quot;</span><span class="p">]</span>
+    
+
+<span class="c">########################################</span>
+<span class="c">#   &#39;actor&#39; fields </span>
+<span class="c">########################################</span>
+</div>
+<div class="viewcode-block" id="field_actor_id"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_id">[docs]</a><span class="k">class</span> <span class="nc">field_actor_id</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assign to self.value the numerical value of actor.id (after stripping off </span>
+<span class="sd">    the leading &#39;id:twitter...&#39; characters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">,</span> <span class="s">&quot;id&quot;</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_actor_id</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value has an id:twitter....</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;:&quot;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="field_actor_postedtime"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_postedtime">[docs]</a><span class="k">class</span> <span class="nc">field_actor_postedtime</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assign to self.value the value of actor.postedTime (input format is defined in the </span>
+<span class="sd">    constructor, output format is default unless overwritten).</span>
+<span class="sd">    &quot;&quot;&quot;</span> 
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">,</span> <span class="s">&quot;postedTime&quot;</span><span class="p">]</span>
+    
+    <span class="c"># this is a more elegant approach -- convert someday, if needed </span>
+    <span class="c">#dateRE = re.compile(&quot;[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}&quot;, re.IGNORECASE)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_actor_postedtime</span> 
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is a string (of a timestamp) </span>
+        <span class="n">input_fmt</span> <span class="o">=</span> <span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s">T%H:%M:%S.000Z&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">input_fmt</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_t_fmt</span><span class="p">)</span> 
+
+</div>
+<div class="viewcode-block" id="field_actor_lang"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_lang">[docs]</a><span class="k">class</span> <span class="nc">field_actor_lang</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the first value in the list at actor.languages&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">,</span> <span class="s">&quot;languages&quot;</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_actor_lang</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is a list, but have only ever seen it with one value, so take that one. </span>
+        <span class="c"># can use str( self.value ) if more than one appear someday</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="field_actor_displayname"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_displayname">[docs]</a><span class="k">class</span> <span class="nc">field_actor_displayname</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of actor.displayName&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">,</span> <span class="s">&quot;displayName&quot;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="field_actor_preferredusername"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_preferredusername">[docs]</a><span class="k">class</span> <span class="nc">field_actor_preferredusername</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of actor.preferredUsername&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">,</span> <span class="s">&quot;preferredUsername&quot;</span><span class="p">]</span>
+ 
+</div>
+<div class="viewcode-block" id="field_actor_summary"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_summary">[docs]</a><span class="k">class</span> <span class="nc">field_actor_summary</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of actor.summary&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">,</span> <span class="s">&quot;summary&quot;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="field_actor_acct_link"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_acct_link">[docs]</a><span class="k">class</span> <span class="nc">field_actor_acct_link</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of actor.link&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">,</span> <span class="s">&quot;link&quot;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="field_actor_links"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_links">[docs]</a><span class="k">class</span> <span class="nc">field_actor_links</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assign to self.value a string repr of a list of the links contained in actor.links (or </span>
+<span class="sd">    default_value if the corresponding dict is empty). The number of links included in the </span>
+<span class="sd">    list is optionally specified in the constructor. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">,</span> <span class="s">&quot;links&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_actor_links</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="c"># ignore the links that are &quot;null&quot; in the payload ( ==&gt; None in the dict )</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span> <span class="o">=</span> <span class="p">[</span> <span class="n">x</span><span class="p">[</span><span class="s">&quot;href&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="s">&quot;href&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="p">]</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fix_length</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span><span class="p">,</span> <span class="n">limit</span> <span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="field_actor_twittertimezone"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_twittertimezone">[docs]</a><span class="k">class</span> <span class="nc">field_actor_twittertimezone</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of actor.twitterTimeZone&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">,</span> <span class="s">&quot;twitterTimeZone&quot;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="field_actor_utcoffset_DB"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_utcoffset_DB">[docs]</a><span class="k">class</span> <span class="nc">field_actor_utcoffset_DB</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of actor.utcOffset.&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">,</span> <span class="s">&quot;utcOffset&quot;</span><span class="p">]</span>
+    
+</div>
+<div class="viewcode-block" id="field_actor_utcoffset"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_utcoffset">[docs]</a><span class="k">class</span> <span class="nc">field_actor_utcoffset</span><span class="p">(</span><span class="n">field_actor_utcoffset_DB</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assign to self.value a string repr of the value of actor.utcOffset. Ensures backward </span>
+<span class="sd">    compatibility with classic, stringy, gnacs.py output.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+   
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_actor_utcoffset</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is a signed integer - str-ify for backward compatibility </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="field_actor_verified"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_verified">[docs]</a><span class="k">class</span> <span class="nc">field_actor_verified</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assign to self.value a 0/1 boolean repr of the value of actor.verified. Default is False (0).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">,</span> <span class="s">&quot;verified&quot;</span><span class="p">]</span>
+    <span class="n">default_value</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_actor_verified</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is possibly boolean </span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;Unable to convert Verified field, error={}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="field_actor_loc_displayname"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_loc_displayname">[docs]</a><span class="k">class</span> <span class="nc">field_actor_loc_displayname</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;assign to self.value the value of actor.location.displayName&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">,</span> <span class="s">&quot;location&quot;</span><span class="p">,</span> <span class="s">&quot;displayName&quot;</span><span class="p">]</span>
+    
+</div>
+<div class="viewcode-block" id="field_actor_followers_DB"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_followers_DB">[docs]</a><span class="k">class</span> <span class="nc">field_actor_followers_DB</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of actor.followersCount.&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">,</span> <span class="s">&quot;followersCount&quot;</span><span class="p">]</span>
+    <span class="c"># self.value is an int  </span>
+ 
+</div>
+<div class="viewcode-block" id="field_actor_followers"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_followers">[docs]</a><span class="k">class</span> <span class="nc">field_actor_followers</span><span class="p">(</span><span class="n">field_actor_followers_DB</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value a str-ified repr of the value of actor.followersCount&quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_actor_followers</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is an int </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>
+  
+ </div>
+<div class="viewcode-block" id="field_actor_friends_DB"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_friends_DB">[docs]</a><span class="k">class</span> <span class="nc">field_actor_friends_DB</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of actor.friendsCount.&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">,</span> <span class="s">&quot;friendsCount&quot;</span><span class="p">]</span>
+    <span class="c"># self.value is an int</span>
+
+</div>
+<div class="viewcode-block" id="field_actor_friends"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_friends">[docs]</a><span class="k">class</span> <span class="nc">field_actor_friends</span><span class="p">(</span><span class="n">field_actor_friends_DB</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value a str-ified repr of the value of actor.friendsCount.&quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_actor_friends</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is an int </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="field_actor_listed_DB"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_listed_DB">[docs]</a><span class="k">class</span> <span class="nc">field_actor_listed_DB</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of actor.listedCount&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">,</span> <span class="s">&quot;listedCount&quot;</span><span class="p">]</span>
+    <span class="c"># self.value is an int</span>
+
+</div>
+<div class="viewcode-block" id="field_actor_listed"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_listed">[docs]</a><span class="k">class</span> <span class="nc">field_actor_listed</span><span class="p">(</span><span class="n">field_actor_listed_DB</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value a str-ified repr of the value of actor.listedCount&quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_actor_listed</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is an int </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="field_actor_statuses_DB"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_statuses_DB">[docs]</a><span class="k">class</span> <span class="nc">field_actor_statuses_DB</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of actor.statusesCount&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">,</span> <span class="s">&quot;statusesCount&quot;</span><span class="p">]</span>
+    <span class="c"># self.value is an int </span>
+    <span class="c"># nb: for file output, this distinction may not be necessary (JM) </span>
+
+</div>
+<div class="viewcode-block" id="field_actor_statuses"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_actor_statuses">[docs]</a><span class="k">class</span> <span class="nc">field_actor_statuses</span><span class="p">(</span><span class="n">field_actor_statuses_DB</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value a str-ified repr of the value of actor.statusesCount&quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_actor_statuses</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is an int </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>
+
+
+
+<span class="c">########################################</span>
+<span class="c">#   &#39;generator&#39; fields </span>
+<span class="c">########################################</span>
+</div>
+<div class="viewcode-block" id="field_generator_displayname"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_generator_displayname">[docs]</a><span class="k">class</span> <span class="nc">field_generator_displayname</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of generator.displayName&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;generator&quot;</span><span class="p">,</span> <span class="s">&quot;displayName&quot;</span><span class="p">]</span>
+    
+
+
+<span class="c">########################################</span>
+<span class="c">#   &#39;gnip&#39; fields </span>
+<span class="c">########################################</span>
+</div>
+<div class="viewcode-block" id="field_gnip_rules"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_gnip_rules">[docs]</a><span class="k">class</span> <span class="nc">field_gnip_rules</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;assign to self.value the value of &#39;gnip&#39;, &#39;matching_rules&#39;&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;gnip&quot;</span><span class="p">,</span> <span class="s">&quot;matching_rules&quot;</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_gnip_rules</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># if matching_rules exists, self.value is a list of dicts </span>
+        <span class="c">#   to be consistent with old code, want a list of [rule (tag), ... ]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span> <span class="s">&quot;{} ({})&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;value&quot;</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;tag&quot;</span><span class="p">]</span> <span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span> <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="field_gnip_urls"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_gnip_urls">[docs]</a><span class="k">class</span> <span class="nc">field_gnip_urls</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the list of &#39;expanded_url&#39; values within &#39;gnip&#39;, &#39;urls&#39;&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;gnip&quot;</span><span class="p">,</span> <span class="s">&quot;urls&quot;</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_gnip_urls</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is possibly a list of url &amp; expanded url dicts</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span> <span class="o">=</span> <span class="p">[</span> <span class="n">x</span><span class="p">[</span><span class="s">&quot;expanded_url&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span> <span class="p">)</span> 
+
+</div>
+<span class="k">class</span> <span class="nc">field_gnip_lang</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;gnip&quot;</span><span class="p">,</span><span class="s">&quot;language&quot;</span><span class="p">,</span><span class="s">&quot;value&quot;</span><span class="p">]</span>
+    
+
+<span class="c"># profileLocations</span>
+
+<div class="viewcode-block" id="field_gnip_pl_displayname"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_gnip_pl_displayname">[docs]</a><span class="k">class</span> <span class="nc">field_gnip_pl_displayname</span><span class="p">(</span><span class="n">_limited_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of gnip.profileLocation.displayName.&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;gnip&quot;</span><span class="p">,</span> <span class="s">&quot;profileLocations&quot;</span><span class="p">]</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;displayName&quot;</span><span class="p">]</span>
+    <span class="c"># use default limit=1 in _limited_field constructor</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_gnip_pl_displayname</span> 
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is possibly a str repr of self.value_list</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="field_gnip_pl_objecttype"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_gnip_pl_objecttype">[docs]</a><span class="k">class</span> <span class="nc">field_gnip_pl_objecttype</span><span class="p">(</span><span class="n">_limited_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of gnip.profileLocations.objectType.&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;gnip&quot;</span><span class="p">,</span> <span class="s">&quot;profileLocations&quot;</span><span class="p">]</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;objectType&quot;</span><span class="p">]</span>
+
+<span class="c"># for nested dicts, use one-level-deeper &quot;subfield&quot; </span></div>
+<span class="k">class</span> <span class="nc">_field_gnip_pl_base</span><span class="p">(</span><span class="n">_limited_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract a bunch of the boilerplate needed to check for and extract the things in </span>
+<span class="sd">    in gnip.profileLocations. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;gnip&quot;</span><span class="p">,</span> <span class="s">&quot;profileLocations&quot;</span><span class="p">]</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="bp">None</span> 
+    <span class="n">subfield</span> <span class="o">=</span> <span class="bp">None</span>    <span class="c"># use this to look for the next-level key</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">_field_gnip_pl_base</span> 
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is possibly a dict</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span> \
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> \
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">subfield</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> \
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">subfield</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="c"># _limited_field constructor builds self.value_list</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">subfield</span><span class="p">]</span>
+            <span class="c">#self.value = self.value[self.subfield] </span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span>
+
+
+<div class="viewcode-block" id="field_gnip_pl_country"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_gnip_pl_country">[docs]</a><span class="k">class</span> <span class="nc">field_gnip_pl_country</span><span class="p">(</span><span class="n">_field_gnip_pl_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of gnip.profileLocations.address.country.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;address&quot;</span><span class="p">]</span>
+    <span class="n">subfield</span> <span class="o">=</span> <span class="s">&quot;country&quot;</span>
+
+</div>
+<div class="viewcode-block" id="field_gnip_pl_region"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_gnip_pl_region">[docs]</a><span class="k">class</span> <span class="nc">field_gnip_pl_region</span><span class="p">(</span><span class="n">_field_gnip_pl_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of gnip.profileLocations.address.region.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;address&quot;</span><span class="p">]</span>
+    <span class="n">subfield</span> <span class="o">=</span> <span class="s">&quot;region&quot;</span>
+
+</div>
+<div class="viewcode-block" id="field_gnip_pl_subregion"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_gnip_pl_subregion">[docs]</a><span class="k">class</span> <span class="nc">field_gnip_pl_subregion</span><span class="p">(</span><span class="n">_field_gnip_pl_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of gnip.profileLocations.address.subRegion.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;address&quot;</span><span class="p">]</span>
+    <span class="n">subfield</span> <span class="o">=</span> <span class="s">&quot;subRegion&quot;</span>
+    
+</div>
+<div class="viewcode-block" id="field_gnip_pl_countrycode"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_gnip_pl_countrycode">[docs]</a><span class="k">class</span> <span class="nc">field_gnip_pl_countrycode</span><span class="p">(</span><span class="n">_field_gnip_pl_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of gnip.profileLocations.address.countryCode.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;address&quot;</span><span class="p">]</span>
+    <span class="n">subfield</span> <span class="o">=</span> <span class="s">&quot;countryCode&quot;</span>
+
+</div>
+<div class="viewcode-block" id="field_gnip_pl_locality"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_gnip_pl_locality">[docs]</a><span class="k">class</span> <span class="nc">field_gnip_pl_locality</span><span class="p">(</span><span class="n">_field_gnip_pl_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of gnip.profileLocations.address.locality.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;address&quot;</span><span class="p">]</span>
+    <span class="n">subfield</span> <span class="o">=</span> <span class="s">&quot;locality&quot;</span>
+
+</div>
+<div class="viewcode-block" id="field_gnip_pl_geo_type"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_gnip_pl_geo_type">[docs]</a><span class="k">class</span> <span class="nc">field_gnip_pl_geo_type</span><span class="p">(</span><span class="n">_field_gnip_pl_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of gnip.profileLocations.geo.type.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;geo&quot;</span><span class="p">]</span>
+    <span class="n">subfield</span> <span class="o">=</span> <span class="s">&quot;type&quot;</span> 
+
+</div>
+<div class="viewcode-block" id="field_gnip_pl_geo_coords"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_gnip_pl_geo_coords">[docs]</a><span class="k">class</span> <span class="nc">field_gnip_pl_geo_coords</span><span class="p">(</span><span class="n">_field_gnip_pl_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the coordinate list in gnip.profileLocations.geo.coordinates.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;geo&quot;</span><span class="p">]</span>
+    <span class="n">subfield</span> <span class="o">=</span> <span class="s">&quot;coordinates&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_gnip_pl_geo_coords</span> 
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is possibly a list </span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fix_length</span><span class="p">(</span> <span class="p">[],</span> <span class="n">limit</span><span class="o">=</span><span class="mi">2</span> <span class="p">)</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span> <span class="p">)</span> 
+
+
+<span class="c"># klout </span>
+</div>
+<div class="viewcode-block" id="field_gnip_klout_score"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_gnip_klout_score">[docs]</a><span class="k">class</span> <span class="nc">field_gnip_klout_score</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of gnip.klout_score.&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;gnip&quot;</span><span class="p">,</span> <span class="s">&quot;klout_score&quot;</span><span class="p">]</span>
+    <span class="n">default_value</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_gnip_klout_score</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is possibly an int</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="field_gnip_klout_user_id"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_gnip_klout_user_id">[docs]</a><span class="k">class</span> <span class="nc">field_gnip_klout_user_id</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of gnip.klout_user_id&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;gnip&quot;</span><span class="p">,</span> <span class="s">&quot;klout_profile&quot;</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_gnip_klout_user_id</span> 
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is possibly a dict of klouty things </span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span> <span class="ow">and</span> <span class="s">&quot;klout_user_id&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="s">&quot;klout_user_id&quot;</span><span class="p">]</span>
+    
+</div>
+<div class="viewcode-block" id="field_gnip_klout_topics"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_gnip_klout_topics">[docs]</a><span class="k">class</span> <span class="nc">field_gnip_klout_topics</span><span class="p">(</span><span class="n">_limited_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assign to self.value_list (and .value) pairs of gnip.klout_profile.displayName </span>
+<span class="sd">    and .klout_topic_id. Up to limit number of these combinations. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;gnip&quot;</span><span class="p">,</span> <span class="s">&quot;klout_profile&quot;</span><span class="p">,</span> <span class="s">&quot;topics&quot;</span><span class="p">]</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;klout_topic_id&quot;</span><span class="p">,</span> <span class="s">&quot;displayName&quot;</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_gnip_klout_topics</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">)</span>
+      
+
+
+<span class="c">########################################</span>
+<span class="c">#   &#39;twitter_entities&#39; fields </span>
+<span class="c">########################################</span>
+
+<span class="c"># URLs</span>
+</div>
+<div class="viewcode-block" id="field_twitter_urls_url"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_twitter_urls_url">[docs]</a><span class="k">class</span> <span class="nc">field_twitter_urls_url</span><span class="p">(</span><span class="n">_limited_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;twitter_entities&quot;</span><span class="p">,</span> <span class="s">&quot;urls&quot;</span><span class="p">]</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;url&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_twitter_urls_url</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">)</span>
+ 
+</div>
+<div class="viewcode-block" id="field_twitter_urls_expanded_url"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_twitter_urls_expanded_url">[docs]</a><span class="k">class</span> <span class="nc">field_twitter_urls_expanded_url</span><span class="p">(</span><span class="n">_limited_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;twitter_entities&quot;</span><span class="p">,</span> <span class="s">&quot;urls&quot;</span><span class="p">]</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;expanded_url&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_twitter_urls_expanded_url</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="field_twitter_urls_display_url"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_twitter_urls_display_url">[docs]</a><span class="k">class</span> <span class="nc">field_twitter_urls_display_url</span><span class="p">(</span><span class="n">_limited_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;twitter_entities&quot;</span><span class="p">,</span> <span class="s">&quot;urls&quot;</span><span class="p">]</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;display_url&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_twitter_urls_display_url</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="field_twitter_urls_tco_expanded_DB"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_twitter_urls_tco_expanded_DB">[docs]</a><span class="k">class</span> <span class="nc">field_twitter_urls_tco_expanded_DB</span><span class="p">(</span><span class="n">_limited_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    combination of two classes above</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;twitter_entities&quot;</span><span class="p">,</span> <span class="s">&quot;urls&quot;</span><span class="p">]</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;url&quot;</span><span class="p">,</span> <span class="s">&quot;expanded_url&quot;</span><span class="p">]</span> 
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_twitter_urls_tco_expanded_DB</span> 
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">)</span>
+
+
+<span class="c"># hashtags</span>
+</div>
+<div class="viewcode-block" id="field_twitter_hashtags_text"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_twitter_hashtags_text">[docs]</a><span class="k">class</span> <span class="nc">field_twitter_hashtags_text</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assign to self.value a list of twitter_entities.hashtags.text. This class maintains </span>
+<span class="sd">    consistency with classic Gnacs behavior.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;twitter_entities&quot;</span><span class="p">,</span> <span class="s">&quot;hashtags&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_twitter_hashtags_text</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is possibly a list of dicts for each activity hashtag</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span> <span class="o">=</span> <span class="p">[</span> <span class="n">x</span><span class="p">[</span><span class="s">&quot;text&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="p">]</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span> <span class="p">)</span> 
+        <span class="c"># hashtags are an existing feature in gnacs, so extend this class for </span>
+        <span class="c">#   the db-specific configuration...</span>
+
+</div>
+<div class="viewcode-block" id="field_twitter_hashtags_text_DB"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_twitter_hashtags_text_DB">[docs]</a><span class="k">class</span> <span class="nc">field_twitter_hashtags_text_DB</span><span class="p">(</span><span class="n">_limited_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Combine the first &#39;limit&#39; hashtags found in the payload into a list and assign to </span>
+<span class="sd">    self.value. If there are less than &#39;limit&#39;, the list is padded with </span>
+<span class="sd">    self.default_value </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;twitter_entities&quot;</span><span class="p">,</span> <span class="s">&quot;hashtags&quot;</span><span class="p">]</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;text&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_twitter_hashtags_text_DB</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">)</span>
+
+<span class="c"># symbols</span>
+</div>
+<div class="viewcode-block" id="field_twitter_symbols_text_DB"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_twitter_symbols_text_DB">[docs]</a><span class="k">class</span> <span class="nc">field_twitter_symbols_text_DB</span><span class="p">(</span><span class="n">_limited_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assign to self.value a list of twitter_entities.symbols &#39;text&#39;s.</span>
+<span class="sd">    This one is a little experimental... haven&#39;t seen it in the wild (Activity Streams) yet, </span>
+<span class="sd">    so using https://blog.twitter.com/2013/symbols-entities-tweets as the template.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;twitter_entities&quot;</span><span class="p">,</span> <span class="s">&quot;symbols&quot;</span><span class="p">]</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;text&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_twitter_symbols_text_DB</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">)</span>
+
+<span class="c"># mentions</span>
+</div>
+<div class="viewcode-block" id="field_twitter_mentions_id_name_DB"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_twitter_mentions_id_name_DB">[docs]</a><span class="k">class</span> <span class="nc">field_twitter_mentions_id_name_DB</span><span class="p">(</span><span class="n">_limited_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assign to self.value a list of &#39;limit&#39; twitter_entities.user_mentions.screen_name and .id pairs </span>
+<span class="sd">    (in order, but in a flat list).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;twitter_entities&quot;</span><span class="p">,</span> <span class="s">&quot;user_mentions&quot;</span><span class="p">]</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;id&quot;</span><span class="p">,</span> <span class="s">&quot;screen_name&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_twitter_mentions_id_name_DB</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">)</span>
+
+<span class="c"># media</span>
+</div>
+<div class="viewcode-block" id="field_twitter_media_id_url_DB"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_twitter_media_id_url_DB">[docs]</a><span class="k">class</span> <span class="nc">field_twitter_media_id_url_DB</span><span class="p">(</span><span class="n">_limited_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assign to self.value a list of twitter_entities.media.id and .expanded_url pairs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;twitter_entities&quot;</span><span class="p">,</span> <span class="s">&quot;media&quot;</span><span class="p">]</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;id&quot;</span><span class="p">,</span> <span class="s">&quot;expanded_url&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_twitter_media_id_url_DB</span> 
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">)</span>
+       
+
+<span class="c">########################################</span>
+<span class="c">#   &#39;geo&#39; &amp; &#39;location&#39; fields (related) </span>
+<span class="c">########################################</span>
+</div>
+<div class="viewcode-block" id="field_geo_type"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_geo_type">[docs]</a><span class="k">class</span> <span class="nc">field_geo_type</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of geo.type.&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;geo&quot;</span><span class="p">,</span> <span class="s">&quot;type&quot;</span><span class="p">]</span>
+    
+</div>
+<div class="viewcode-block" id="field_geo_coords"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_geo_coords">[docs]</a><span class="k">class</span> <span class="nc">field_geo_coords</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assign to self.value the value of geo.coordinates. This is the coordinate pair </span>
+<span class="sd">    of the user-enabled tweet geotag.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;geo&quot;</span><span class="p">,</span> <span class="s">&quot;coordinates&quot;</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_geo_coords</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="c">#self.value_list = [ self.default_value, self.default_value ]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fix_length</span><span class="p">([],</span> <span class="n">limit</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> 
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="field_location_type"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_location_type">[docs]</a><span class="k">class</span> <span class="nc">field_location_type</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of location.geo.type.&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;location&quot;</span><span class="p">,</span> <span class="s">&quot;geo&quot;</span><span class="p">,</span> <span class="s">&quot;type&quot;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="field_location_displayname"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_location_displayname">[docs]</a><span class="k">class</span> <span class="nc">field_location_displayname</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of location.displayName&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;location&quot;</span><span class="p">,</span> <span class="s">&quot;displayName&quot;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="field_location_coords"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_location_coords">[docs]</a><span class="k">class</span> <span class="nc">field_location_coords</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assign to self.value the value of location.geo.coordsindates . This the bounding </span>
+<span class="sd">    polygon from the original activity payload from Twitter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;location&quot;</span><span class="p">,</span> <span class="s">&quot;geo&quot;</span><span class="p">,</span> <span class="s">&quot;coordinates&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">field_location_coords</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is either default_value or a list of lists of polygon vertices (lists) </span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span> <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">)</span> 
+
+</div>
+<div class="viewcode-block" id="field_location_twittercountry"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_location_twittercountry">[docs]</a><span class="k">class</span> <span class="nc">field_location_twittercountry</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of location.twitter_country_code.&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;location&quot;</span><span class="p">,</span> <span class="s">&quot;twitter_country_code&quot;</span><span class="p">]</span>
+
+
+
+<span class="c">########################################</span>
+<span class="c">#   other top-level fields </span>
+<span class="c">########################################</span>
+</div>
+<div class="viewcode-block" id="field_inreplyto_link"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_inreplyto_link">[docs]</a><span class="k">class</span> <span class="nc">field_inreplyto_link</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of inReplyTo.link&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;inReplyTo&quot;</span><span class="p">,</span> <span class="s">&quot;link&quot;</span><span class="p">]</span>
+    
+</div>
+<div class="viewcode-block" id="field_object_id"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_object_id">[docs]</a><span class="k">class</span> <span class="nc">field_object_id</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of object.id&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;object&quot;</span><span class="p">,</span> <span class="s">&quot;id&quot;</span><span class="p">]</span>
+    
+
+</div>
+<div class="viewcode-block" id="field_object_postedtime"><a class="viewcode-back" href="../../twitter.html#acscsv.twacsDB.field_object_postedtime">[docs]</a><span class="k">class</span> <span class="nc">field_object_postedtime</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign to self.value the value of object.postedTime&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;object&quot;</span><span class="p">,</span> <span class="s">&quot;postedTime&quot;</span><span class="p">]</span>
+    
+
+
+<span class="c">############################</span></div>
+<span class="k">class</span> <span class="nc">Twacs</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">AcsCSV</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span>
+            <span class="p">,</span> <span class="n">delim</span>
+            <span class="p">,</span> <span class="n">options_keypath</span>
+            <span class="p">,</span> <span class="n">options_geo</span>
+            <span class="p">,</span> <span class="n">options_user</span>
+            <span class="p">,</span> <span class="n">options_rules</span>
+            <span class="p">,</span> <span class="n">options_urls</span>
+            <span class="p">,</span> <span class="n">options_lang</span>
+            <span class="p">,</span> <span class="n">options_influence</span>
+            <span class="p">,</span> <span class="n">options_struct</span>
+            <span class="p">,</span> <span class="n">options_db</span>
+            <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Twacs</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">delim</span><span class="p">,</span> <span class="n">options_keypath</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_geo</span> <span class="o">=</span> <span class="n">options_geo</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_user</span> <span class="o">=</span> <span class="n">options_user</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_rules</span> <span class="o">=</span> <span class="n">options_rules</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_urls</span> <span class="o">=</span> <span class="n">options_urls</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_lang</span> <span class="o">=</span> <span class="n">options_lang</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_influence</span> <span class="o">=</span> <span class="n">options_influence</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_struct</span> <span class="o">=</span> <span class="n">options_struct</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_db</span> <span class="o">=</span> <span class="n">options_db</span>
+        
+    <span class="k">def</span> <span class="nf">procRecordToList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Takes JSON payload d (as a dictionary), identifies the activity type by its verb, </span>
+<span class="sd">        and returns compliance fields if needed. Otherwise, returns the parsed + delimited line, as </span>
+<span class="sd">        determined by user-specified options.</span>
+<span class="sd">        &quot;&quot;&quot;</span> 
+        <span class="n">record</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">try</span><span class="p">:</span>        <span class="c"># try block needs a KeyError exception?</span>
+            <span class="n">verb</span> <span class="o">=</span> <span class="n">field_verb</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+            <span class="c"># check for compliance</span>
+            <span class="k">if</span> <span class="n">verb</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;Unidentified meta message&quot;</span>
+                <span class="k">for</span> <span class="n">mtype</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&quot;error&quot;</span><span class="p">,</span> <span class="s">&quot;warning&quot;</span><span class="p">,</span> <span class="s">&quot;info&quot;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">mtype</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="s">&quot;message&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="n">mtype</span><span class="p">]:</span>
+                            <span class="n">msg</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">mtype</span><span class="p">][</span><span class="s">&quot;message&quot;</span><span class="p">]</span>
+                        <span class="k">elif</span> <span class="s">&quot;message&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+                            <span class="n">msg</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;message&quot;</span><span class="p">]</span>
+                        <span class="k">continue</span>
+                    <span class="n">mtype</span> <span class="o">=</span> <span class="s">&quot;Unidentified&quot;</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipRemove</span><span class="p">,</span> <span class="n">mtype</span><span class="p">]))</span>
+                <span class="c">#TODO: convert gnipDateTime, gnipRemove into classes like everything else</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipDateTime</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">record</span>
+            <span class="k">if</span> <span class="n">verb</span> <span class="o">==</span> <span class="s">&quot;delete&quot;</span><span class="p">:</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s">&quot;object&quot;</span><span class="p">][</span><span class="s">&quot;id&quot;</span><span class="p">])</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipDateTime</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipRemove</span><span class="p">,</span> <span class="n">verb</span><span class="p">]))</span>
+                <span class="k">return</span> <span class="n">record</span>
+            <span class="k">elif</span> <span class="n">verb</span> <span class="o">==</span> <span class="s">&quot;scrub_geo&quot;</span><span class="p">:</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">][</span><span class="s">&quot;id&quot;</span><span class="p">])</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipDateTime</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipRemove</span><span class="p">,</span> <span class="n">verb</span><span class="p">]))</span>
+                <span class="k">return</span> <span class="n">record</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipError</span><span class="p">)</span>
+            <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipRemove</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">record</span>
+        <span class="c"># at this point, it&#39;s a valid, non-compliance activity</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_db</span><span class="p">:</span>
+            <span class="c"># custom output function</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">multi_file_DB</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">record</span><span class="p">)</span>
+        <span class="c">#</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">record</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">combine_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Takes an arbitrary number of lists to be combined into a single string for passing back </span>
+<span class="sd">        to main gnacs.py and subsequent splitting. The special delimiter for parsing the string </span>
+<span class="sd">        back into separate lists is defined in here.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="s">&quot;GNIPSPLIT&quot;</span>
+        <span class="c">#</span>
+        <span class="c"># append flag to the end of all but last list</span>
+        <span class="p">[</span> <span class="n">x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="p">]</span>
+        <span class="c"># combine the lists into one</span>
+        <span class="n">combined_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="p">[</span> <span class="n">combined_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">args</span> <span class="p">]</span> 
+        <span class="c">#</span>
+        <span class="c"># this feels like the right approach, but won&#39;t pass through procRecord without</span>
+        <span class="c">#   some more effort (JM)</span>
+        <span class="c">#return ( combined_list, flag )</span>
+        <span class="k">return</span> <span class="n">combined_list</span>
+
+    <span class="k">def</span> <span class="nf">csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>                            <span class="c"># KeyError exception at EOF</span>
+            <span class="c"># always first 3 items </span>
+            <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_id</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>
+            <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_postedtime</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>
+            <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_body</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>
+            <span class="c"># begin command line options</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_urls</span><span class="p">:</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_gnip_urls</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span> 
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_twitter_urls_url</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span> 
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_twitter_urls_expanded_url</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span> 
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_twitter_urls_display_url</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_lang</span><span class="p">:</span>
+                <span class="c"># actor lang</span>
+                <span class="k">try</span><span class="p">:</span> 
+                    <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_actor_lang</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span> 
+                <span class="k">except</span> <span class="ne">UnicodeEncodeError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;bad-encoding&quot;</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_gnip_lang</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_twitter_lang</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_rules</span><span class="p">:</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_gnip_rules</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_geo</span><span class="p">:</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_geo_coords</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span> 
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_geo_type</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_location_coords</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span> 
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_location_type</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_location_displayname</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_location_twittercountry</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_actor_utcoffset</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_actor_loc_displayname</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_gnip_pl_displayname</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_gnip_pl_objecttype</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_gnip_pl_country</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_gnip_pl_region</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_gnip_pl_countrycode</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_gnip_pl_locality</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_gnip_pl_geo_type</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_gnip_pl_geo_coords</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_user</span><span class="p">:</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_actor_displayname</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_actor_preferredusername</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_influence</span><span class="p">:</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_gnip_klout_score</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_actor_followers</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_actor_friends</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_actor_listed</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_actor_statuses</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_struct</span><span class="p">:</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_activity_type</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_inreplyto_link</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_object_id</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">field_object_postedtime</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="p">)</span>  
+            <span class="k">return</span> <span class="n">record</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="c">#sys.stderr.write(&quot;Field missing from record (%d), skipping\n&quot;%self.cnt)</span>
+            <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipError</span><span class="p">)</span>
+            <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipRemove</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">record</span>
+
+
+    <span class="k">def</span> <span class="nf">multi_file_DB</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Custom output format designed for loading multiple database tables. Creates N separate </span>
+<span class="sd">        lists of activity fields, joins them on a GNIPSPLIT to be split at the gnacs.py level </span>
+<span class="sd">        and written to separate files.      </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># timestamp format</span>
+        <span class="n">t_fmt</span> <span class="o">=</span> <span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s"> %H:%M:%S&quot;</span>
+        <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span> <span class="n">t_fmt</span> <span class="p">)</span>
+
+        <span class="n">default_value</span> <span class="o">=</span> <span class="n">_field</span><span class="p">({})</span><span class="o">.</span><span class="n">default_value</span>
+
+        <span class="c"># hash_list will be [ id, tag1, id, tag2, ... ] and will be split in gnacs.py</span>
+        <span class="n">hash_list</span> <span class="o">=</span> <span class="p">[]</span> 
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">field_twitter_hashtags_text_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">default_value</span><span class="p">:</span>      <span class="c"># temporary hack to exclude all the &quot;NULL&quot; values</span>
+                <span class="n">hash_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span> <span class="p">[</span> <span class="n">field_id</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">i</span> <span class="p">]</span> <span class="p">)</span> 
+
+        <span class="n">acs_list</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">field_id</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_gnip_rules</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">now</span> 
+                    <span class="p">,</span> <span class="n">field_postedtime</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_verb</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_actor_id</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_body</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_twitter_lang</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_gnip_lang</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_link</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_generator_displayname</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">]</span> \
+                    <span class="o">+</span> <span class="n">field_geo_coords</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value_list</span> \
+                    <span class="o">+</span> <span class="n">field_twitter_symbols_text_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value_list</span> \
+                    <span class="o">+</span> <span class="n">field_twitter_mentions_id_name_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value_list</span> \
+                    <span class="o">+</span> <span class="n">field_twitter_urls_tco_expanded_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value_list</span> \
+                    <span class="o">+</span> <span class="n">field_twitter_media_id_url_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value_list</span> 
+
+        <span class="n">ustatic_list</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">now</span> 
+                    <span class="p">,</span> <span class="n">field_actor_id</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_id</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>         <span class="c"># needs to be updated programatically in an actual app </span>
+                    <span class="p">,</span> <span class="n">field_actor_postedtime</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_actor_preferredusername</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_actor_displayname</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_actor_acct_link</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_actor_summary</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">]</span> \
+                    <span class="o">+</span> <span class="n">field_actor_links</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">value_list</span> \
+                    <span class="o">+</span> <span class="p">[</span> 
+                    <span class="n">field_actor_twittertimezone</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_actor_utcoffset_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_actor_verified</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_actor_lang</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">]</span> \
+                    <span class="o">+</span> <span class="n">field_gnip_pl_geo_coords</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value_list</span> \
+                    <span class="o">+</span> <span class="p">[</span> 
+                    <span class="n">field_gnip_pl_countrycode</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+                    <span class="p">,</span> <span class="n">field_gnip_pl_locality</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+                    <span class="p">,</span> <span class="n">field_gnip_pl_region</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+                    <span class="p">,</span> <span class="n">field_gnip_pl_subregion</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+                    <span class="p">,</span> <span class="n">field_gnip_pl_displayname</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+                    <span class="p">,</span> <span class="n">field_gnip_klout_user_id</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+                    <span class="p">]</span>
+
+        <span class="n">udyn_list</span> <span class="o">=</span> <span class="p">[</span> 
+                    <span class="n">field_actor_id</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_id</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>         <span class="c"># needs to be updated programatically in an actual app </span>
+                    <span class="p">,</span> <span class="n">field_gnip_klout_score</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">]</span> \
+                    <span class="o">+</span> <span class="n">field_gnip_klout_topics</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value_list</span> \
+                    <span class="o">+</span> <span class="p">[</span>
+                    <span class="n">field_actor_statuses_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_actor_followers_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>  
+                    <span class="p">,</span> <span class="n">field_actor_friends_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>  
+                    <span class="p">,</span> <span class="n">field_actor_listed_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>  
+                    <span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">combine_lists</span><span class="p">(</span>
+                    <span class="n">acs_list</span>
+                    <span class="p">,</span> <span class="n">ustatic_list</span>
+                    <span class="p">,</span> <span class="n">udyn_list</span>
+                    <span class="p">,</span> <span class="n">hash_list</span> 
+                    <span class="p">)</span>
+       
+
+<span class="c">#TODO: possible future extension of ^</span>
+<span class="c">#        # this is the acs_list if all twitter entities are stripped out into separate tables</span>
+<span class="c">#        acs_list = [</span>
+<span class="c">#                    field_id(d).value </span>
+<span class="c">#                    , field_gnip_rules(d).value </span>
+<span class="c">#                    , now </span>
+<span class="c">#                    , field_postedtime(d).value </span>
+<span class="c">#                    , field_verb(d).value </span>
+<span class="c">#                    , field_actor_id(d).value </span>
+<span class="c">#                    , field_body(d).value </span>
+<span class="c">#                    , field_twitter_lang(d).value </span>
+<span class="c">#                    , field_gnip_lang(d).value </span>
+<span class="c">#                    , field_link(d).value </span>
+<span class="c">#                    , field_generator_displayname(d).value </span>
+<span class="c">#                    ] \</span>
+<span class="c">#                    + field_geo_coords(d).value_list \</span>
+<span class="c">#</span>
+<span class="c">#</span>
+<span class="c">#        #</span>
+<span class="c">#        sym_list = []</span>
+<span class="c">#        for i in field_twitter_symbols_text_DB(d).value_list:</span>
+<span class="c">#            sym_list.extend( [ field_id(d).value, i ] ) </span>
+<span class="c">#        #</span>
+<span class="c">#        # nb: this isn&#39;t going to work yet. need to split out the actId, uid, uname triplets</span>
+<span class="c">#        mentions_list = []</span>
+<span class="c">#        for i in field_twitter_mentions_id_name_DB(d).value_list: </span>
+<span class="c">#            mentions_list.extend( [ field_id(d).value, i ] ) </span>
+<span class="c">#        #</span>
+<span class="c">#        urls_list = []</span>
+<span class="c">#        media_list = []</span>
+
+
+
+
+
+    <span class="k">def</span> <span class="nf">multi_file_DB_1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Custom output format designed for loading multiple database tables.</span>
+<span class="sd">        Creates 3 separate lists of activity fields, joins them on a GNIPSPLIT to be split </span>
+<span class="sd">        at the gnacs.py level and written to separate files.      </span>
+<span class="sd">    </span>
+<span class="sd">        Superceded 2014-05-12 for more star-schema approach of e.g. hashtag/mention/link/... tables</span>
+<span class="sd">        (JM) </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># timestamp format</span>
+        <span class="n">t_fmt</span> <span class="o">=</span> <span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s"> %H:%M:%S&quot;</span>
+        <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span> <span class="n">t_fmt</span> <span class="p">)</span>
+
+        <span class="c"># the explicit .value attr reference is needed</span>
+        <span class="n">acs_list</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">field_id</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_gnip_rules</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">now</span> 
+                    <span class="p">,</span> <span class="n">field_postedtime</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_verb</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_actor_id</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_body</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_twitter_lang</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_gnip_lang</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_link</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_generator_displayname</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">]</span> \
+                    <span class="o">+</span> <span class="n">field_geo_coords</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value_list</span> \
+                    <span class="o">+</span> <span class="n">field_twitter_hashtags_text_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value_list</span> \
+                    <span class="o">+</span> <span class="n">field_twitter_symbols_text_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value_list</span> \
+                    <span class="o">+</span> <span class="n">field_twitter_mentions_id_name_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value_list</span> \
+                    <span class="o">+</span> <span class="n">field_twitter_urls_tco_expanded_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value_list</span> \
+                    <span class="o">+</span> <span class="n">field_twitter_media_id_url_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value_list</span> 
+
+        <span class="n">ustatic_list</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">now</span> 
+                    <span class="p">,</span> <span class="n">field_actor_id</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_id</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>         <span class="c"># needs to be updated programatically in an actual app </span>
+                    <span class="p">,</span> <span class="n">field_actor_postedtime</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_actor_preferredusername</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_actor_displayname</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_actor_acct_link</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_actor_summary</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">]</span> \
+                    <span class="o">+</span> <span class="n">field_actor_links</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">value_list</span> \
+                    <span class="o">+</span> <span class="p">[</span> 
+                    <span class="n">field_actor_twittertimezone</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_actor_utcoffset_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_actor_verified</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_actor_lang</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">]</span> \
+                    <span class="o">+</span> <span class="n">field_gnip_pl_geo_coords</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value_list</span> \
+                    <span class="o">+</span> <span class="p">[</span> 
+                    <span class="n">field_gnip_pl_countrycode</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+                    <span class="p">,</span> <span class="n">field_gnip_pl_locality</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+                    <span class="p">,</span> <span class="n">field_gnip_pl_region</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+                    <span class="p">,</span> <span class="n">field_gnip_pl_subregion</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+                    <span class="p">,</span> <span class="n">field_gnip_pl_displayname</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+                    <span class="p">,</span> <span class="n">field_gnip_klout_user_id</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+                    <span class="p">]</span>
+
+        <span class="n">udyn_list</span> <span class="o">=</span> <span class="p">[</span> 
+                    <span class="n">field_actor_id</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_id</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>         <span class="c"># needs to be updated programatically in an actual app </span>
+                    <span class="p">,</span> <span class="n">field_gnip_klout_score</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">]</span> \
+                    <span class="o">+</span> <span class="n">field_gnip_klout_topics</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value_list</span> \
+                    <span class="o">+</span> <span class="p">[</span>
+                    <span class="n">field_actor_statuses_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+                    <span class="p">,</span> <span class="n">field_actor_followers_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>  
+                    <span class="p">,</span> <span class="n">field_actor_friends_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>  
+                    <span class="p">,</span> <span class="n">field_actor_listed_DB</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>  
+                    <span class="p">]</span>
+        <span class="c">#</span>
+        <span class="c">#TODO: replace with combine_lists() method above</span>
+        <span class="c">#</span>
+        <span class="c"># consider instead sending the combined list and an arbitrary list of positions to split it</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="s">&quot;GNIPSPLIT&quot;</span>  <span class="c"># this is hardcoded into gnacs.py, as well. change both if needed!</span>
+        <span class="c"># only need mortar on first two bricks </span>
+        <span class="p">[</span> <span class="n">x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">acs_list</span><span class="p">,</span> <span class="n">ustatic_list</span> <span class="p">]</span>
+        <span class="n">combined_list</span> <span class="o">=</span> <span class="p">[]</span> 
+        <span class="n">combined_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">acs_list</span><span class="p">)</span>
+        <span class="n">combined_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">ustatic_list</span><span class="p">)</span>
+        <span class="n">combined_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">udyn_list</span><span class="p">)</span>
+        <span class="c">#</span>
+        <span class="k">return</span> <span class="n">combined_list</span> 
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">gnacs 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Scott Hendrickson, Josh Montague.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

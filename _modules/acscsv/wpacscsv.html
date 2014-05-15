@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>acscsv.wpacscsv &mdash; gnacs 0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="gnacs 0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">gnacs 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for acscsv.wpacscsv</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># -*- coding: UTF-8 -*-</span>
+<span class="n">__author__</span><span class="o">=</span><span class="s">&quot;Scott Hendrickson&quot;</span>
+<span class="n">__license__</span><span class="o">=</span><span class="s">&quot;Simplified BSD&quot;</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">acscsv</span>
+
+<div class="viewcode-block" id="WPacsCSV"><a class="viewcode-back" href="../../wordpress.html#acscsv.wpacscsv.WPacsCSV">[docs]</a><span class="k">class</span> <span class="nc">WPacsCSV</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">AcsCSV</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Word press activites&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delim</span><span class="p">,</span> <span class="n">options_keypath</span><span class="p">,</span> <span class="n">options_user</span><span class="p">,</span> <span class="n">options_rules</span><span class="p">,</span> <span class="n">options_lang</span><span class="p">,</span> <span class="n">options_struct</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">WPacsCSV</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">delim</span><span class="p">,</span><span class="n">options_keypath</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_user</span> <span class="o">=</span> <span class="n">options_user</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_rules</span> <span class="o">=</span> <span class="n">options_rules</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_lang</span> <span class="o">=</span> <span class="n">options_lang</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_struct</span> <span class="o">=</span> <span class="n">options_struct</span>
+
+<div class="viewcode-block" id="WPacsCSV.procRecordToList"><a class="viewcode-back" href="../../wordpress.html#acscsv.wpacscsv.WPacsCSV.procRecordToList">[docs]</a>    <span class="k">def</span> <span class="nf">procRecordToList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates the list of output fields.&quot;&quot;&quot;</span>
+        <span class="n">record</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s">&quot;verb&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+                <span class="n">verb</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;verb&quot;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;Unidentified meta message&quot;</span>
+                <span class="k">for</span> <span class="n">mtype</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&quot;error&quot;</span><span class="p">,</span> <span class="s">&quot;warning&quot;</span><span class="p">,</span> <span class="s">&quot;info&quot;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">mtype</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="s">&quot;message&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="n">mtype</span><span class="p">]:</span>
+                            <span class="n">msg</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">mtype</span><span class="p">][</span><span class="s">&quot;message&quot;</span><span class="p">]</span>
+                        <span class="k">elif</span> <span class="s">&quot;message&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+                            <span class="n">msg</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;message&quot;</span><span class="p">]</span>
+                        <span class="k">continue</span>
+                    <span class="n">mtype</span> <span class="o">=</span> <span class="s">&quot;Unidentified&quot;</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipRemove</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mtype</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">record</span>
+            <span class="k">if</span> <span class="n">verb</span> <span class="o">==</span> <span class="s">&quot;delete&quot;</span><span class="p">:</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipRemove</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">verb</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cleanField</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s">&quot;object&quot;</span><span class="p">][</span><span class="s">&quot;id&quot;</span><span class="p">]))</span>
+                <span class="k">return</span> <span class="n">record</span>
+            <span class="c">#</span>
+            <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s">&quot;id&quot;</span><span class="p">])</span>
+            <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s">&quot;postedTime&quot;</span><span class="p">])</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;object&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s">&quot;content&quot;</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">:</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cleanField</span><span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="s">&quot;content&quot;</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;None&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s">&quot;summary&quot;</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">:</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cleanField</span><span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="s">&quot;summary&quot;</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;None&quot;</span><span class="p">)</span>
+            <span class="c">#</span>
+            <span class="n">gnip</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;gnip&quot;</span><span class="p">]</span>
+            <span class="n">actor</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_lang</span><span class="p">:</span>
+                <span class="n">glang</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="k">if</span> <span class="s">&quot;language&quot;</span> <span class="ow">in</span> <span class="n">gnip</span><span class="p">:</span>
+                    <span class="n">glang</span> <span class="o">=</span> <span class="n">gnip</span><span class="p">[</span><span class="s">&quot;language&quot;</span><span class="p">][</span><span class="s">&quot;value&quot;</span><span class="p">]</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">glang</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_rules</span><span class="p">:</span>
+                <span class="n">rules</span> <span class="o">=</span> <span class="s">&#39;[]&#39;</span>
+                <span class="k">if</span> <span class="s">&quot;matching_rules&quot;</span> <span class="ow">in</span> <span class="n">gnip</span><span class="p">:</span>
+                    <span class="n">rules</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buildListString</span><span class="p">([</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> [</span><span class="si">%s</span><span class="s">]&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="s">&quot;value&quot;</span><span class="p">],</span> <span class="n">l</span><span class="p">[</span><span class="s">&quot;tag&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">gnip</span><span class="p">[</span><span class="s">&quot;matching_rules&quot;</span><span class="p">]])</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rules</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_struct</span><span class="p">:</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;target&quot;</span><span class="p">]</span>
+                <span class="c"># put these things in try blocks / ifs </span>
+                <span class="c"># site</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">target</span><span class="p">[</span><span class="s">&quot;wpBlogId&quot;</span><span class="p">]))</span>
+                <span class="c"># blog link</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target</span><span class="p">[</span><span class="s">&quot;link&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;ascii&#39;</span><span class="p">,</span> <span class="s">&#39;replace&#39;</span><span class="p">))</span>
+                <span class="c"># object</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="s">&quot;wpPostId&quot;</span><span class="p">]))</span>
+                <span class="c"># link to post</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="s">&quot;link&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;ascii&#39;</span><span class="p">,</span> <span class="s">&#39;replace&#39;</span><span class="p">))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_user</span><span class="p">:</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">splitId</span><span class="p">(</span><span class="n">actor</span><span class="p">[</span><span class="s">&quot;id&quot;</span><span class="p">])</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+            <span class="c">#</span>
+            <span class="k">return</span> <span class="n">record</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;Field missing from record (</span><span class="si">%d</span><span class="s">), skipping</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">cnt</span><span class="p">)</span>
+            <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipError</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">record</span>
+</pre></div></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">gnacs 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Scott Hendrickson, Josh Montague.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

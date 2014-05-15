@@ -1,0 +1,527 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Twitter Model &mdash; gnacs 0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="gnacs 0 documentation" href="index.html" />
+    <link rel="next" title="Disqus Model" href="disqus.html" />
+    <link rel="prev" title="CSV Model" href="basic_csv.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="disqus.html" title="Disqus Model"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="basic_csv.html" title="CSV Model"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">gnacs 0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="twitter-model">
+<h1>Twitter Model<a class="headerlink" href="#twitter-model" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div><span class="target" id="module-acscsv.twacscsv"></span><dl class="class">
+<dt id="acscsv.twacscsv.TwacsCSV">
+<em class="property">class </em><tt class="descclassname">acscsv.twacscsv.</tt><tt class="descname">TwacsCSV</tt><big>(</big><em>delim</em>, <em>options_keypath</em>, <em>options_geo</em>, <em>options_user</em>, <em>options_rules</em>, <em>options_urls</em>, <em>options_lang</em>, <em>options_influence</em>, <em>options_struct</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacscsv.html#TwacsCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacscsv.TwacsCSV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subset of Twitter fields with specified delimiter.  Please see help for options</p>
+<dl class="method">
+<dt id="acscsv.twacscsv.TwacsCSV.procRecordToList">
+<tt class="descname">procRecordToList</tt><big>(</big><em>d</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacscsv.html#TwacsCSV.procRecordToList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacscsv.TwacsCSV.procRecordToList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the list of output fields in determined order according to input options</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-acscsv.twacsDB"></span><dl class="class">
+<dt id="acscsv.twacsDB.example_user_rainbows">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">example_user_rainbows</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#example_user_rainbows"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.example_user_rainbows" title="Permalink to this definition">¶</a></dt>
+<dd><p>In this ficticious example, take a dict (data) and assign to self.value a pipe-delimited list 
+of the users&#8217;s rainbow color choices. Values are extracted from the dictionary at the end of 
+the gnip.zig.zag key-path.</p>
+<p>Your real class should begin with &#8216;<a href="#id1"><span class="problematic" id="id2">field_</span></a>&#8216; in order to be included in the test suite. It should 
+also try to strike a balance between being user-friendly (can the next user figure out what it
+does without reading too much code?) and being 500 characters long.</p>
+<p>===
+&gt;&gt;&gt; example_user_rainbows(data).value
+blue|red|green</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">example_user_rainbows</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">value_list</span>
+<span class="go">[&quot;blue&quot;, &quot;red&quot;, &quot;green&quot;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_activity_type">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_activity_type</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_activity_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_activity_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the appropriate value of Tweet, Retweet, or Reply</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_acct_link">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_acct_link</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_acct_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_acct_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of actor.link</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_displayname">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_displayname</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_displayname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_displayname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of actor.displayName</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_followers">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_followers</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_followers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_followers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value a str-ified repr of the value of actor.followersCount</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_followers_DB">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_followers_DB</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_followers_DB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_followers_DB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of actor.followersCount.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_friends">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_friends</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_friends"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_friends" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value a str-ified repr of the value of actor.friendsCount.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_friends_DB">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_friends_DB</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_friends_DB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_friends_DB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of actor.friendsCount.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_id">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_id</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the numerical value of actor.id (after stripping off 
+the leading &#8216;id:twitter...&#8217; characters.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_lang">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_lang</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_lang"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_lang" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the first value in the list at actor.languages</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_links">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_links</tt><big>(</big><em>json_record</em>, <em>limit=2</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_links"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_links" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value a string repr of a list of the links contained in actor.links (or 
+default_value if the corresponding dict is empty). The number of links included in the 
+list is optionally specified in the constructor.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_listed">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_listed</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_listed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_listed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value a str-ified repr of the value of actor.listedCount</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_listed_DB">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_listed_DB</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_listed_DB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_listed_DB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of actor.listedCount</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_loc_displayname">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_loc_displayname</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_loc_displayname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_loc_displayname" title="Permalink to this definition">¶</a></dt>
+<dd><p>assign to self.value the value of actor.location.displayName</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_postedtime">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_postedtime</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_postedtime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_postedtime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of actor.postedTime (input format is defined in the 
+constructor, output format is default unless overwritten).</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_preferredusername">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_preferredusername</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_preferredusername"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_preferredusername" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of actor.preferredUsername</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_statuses">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_statuses</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_statuses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_statuses" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value a str-ified repr of the value of actor.statusesCount</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_statuses_DB">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_statuses_DB</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_statuses_DB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_statuses_DB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of actor.statusesCount</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_summary">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_summary</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of actor.summary</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_twittertimezone">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_twittertimezone</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_twittertimezone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_twittertimezone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of actor.twitterTimeZone</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_utcoffset">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_utcoffset</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_utcoffset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_utcoffset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value a string repr of the value of actor.utcOffset. Ensures backward 
+compatibility with classic, stringy, gnacs.py output.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_utcoffset_DB">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_utcoffset_DB</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_utcoffset_DB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_utcoffset_DB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of actor.utcOffset.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_actor_verified">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_actor_verified</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_actor_verified"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_actor_verified" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value a 0/1 boolean repr of the value of actor.verified. Default is False (0).</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_body">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_body</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_body"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_body" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value in top-level body key.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_generator_displayname">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_generator_displayname</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_generator_displayname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_generator_displayname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of generator.displayName</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_geo_coords">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_geo_coords</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_geo_coords"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_geo_coords" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of geo.coordinates. This is the coordinate pair 
+of the user-enabled tweet geotag.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_geo_type">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_geo_type</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_geo_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_geo_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of geo.type.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_gnip_klout_score">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_gnip_klout_score</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_gnip_klout_score"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_gnip_klout_score" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of gnip.klout_score.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_gnip_klout_topics">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_gnip_klout_topics</tt><big>(</big><em>json_record</em>, <em>limit=2</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_gnip_klout_topics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_gnip_klout_topics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value_list (and .value) pairs of gnip.klout_profile.displayName 
+and .klout_topic_id. Up to limit number of these combinations.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_gnip_klout_user_id">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_gnip_klout_user_id</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_gnip_klout_user_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_gnip_klout_user_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of gnip.klout_user_id</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_gnip_pl_country">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_gnip_pl_country</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_gnip_pl_country"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_gnip_pl_country" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of gnip.profileLocations.address.country.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_gnip_pl_countrycode">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_gnip_pl_countrycode</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_gnip_pl_countrycode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_gnip_pl_countrycode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of gnip.profileLocations.address.countryCode.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_gnip_pl_displayname">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_gnip_pl_displayname</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_gnip_pl_displayname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_gnip_pl_displayname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of gnip.profileLocation.displayName.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_gnip_pl_geo_coords">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_gnip_pl_geo_coords</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_gnip_pl_geo_coords"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_gnip_pl_geo_coords" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the coordinate list in gnip.profileLocations.geo.coordinates.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_gnip_pl_geo_type">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_gnip_pl_geo_type</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_gnip_pl_geo_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_gnip_pl_geo_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of gnip.profileLocations.geo.type.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_gnip_pl_locality">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_gnip_pl_locality</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_gnip_pl_locality"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_gnip_pl_locality" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of gnip.profileLocations.address.locality.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_gnip_pl_objecttype">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_gnip_pl_objecttype</tt><big>(</big><em>json_record</em>, <em>limit=1</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_gnip_pl_objecttype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_gnip_pl_objecttype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of gnip.profileLocations.objectType.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_gnip_pl_region">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_gnip_pl_region</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_gnip_pl_region"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_gnip_pl_region" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of gnip.profileLocations.address.region.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_gnip_pl_subregion">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_gnip_pl_subregion</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_gnip_pl_subregion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_gnip_pl_subregion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of gnip.profileLocations.address.subRegion.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_gnip_rules">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_gnip_rules</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_gnip_rules"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_gnip_rules" title="Permalink to this definition">¶</a></dt>
+<dd><p>assign to self.value the value of &#8216;gnip&#8217;, &#8216;matching_rules&#8217;</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_gnip_urls">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_gnip_urls</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_gnip_urls"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_gnip_urls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the list of &#8216;expanded_url&#8217; values within &#8216;gnip&#8217;, &#8216;urls&#8217;</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_id">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_id</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value in the top-level id key.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_inreplyto_link">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_inreplyto_link</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_inreplyto_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_inreplyto_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of inReplyTo.link</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_link">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_link</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value in top-level link key.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_location_coords">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_location_coords</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_location_coords"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_location_coords" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of location.geo.coordsindates . This the bounding 
+polygon from the original activity payload from Twitter.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_location_displayname">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_location_displayname</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_location_displayname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_location_displayname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of location.displayName</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_location_twittercountry">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_location_twittercountry</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_location_twittercountry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_location_twittercountry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of location.twitter_country_code.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_location_type">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_location_type</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_location_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_location_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of location.geo.type.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_object_id">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_object_id</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_object_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_object_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of object.id</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_object_postedtime">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_object_postedtime</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_object_postedtime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_object_postedtime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value the value of object.postedTime</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_postedtime">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_postedtime</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_postedtime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_postedtime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value in the top-level postedTime key. Timestamp is 
+formatted according to input_fmt, which is set in the constructor.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_twitter_hashtags_text">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_twitter_hashtags_text</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_twitter_hashtags_text"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_twitter_hashtags_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value a list of twitter_entities.hashtags.text. This class maintains 
+consistency with classic Gnacs behavior.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_twitter_hashtags_text_DB">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_twitter_hashtags_text_DB</tt><big>(</big><em>json_record</em>, <em>limit=5</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_twitter_hashtags_text_DB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_twitter_hashtags_text_DB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combine the first &#8216;limit&#8217; hashtags found in the payload into a list and assign to 
+self.value. If there are less than &#8216;limit&#8217;, the list is padded with 
+self.default_value</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_twitter_lang">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_twitter_lang</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_twitter_lang"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_twitter_lang" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of top-level twitter_lang key.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_twitter_media_id_url_DB">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_twitter_media_id_url_DB</tt><big>(</big><em>json_record</em>, <em>limit=5</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_twitter_media_id_url_DB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_twitter_media_id_url_DB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value a list of twitter_entities.media.id and .expanded_url pairs</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_twitter_mentions_id_name_DB">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_twitter_mentions_id_name_DB</tt><big>(</big><em>json_record</em>, <em>limit=5</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_twitter_mentions_id_name_DB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_twitter_mentions_id_name_DB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value a list of &#8216;limit&#8217; twitter_entities.user_mentions.screen_name and .id pairs 
+(in order, but in a flat list).</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_twitter_symbols_text_DB">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_twitter_symbols_text_DB</tt><big>(</big><em>json_record</em>, <em>limit=5</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_twitter_symbols_text_DB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_twitter_symbols_text_DB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign to self.value a list of twitter_entities.symbols &#8216;text&#8217;s.
+This one is a little experimental... haven&#8217;t seen it in the wild (Activity Streams) yet, 
+so using <a class="reference external" href="https://blog.twitter.com/2013/symbols-entities-tweets">https://blog.twitter.com/2013/symbols-entities-tweets</a> as the template.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_twitter_urls_display_url">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_twitter_urls_display_url</tt><big>(</big><em>json_record</em>, <em>limit=5</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_twitter_urls_display_url"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_twitter_urls_display_url" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_twitter_urls_expanded_url">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_twitter_urls_expanded_url</tt><big>(</big><em>json_record</em>, <em>limit=5</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_twitter_urls_expanded_url"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_twitter_urls_expanded_url" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_twitter_urls_tco_expanded_DB">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_twitter_urls_tco_expanded_DB</tt><big>(</big><em>json_record</em>, <em>limit=5</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_twitter_urls_tco_expanded_DB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_twitter_urls_tco_expanded_DB" title="Permalink to this definition">¶</a></dt>
+<dd><p>combination of two classes above</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_twitter_urls_url">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_twitter_urls_url</tt><big>(</big><em>json_record</em>, <em>limit=5</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_twitter_urls_url"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_twitter_urls_url" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twacsDB.field_verb">
+<em class="property">class </em><tt class="descclassname">acscsv.twacsDB.</tt><tt class="descname">field_verb</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twacsDB.html#field_verb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twacsDB.field_verb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value in the top-level verb key.</p>
+</dd></dl>
+
+</div></blockquote>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="basic_csv.html"
+                        title="previous chapter">CSV Model</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="disqus.html"
+                        title="next chapter">Disqus Model</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/twitter.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="disqus.html" title="Disqus Model"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="basic_csv.html" title="CSV Model"
+             >previous</a> |</li>
+        <li><a href="index.html">gnacs 0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Scott Hendrickson, Josh Montague.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

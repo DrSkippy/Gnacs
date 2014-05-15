@@ -1,0 +1,351 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>acscsv.twacscsv &mdash; gnacs 0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="gnacs 0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">gnacs 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for acscsv.twacscsv</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: UTF-8 -*-</span>
+<span class="n">__author__</span><span class="o">=</span><span class="s">&quot;Scott Hendrickson&quot;</span>
+<span class="n">__license__</span><span class="o">=</span><span class="s">&quot;Simplified BSD&quot;</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">acscsv</span>
+
+<div class="viewcode-block" id="TwacsCSV"><a class="viewcode-back" href="../../twitter.html#acscsv.twacscsv.TwacsCSV">[docs]</a><span class="k">class</span> <span class="nc">TwacsCSV</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">AcsCSV</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Subset of Twitter fields with specified delimiter.  Please see help for options&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delim</span><span class="p">,</span> <span class="n">options_keypath</span><span class="p">,</span> <span class="n">options_geo</span><span class="p">,</span> <span class="n">options_user</span><span class="p">,</span> <span class="n">options_rules</span><span class="p">,</span> <span class="n">options_urls</span><span class="p">,</span> <span class="n">options_lang</span><span class="p">,</span> <span class="n">options_influence</span><span class="p">,</span> <span class="n">options_struct</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">TwacsCSV</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">delim</span><span class="p">,</span><span class="n">options_keypath</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_geo</span> <span class="o">=</span> <span class="n">options_geo</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_user</span> <span class="o">=</span> <span class="n">options_user</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_rules</span> <span class="o">=</span> <span class="n">options_rules</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_urls</span> <span class="o">=</span> <span class="n">options_urls</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_lang</span> <span class="o">=</span> <span class="n">options_lang</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_influence</span> <span class="o">=</span> <span class="n">options_influence</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options_struct</span> <span class="o">=</span> <span class="n">options_struct</span>
+        
+<div class="viewcode-block" id="TwacsCSV.procRecordToList"><a class="viewcode-back" href="../../twitter.html#acscsv.twacscsv.TwacsCSV.procRecordToList">[docs]</a>    <span class="k">def</span> <span class="nf">procRecordToList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">d</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Builds the list of output fields in determined order according to input options&quot;&quot;&quot;</span>
+        <span class="n">record</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s">&quot;verb&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+                <span class="n">verb</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;verb&quot;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;Unidentified meta message&quot;</span>
+                <span class="k">for</span> <span class="n">mtype</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&quot;error&quot;</span><span class="p">,</span> <span class="s">&quot;warning&quot;</span><span class="p">,</span> <span class="s">&quot;info&quot;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">mtype</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="s">&quot;message&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="n">mtype</span><span class="p">]:</span>
+                            <span class="n">msg</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">mtype</span><span class="p">][</span><span class="s">&quot;message&quot;</span><span class="p">]</span>
+                        <span class="k">elif</span> <span class="s">&quot;message&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+                            <span class="n">msg</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;message&quot;</span><span class="p">]</span>
+                        <span class="k">continue</span>
+                    <span class="n">mtype</span> <span class="o">=</span> <span class="s">&quot;Unidentified&quot;</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipRemove</span><span class="p">,</span> <span class="n">mtype</span><span class="p">]))</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipDateTime</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">record</span>
+            <span class="k">if</span> <span class="n">verb</span> <span class="o">==</span> <span class="s">&quot;delete&quot;</span><span class="p">:</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s">&quot;object&quot;</span><span class="p">][</span><span class="s">&quot;id&quot;</span><span class="p">])</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipDateTime</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipRemove</span><span class="p">,</span> <span class="n">verb</span><span class="p">]))</span>
+                <span class="k">return</span> <span class="n">record</span>
+            <span class="k">elif</span> <span class="n">verb</span> <span class="o">==</span> <span class="s">&quot;scrub_geo&quot;</span><span class="p">:</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">][</span><span class="s">&quot;id&quot;</span><span class="p">])</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipDateTime</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipRemove</span><span class="p">,</span> <span class="n">verb</span><span class="p">]))</span>
+                <span class="k">return</span> <span class="n">record</span>
+            <span class="c"># always first 2 items</span>
+            <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s">&quot;id&quot;</span><span class="p">])</span>
+            <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s">&quot;postedTime&quot;</span><span class="p">])</span>
+            <span class="c"># add some handling so calling gnacs without a pub is still useful</span>
+            <span class="c">#   n.b.: -stocktwits is native, so no &#39;verb&#39; to get here</span>
+            <span class="c">#         -put more-specific fields at the beginning to catch them </span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;object&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s">&quot;getglue&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="p">:</span> <span class="c"># getglue </span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">verb</span><span class="p">)</span>     <span class="c"># &#39;body&#39; is inconsistent in gg</span>
+            <span class="k">elif</span> <span class="s">&quot;foursquareCategories&quot;</span> <span class="ow">in</span> <span class="n">obj</span> <span class="ow">or</span> <span class="s">&quot;foursquareCheckinOffset&quot;</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">:</span>      <span class="c"># fsq</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="s">&quot;geo&quot;</span><span class="p">][</span><span class="s">&quot;coordinates&quot;</span><span class="p">]))</span>
+            <span class="k">elif</span> <span class="s">&quot;wpBlogId&quot;</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">:</span>     <span class="c"># wp</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="s">&quot;wpBlogId&quot;</span><span class="p">]))</span>
+            <span class="k">elif</span> <span class="s">&quot;tumblrType&quot;</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">:</span>   <span class="c"># tumblr</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="s">&quot;tumblrType&quot;</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="s">&quot;body&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>           <span class="c"># tw, disqus, stocktw,  </span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cleanField</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s">&quot;body&quot;</span><span class="p">]))</span>       
+            <span class="k">elif</span> <span class="s">&quot;link&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>           <span class="c"># ng</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s">&quot;link&quot;</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>                       <span class="c"># ? </span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;None&quot;</span><span class="p">)</span>
+            <span class="c">#</span>
+            <span class="n">gnip</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">actor</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="s">&quot;gnip&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+                <span class="n">gnip</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;gnip&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s">&quot;actor&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>    <span class="c"># no &#39;actor&#39; in ng</span>
+                <span class="n">actor</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;actor&quot;</span><span class="p">]</span>
+            <span class="c">#</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_urls</span><span class="p">:</span>
+                <span class="n">urls</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="k">if</span> <span class="s">&quot;urls&quot;</span> <span class="ow">in</span> <span class="n">gnip</span><span class="p">:</span>
+                    <span class="n">urls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buildListString</span><span class="p">([</span> <span class="n">l</span><span class="p">[</span><span class="s">&quot;expanded_url&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">gnip</span><span class="p">[</span><span class="s">&quot;urls&quot;</span><span class="p">]])</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">urls</span><span class="p">)</span>
+                <span class="n">twitter_urls</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="n">twitter_un_urls</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="k">if</span> <span class="s">&quot;twitter_entities&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="s">&quot;urls&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;twitter_entities&quot;</span><span class="p">]:</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s">&quot;twitter_entities&quot;</span><span class="p">][</span><span class="s">&quot;urls&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">tmp_url_list</span> <span class="o">=</span> <span class="p">[]</span>
+                            <span class="n">tmp_un_url_list</span> <span class="o">=</span> <span class="p">[]</span>
+                            <span class="k">for</span> <span class="n">tmp_rec</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;twitter_entities&quot;</span><span class="p">][</span><span class="s">&quot;urls&quot;</span><span class="p">]:</span>
+                                <span class="k">try</span><span class="p">:</span>
+                                    <span class="k">if</span> <span class="s">&quot;url&quot;</span> <span class="ow">in</span> <span class="n">tmp_rec</span> <span class="ow">and</span> <span class="n">tmp_rec</span><span class="p">[</span><span class="s">&quot;url&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                                        <span class="n">tmp_url_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_rec</span><span class="p">[</span><span class="s">&quot;url&quot;</span><span class="p">])</span>
+                                    <span class="k">else</span><span class="p">:</span>
+                                        <span class="n">tmp_url_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;None&quot;</span><span class="p">)</span>
+                                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                                    <span class="n">tmp_url_list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;twitter_entiteis:urls:url&quot;</span><span class="p">]</span>
+                                <span class="k">try</span><span class="p">:</span>
+                                    <span class="k">if</span> <span class="s">&quot;expanded_url&quot;</span> <span class="ow">in</span> <span class="n">tmp_rec</span> <span class="ow">and</span> <span class="n">tmp_rec</span><span class="p">[</span><span class="s">&quot;expanded_url&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                                        <span class="n">tmp_un_url_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_rec</span><span class="p">[</span><span class="s">&quot;expanded_url&quot;</span><span class="p">])</span>
+                                    <span class="k">else</span><span class="p">:</span>
+                                        <span class="n">tmp_un_url_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;None&quot;</span><span class="p">)</span>
+                                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                                    <span class="n">tmp_un_urls_list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;twitter_entities:urls:expanded_url&quot;</span><span class="p">]</span>
+                            <span class="n">twitter_urls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buildListString</span><span class="p">(</span><span class="n">tmp_url_list</span><span class="p">)</span>
+                            <span class="n">twitter_un_urls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buildListString</span><span class="p">(</span><span class="n">tmp_un_url_list</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">twitter_urls</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">twitter_un_urls</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_lang</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">actor</span><span class="p">[</span><span class="s">&quot;languages&quot;</span><span class="p">]]))</span>
+                <span class="k">except</span> <span class="ne">UnicodeEncodeError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="s">&quot;bad encoding&quot;</span><span class="p">))</span>
+                <span class="n">glang</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="k">if</span> <span class="s">&quot;language&quot;</span> <span class="ow">in</span> <span class="n">gnip</span><span class="p">:</span>
+                    <span class="n">glang</span> <span class="o">=</span> <span class="n">gnip</span><span class="p">[</span><span class="s">&quot;language&quot;</span><span class="p">][</span><span class="s">&quot;value&quot;</span><span class="p">]</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">glang</span><span class="p">)</span>
+                <span class="n">tlang</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="k">if</span> <span class="s">&quot;twitter_lang&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+                    <span class="n">tlang</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;twitter_lang&quot;</span><span class="p">]</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tlang</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_rules</span><span class="p">:</span>
+                <span class="n">rules</span> <span class="o">=</span> <span class="s">&#39;[]&#39;</span>
+                <span class="k">if</span> <span class="s">&quot;matching_rules&quot;</span> <span class="ow">in</span> <span class="n">gnip</span><span class="p">:</span>
+                    <span class="n">rules</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buildListString</span><span class="p">([</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> (</span><span class="si">%s</span><span class="s">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="s">&quot;value&quot;</span><span class="p">],</span> <span class="n">l</span><span class="p">[</span><span class="s">&quot;tag&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">gnip</span><span class="p">[</span><span class="s">&quot;matching_rules&quot;</span><span class="p">]])</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rules</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_geo</span><span class="p">:</span>
+                <span class="n">geoType</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">geoCoordsList</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="n">geoCoords</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="k">if</span> <span class="s">&quot;geo&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="s">&quot;type&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;geo&quot;</span><span class="p">]:</span>
+                        <span class="n">geoType</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;geo&quot;</span><span class="p">][</span><span class="s">&quot;type&quot;</span><span class="p">]</span>
+                        <span class="c">#self.geoCoords = [str(l) for l in d[&quot;geo&quot;][&quot;coordinates&quot;]]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">geoCoordsList</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;geo&quot;</span><span class="p">][</span><span class="s">&quot;coordinates&quot;</span><span class="p">]</span>
+                        <span class="n">geoCoords</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geoCoordsList</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">geoCoords</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">geoType</span><span class="p">)</span>
+                <span class="n">locType</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="n">locCoords</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="n">locName</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="n">locCountry</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="k">if</span> <span class="s">&quot;location&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+                    <span class="n">locName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cleanField</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s">&quot;location&quot;</span><span class="p">][</span><span class="s">&quot;displayName&quot;</span><span class="p">])</span>
+                    <span class="n">locCountry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cleanField</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s">&quot;location&quot;</span><span class="p">][</span><span class="s">&quot;twitter_country_code&quot;</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="s">&quot;geo&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;location&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;location&quot;</span><span class="p">][</span><span class="s">&quot;geo&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="s">&quot;type&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;location&quot;</span><span class="p">][</span><span class="s">&quot;geo&quot;</span><span class="p">]:</span>
+                            <span class="n">locType</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;location&quot;</span><span class="p">][</span><span class="s">&quot;geo&quot;</span><span class="p">][</span><span class="s">&quot;type&quot;</span><span class="p">]</span>
+                            <span class="n">locCoords</span> <span class="o">=</span> <span class="nb">str</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;location&quot;</span><span class="p">][</span><span class="s">&quot;geo&quot;</span><span class="p">][</span><span class="s">&quot;coordinates&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">locCoords</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">locType</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">locName</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">locCountry</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">actor</span><span class="p">[</span><span class="s">&quot;utcOffset&quot;</span><span class="p">]))</span>
+                <span class="n">dName</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="k">if</span> <span class="s">&quot;location&quot;</span> <span class="ow">in</span> <span class="n">actor</span> <span class="ow">and</span> <span class="s">&quot;displayName&quot;</span> <span class="ow">in</span> <span class="n">actor</span><span class="p">[</span><span class="s">&quot;location&quot;</span><span class="p">]:</span>
+                    <span class="n">dName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cleanField</span><span class="p">(</span><span class="n">actor</span><span class="p">[</span><span class="s">&quot;location&quot;</span><span class="p">][</span><span class="s">&quot;displayName&quot;</span><span class="p">])</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dName</span><span class="p">)</span>
+                <span class="c"># gnip:profileLocations</span>
+                <span class="n">pl_otype</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="n">pl_name</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="c"># profileLocations:address</span>
+                <span class="n">pl_country</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="n">pl_region</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="n">pl_countrycode</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="n">pl_locality</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="c"># profileLocations:geo</span>
+                <span class="n">pl_gtype</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="n">pl_coords</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="k">if</span> <span class="s">&quot;profileLocations&quot;</span> <span class="ow">in</span> <span class="n">gnip</span><span class="p">:</span>
+                    <span class="c"># n.b. profileLocations is a list, suggests it might include &gt;1 thing eventually</span>
+                    <span class="n">pl</span> <span class="o">=</span> <span class="n">gnip</span><span class="p">[</span><span class="s">&quot;profileLocations&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="s">&quot;objectType&quot;</span> <span class="ow">in</span> <span class="n">pl</span><span class="p">:</span>
+                        <span class="n">pl_otype</span> <span class="o">=</span> <span class="n">pl</span><span class="p">[</span><span class="s">&quot;objectType&quot;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="s">&quot;displayName&quot;</span> <span class="ow">in</span> <span class="n">pl</span><span class="p">:</span>
+                        <span class="n">pl_name</span> <span class="o">=</span> <span class="n">pl</span><span class="p">[</span><span class="s">&quot;displayName&quot;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="s">&quot;address&quot;</span> <span class="ow">in</span> <span class="n">pl</span><span class="p">:</span>
+                        <span class="n">adrs</span> <span class="o">=</span> <span class="n">pl</span><span class="p">[</span><span class="s">&quot;address&quot;</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="s">&quot;country&quot;</span> <span class="ow">in</span> <span class="n">adrs</span><span class="p">:</span>
+                            <span class="n">pl_country</span> <span class="o">=</span> <span class="n">adrs</span><span class="p">[</span><span class="s">&quot;country&quot;</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="s">&quot;region&quot;</span> <span class="ow">in</span> <span class="n">adrs</span><span class="p">:</span>
+                            <span class="n">pl_region</span> <span class="o">=</span> <span class="n">adrs</span><span class="p">[</span><span class="s">&quot;region&quot;</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="s">&quot;countryCode&quot;</span> <span class="ow">in</span> <span class="n">adrs</span><span class="p">:</span>
+                            <span class="n">pl_countrycode</span> <span class="o">=</span> <span class="n">adrs</span><span class="p">[</span><span class="s">&quot;countryCode&quot;</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="s">&quot;locality&quot;</span> <span class="ow">in</span> <span class="n">adrs</span><span class="p">:</span>
+                            <span class="n">pl_locality</span> <span class="o">=</span> <span class="n">adrs</span><span class="p">[</span><span class="s">&quot;locality&quot;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="s">&quot;geo&quot;</span> <span class="ow">in</span> <span class="n">pl</span><span class="p">:</span>
+                        <span class="n">geo</span> <span class="o">=</span> <span class="n">pl</span><span class="p">[</span><span class="s">&quot;geo&quot;</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="s">&quot;type&quot;</span> <span class="ow">in</span> <span class="n">geo</span><span class="p">:</span>
+                            <span class="n">pl_gtype</span> <span class="o">=</span> <span class="n">geo</span><span class="p">[</span><span class="s">&quot;type&quot;</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="s">&quot;coordinates&quot;</span> <span class="ow">in</span> <span class="n">geo</span><span class="p">:</span>
+                            <span class="n">pl_coords</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">geo</span><span class="p">[</span><span class="s">&quot;coordinates&quot;</span><span class="p">])</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pl_name</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pl_otype</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pl_country</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pl_region</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pl_countrycode</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pl_locality</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pl_gtype</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pl_coords</span><span class="p">)</span>
+                <span class="c">#</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_user</span><span class="p">:</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cleanField</span><span class="p">(</span><span class="n">actor</span><span class="p">[</span><span class="s">&quot;displayName&quot;</span><span class="p">]))</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cleanField</span><span class="p">(</span><span class="n">actor</span><span class="p">[</span><span class="s">&quot;preferredUsername&quot;</span><span class="p">]))</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">tmp</span> <span class="o">=</span> <span class="n">actor</span><span class="p">[</span><span class="s">&quot;id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;:&quot;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span> <span class="c">#Brian&#39;s 1st attempt at Gnacsification</span>
+                <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                    <span class="n">tmp</span> <span class="o">=</span> <span class="s">&quot;actor:id&quot;</span>                    
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_influence</span><span class="p">:</span>
+                <span class="n">klout</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="n">followers</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="n">friends</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="n">listed</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="n">statuses</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="k">if</span> <span class="s">&quot;klout_score&quot;</span> <span class="ow">in</span> <span class="n">gnip</span><span class="p">:</span>
+                    <span class="n">klout</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">gnip</span><span class="p">[</span><span class="s">&quot;klout_score&quot;</span><span class="p">])</span>
+                <span class="n">followers</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">actor</span><span class="p">[</span><span class="s">&quot;followersCount&quot;</span><span class="p">])</span>
+                <span class="n">friends</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">actor</span><span class="p">[</span><span class="s">&quot;friendsCount&quot;</span><span class="p">])</span>
+                <span class="n">listed</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">actor</span><span class="p">[</span><span class="s">&quot;listedCount&quot;</span><span class="p">])</span>
+                <span class="n">statuses</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">actor</span><span class="p">[</span><span class="s">&quot;statusesCount&quot;</span><span class="p">])</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">klout</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">followers</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">friends</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">listed</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">statuses</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options_struct</span><span class="p">:</span>
+                <span class="n">oid</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="n">opt</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="n">overb</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="n">inReplyTo</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+                <span class="k">if</span> <span class="s">&quot;inReplyTo&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+                    <span class="n">inReplyTo</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;inReplyTo&quot;</span><span class="p">][</span><span class="s">&quot;link&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="s">&quot;object&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+                    <span class="n">obj</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s">&quot;object&quot;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="s">&quot;objectType&quot;</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">:</span>
+                        <span class="n">overb</span> <span class="o">=</span> <span class="n">obj</span><span class="p">[</span><span class="s">&quot;objectType&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">verb</span> <span class="o">==</span> <span class="s">&quot;share&quot;</span> <span class="ow">and</span> <span class="n">overb</span> <span class="o">==</span> <span class="s">&quot;activity&quot;</span><span class="p">:</span>
+                    <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;Retweet&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="s">&quot;id&quot;</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">:</span>
+                        <span class="n">oid</span> <span class="o">=</span> <span class="n">obj</span><span class="p">[</span><span class="s">&quot;id&quot;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="s">&quot;postedTime&quot;</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">:</span>
+                        <span class="n">opt</span> <span class="o">=</span> <span class="n">obj</span><span class="p">[</span><span class="s">&quot;postedTime&quot;</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="n">inReplyTo</span> <span class="o">==</span> <span class="s">&quot;None&quot;</span><span class="p">:</span>
+                    <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;Tweet&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;Reply&quot;</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inReplyTo</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">oid</span><span class="p">)</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span>
+            <span class="c">#</span>
+            <span class="k">return</span> <span class="n">record</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="c">#sys.stderr.write(&quot;Field missing from record (%d), skipping\n&quot;%self.cnt)</span>
+            <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipError</span><span class="p">)</span>
+            <span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">gnipRemove</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">record</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">gnacs 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Scott Hendrickson, Josh Montague.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
