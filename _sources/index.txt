@@ -12,6 +12,7 @@ Publisher Modules
 .. toctree::
     :maxdepth: 2
 
+    command
     basic_csv
     twitter
     disqus

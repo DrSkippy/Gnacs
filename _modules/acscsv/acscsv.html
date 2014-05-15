@@ -60,6 +60,118 @@
 <span class="n">gnipError</span> <span class="o">=</span> <span class="s">&quot;GNIPERROR&quot;</span>
 <span class="n">gnipRemove</span> <span class="o">=</span> <span class="s">&quot;GNIPREMOVE&quot;</span>
 <span class="n">gnipDateTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s">T%H:%M:%S.000Z&quot;</span><span class="p">)</span>
+<span class="n">INTERNAL_EMPTY_FIELD</span> <span class="o">=</span> <span class="s">&quot;GNIPEMPTYFIELD&quot;</span>
+
+<span class="k">class</span> <span class="nc">_field</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for extracting the desired value at the end of a series of keys in a JSON Activity </span>
+<span class="sd">    Streams payload. Set the application-wide default value (for e.g. missing values) here, </span>
+<span class="sd">    but also use child classes to override when necessary. Subclasses also need to define the </span>
+<span class="sd">    key-path (path) to the desired location by overwriting the path attr.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># set some default values; these can be overwritten in custom classes </span>
+    <span class="n">default_t_fmt</span> <span class="o">=</span> <span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s"> %H:%M:%S&quot;</span>
+    <span class="n">default_value</span> <span class="o">=</span> <span class="n">INTERNAL_EMPTY_FIELD</span>
+    <span class="c">#default_value = &quot;\\N&quot;           # escaped \N ==&gt; MySQL NULL</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="bp">None</span>                    <span class="c"># str representation of the field, often = str( self.value_list ) </span>
+    <span class="n">value_list</span> <span class="o">=</span> <span class="p">[</span> <span class="n">default_value</span> <span class="p">]</span>  <span class="c"># overwrite when value is most appropriately a list </span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[]</span>                       <span class="c"># dict key-path to follow for desired value</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">walk_path</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">walk_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">json_record</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">res</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="c"># handle the special case where the walk_path found null (JSON) which converts to </span>
+        <span class="c"># a Python None. Only use &quot;None&quot; (str version) if it&#39;s assigned to self.default_value </span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="k">if</span> <span class="n">res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+
+    <span class="k">def</span> <span class="nf">fix_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iterable</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Take an iterable (typically a list) and an optional maximum length (limit). </span>
+<span class="sd">        If limit is not given, and the input iterable is not equal to self.default_value</span>
+<span class="sd">        (typically &quot;None&quot;), the input iterable is returned. If limit is given, the return</span>
+<span class="sd">        value is a list that is either truncated to the first limit items, or padded </span>
+<span class="sd">        with self.default_value until it is of size limit. Note: strings are iterables, </span>
+<span class="sd">        so if you pass this function a string, it will (optionally) truncate the </span>
+<span class="sd">        number of characters in the string according to limit. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span> 
+
+        <span class="k">if</span> <span class="n">limit</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c"># no limits on the length of the result, so just return the original iterable</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">iterable</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c">#if len(iterable) == 0:</span>
+            <span class="k">if</span> <span class="n">iterable</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c"># if walk_path() finds the final key, but the value is an empty list </span>
+                <span class="c">#   (common for e.g. the contents of twitter_entities) </span>
+                <span class="c">#   overwrite self.value with a list of self.default_value and of length limit</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span> <span class="p">]</span><span class="o">*</span><span class="n">limit</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># found something useful in the iterable, either pad the list or truncate </span>
+                <span class="c">#   to end up with something of the proper length                                                                                                                                   </span>
+                <span class="n">current_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span> <span class="n">iterable</span> <span class="p">)</span> 
+                <span class="k">if</span> <span class="n">current_length</span> <span class="o">&lt;</span> <span class="n">limit</span><span class="p">:</span>
+                    <span class="n">res</span> <span class="o">=</span> <span class="n">iterable</span> <span class="o">+</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span> 
+                                        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">limit</span> <span class="o">-</span> <span class="n">current_length</span><span class="p">)</span> <span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>  
+                    <span class="n">res</span> <span class="o">=</span> <span class="n">iterable</span><span class="p">[:</span><span class="n">limit</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+
+<span class="k">class</span> <span class="nc">_limited_field</span><span class="p">(</span><span class="n">_field</span><span class="p">):</span>
+    <span class="c">#TODO: is there a better way that this class and the fix_length() method in _field class</span>
+    <span class="c">#       could be combined?</span>
+    <span class="sd">&quot;&quot;&quot;  </span>
+<span class="sd">    Takes JSON record (in python dict form) and optionally a maximum length (limit, </span>
+<span class="sd">    with default length=5). Uses parent class _field() to assign the appropriate value </span>
+<span class="sd">    to self.value. When self.value is a list of dictionaries, </span>
+<span class="sd">    inheriting from _limited_field() class allows for the extraction and combination of </span>
+<span class="sd">    an arbitrary number of fields within self.value into self.value_list.</span>
+
+<span class="sd">    Ex: if your class would lead to having </span>
+<span class="sd">    self.value = [ {&#39;a&#39;: 1, &#39;b&#39;: 2, &#39;c&#39;: 3}, {&#39;a&#39;: 4, &#39;b&#39;: 5, &#39;c&#39;: 6} ], and what you&#39;d like </span>
+<span class="sd">    is a list that looks like [ 1, 2, 4, 5 ], inheriting from _limited_field() allows you </span>
+<span class="sd">    to overwrite the fields list ( fields=[&quot;a&quot;, &quot;b&quot;] ) to obtain this result. </span>
+<span class="sd">    Finally, self.value is set to a string representation of the final self.value_list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="bp">None</span> 
+    
+    <span class="c">#TODO: set limit=None by default and just return as many as there are, otherwise (by specifying </span>
+    <span class="c">#    limit), return a maximum of limit.</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">_limited_field</span> 
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is possibly a list of dicts for each activity media object </span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+            <span class="c"># start with default list full of the default_values</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span> <span class="o">=</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span> <span class="p">]</span><span class="o">*</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">)</span><span class="o">*</span><span class="n">limit</span> <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span> 
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">):</span>   <span class="c"># iterate over the dicts in the list</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">limit</span><span class="p">:</span>                   <span class="c"># ... up until you reach limit </span>
+                        <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">y</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">):</span>      <span class="c"># iterate over the dict keys </span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span><span class="p">[</span> <span class="nb">len</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span> <span class="p">)</span><span class="o">*</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="p">]</span> 
+            <span class="c"># finally, str-ify the list</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span> <span class="p">)</span>
+
+
+<span class="c"># TODO:</span>
+<span class="c"># - consolidate _limited_field() &amp; fix_length() if possible </span>
+<span class="c"># - replace 2-level dict traversal (eg profileLocation base class) with acscsv.walk_path() or </span>
+<span class="c">#       similar helper method </span>
+
 
 <div class="viewcode-block" id="TestAcsCSV"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.TestAcsCSV">[docs]</a><span class="k">class</span> <span class="nc">TestAcsCSV</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Unit tests ofr common CSV utility functions&quot;&quot;&quot;</span>
@@ -125,13 +237,16 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">x</span>
 </div>
-<div class="viewcode-block" id="AcsCSV.asString"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV.asString">[docs]</a>    <span class="k">def</span> <span class="nf">asString</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">l</span><span class="p">):</span>
+<div class="viewcode-block" id="AcsCSV.asString"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV.asString">[docs]</a>    <span class="k">def</span> <span class="nf">asString</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">emptyField</span><span class="o">=</span><span class="s">&quot;None&quot;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns a delimited list object as a properly delimited string.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">l</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">INTERNAL_EMPTY_FIELD</span><span class="p">:</span>
+                <span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">emptyField</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">delim</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
 </div>
-<div class="viewcode-block" id="AcsCSV.procRecord"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV.procRecord">[docs]</a>    <span class="k">def</span> <span class="nf">procRecord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cnt</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<div class="viewcode-block" id="AcsCSV.procRecord"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV.procRecord">[docs]</a>    <span class="k">def</span> <span class="nf">procRecord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cnt</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">emptyField</span><span class="o">=</span><span class="s">&quot;None&quot;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Wrapper for the core activity parsing function.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cnt</span> <span class="o">=</span> <span class="n">cnt</span>
         <span class="n">source_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">procRecordToList</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -140,7 +255,7 @@
         <span class="c"># ensure no pipes, newlines, etc</span>
         <span class="c">#TODO: remove calls to cleanField() in submodules</span>
         <span class="n">source_list</span> <span class="o">=</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">cleanField</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">source_list</span> <span class="p">]</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">asString</span><span class="p">(</span><span class="n">source_list</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">asString</span><span class="p">(</span><span class="n">source_list</span><span class="p">,</span> <span class="n">emptyField</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="AcsCSV.asGeoJSON"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV.asGeoJSON">[docs]</a>    <span class="k">def</span> <span class="nf">asGeoJSON</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cnt</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get results as GeoJSON representation.&quot;&quot;&quot;</span>
