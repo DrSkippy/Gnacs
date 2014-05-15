@@ -15,7 +15,7 @@ If you don't have a c complier:
 
 In order to regenerate the documentation, also use:
 
-     `sudo pip install sphinx autodoc ghp-import` 
+     `sudo pip install sphinx autodoc ghp-import sphinx-argparse` 
 
 To view the Sphinx docs go [here](https://drskippy27.github.io/Gnacs/)
 
