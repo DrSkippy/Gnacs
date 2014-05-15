@@ -1,9 +1,10 @@
 Command Line Application
 ========================
 
-    .. autofunction:: gnacs.gnacs_args
+.. autofunction:: gnacs.gnacs_args
 
-    .. argparse::
-        :module: gnacs.py
-        :function: gnacs_args
+.. argparse:: 
+    :module: gnacs 
+    :func: gnacs_args 
+    :prog: gnacs.py
 

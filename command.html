@@ -55,14 +55,107 @@
             
   <div class="section" id="command-line-application">
 <h1>Command Line Application<a class="headerlink" href="#command-line-application" title="Permalink to this headline">¶</a></h1>
-<blockquote>
-<div><dl class="function">
+<dl class="function">
 <dt id="gnacs.gnacs_args">
 <tt class="descclassname">gnacs.</tt><tt class="descname">gnacs_args</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/gnacs.html#gnacs_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gnacs.gnacs_args" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse comand line arguemnts for command line utility</p>
 </dd></dl>
 
-</div></blockquote>
+<p>Parse seqeunce of JSON formated activities.</p>
+<pre class="literal-block">
+usage: gnacs.py [-h] [-a] [-g] [-i] [-c] [-l] [-j] [-o] [-p] [-s] [-t] [-r]
+                [-u] [-v] [-x] [-z PUB] [-k KEYPATH] [-D]
+                [file_name]
+
+</pre>
+<dl class="docutils">
+<dt>Positional arguments:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd>file_name</kbd></td>
+<td>Input file name (optional).</td></tr>
+</tbody>
+</table>
+</dd>
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-a=False</span>, <span class="option">--status=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Version, status, etc.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-g=False</span>, <span class="option">--geo=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Include geo fields</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-i=False</span>, <span class="option">--influence=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Show user&#8217;s influence metrics</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-c=False</span>, <span class="option">--csv=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Comma-delimited output (, default is | without quotes)</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-l=False</span>, <span class="option">--lang=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Include language fields</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-j=False</span>, <span class="option">--geojson=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Output is geojson format (Foursquare and Twitter only)                     Caution: dataset must fit in memory.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-o=False</span>, <span class="option">--origin=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Include source/origin fields</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-p=False</span>, <span class="option">--pretty=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Pretty JSON output of full records</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-s=False</span>, <span class="option">--urls=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Include urls fields</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-t=False</span>, <span class="option">--structure=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Include thread linking fields</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-r=False</span>, <span class="option">--rules=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Include rules fields</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-u=False</span>, <span class="option">--user=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Include user fields</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-v=False</span>, <span class="option">--version=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Show version number</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-x=False</span>, <span class="option">--explain=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Show field names in output for sample input records</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-z=twitter</span>, <span class="option">--publisher=twitter</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Publisher (default is twitter), twitter, newsgator, disqus,                     wordpress, wpcomments, tumblr, foursquare, getglue, stocktwits, stocktwits-native</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-k</span>, <span class="option">--keypath</span></kbd></td>
+<td>returns a value from a path of the form &#8216;key:value&#8217;</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-D=False</span>, <span class="option">--database=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>directs stdout to file objects for uploading to mysql db tables</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
 </div>
 
 
