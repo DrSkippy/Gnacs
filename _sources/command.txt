@@ -6,5 +6,5 @@ Command Line Application
         :func: gnacs_args
         :prog: Gnacs
 
-    .. autofunction:: gnacs.main
+    .. autofunction:: gnacs.gnacs_args
 

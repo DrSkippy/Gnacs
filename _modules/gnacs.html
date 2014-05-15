@@ -1,0 +1,368 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gnacs &mdash; gnacs 0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="gnacs 0 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">gnacs 0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for gnacs</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># -*- coding: UTF-8 -*-</span>
+<span class="n">__author__</span><span class="o">=</span><span class="s">&quot;Scott Hendrickson, Josh Montague&quot;</span>
+<span class="n">__license__</span><span class="o">=</span><span class="s">&quot;Simplified BSD&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pkg_resources</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">__version__</span> <span class="o">=</span> <span class="n">pkg_resources</span><span class="o">.</span><span class="n">require</span><span class="p">(</span><span class="s">&quot;gnacs&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">version</span>
+<span class="k">except</span> <span class="n">pkg_resources</span><span class="o">.</span><span class="n">DistributionNotFound</span><span class="p">:</span>
+    <span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;N/A&quot;</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">codecs</span>
+<span class="kn">import</span> <span class="nn">fileinput</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">from</span> <span class="nn">acscsv</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="c"># ujson is 20% faster</span>
+<span class="kn">import</span> <span class="nn">json</span> <span class="kn">as</span> <span class="nn">json_formatter</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">ujson</span> <span class="kn">as</span> <span class="nn">json</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">json</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">simplejson</span> <span class="kn">as</span> <span class="nn">json</span>
+
+<span class="c"># unicode</span>
+<span class="nb">reload</span><span class="p">(</span><span class="n">sys</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">codecs</span><span class="o">.</span><span class="n">getwriter</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+
+<div class="viewcode-block" id="gnacs_args"><a class="viewcode-back" href="../command.html#gnacs.gnacs_args">[docs]</a><span class="k">def</span> <span class="nf">gnacs_args</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Parse comand line arguemnts for command line utility&quot;&quot;&quot;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+            <span class="n">description</span><span class="o">=</span><span class="s">&quot;Parse seqeunce of JSON formated activities.&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;file_name&quot;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span> <span class="s">&quot;file_name&quot;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s">&quot;?&quot;</span>
+            <span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="p">[]</span> 
+            <span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Input file name (optional).&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-a&quot;</span><span class="p">,</span><span class="s">&quot;--status&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;status&quot;</span>
+            <span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span>
+            <span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Version, status, etc.&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-g&quot;</span><span class="p">,</span><span class="s">&quot;--geo&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;geo&quot;</span>
+            <span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span>
+			<span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Include geo fields&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-i&quot;</span><span class="p">,</span> <span class="s">&quot;--influence&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;influence&quot;</span>
+            <span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span>
+			<span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Show user&#39;s influence metrics&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-c&quot;</span><span class="p">,</span><span class="s">&quot;--csv&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;csv&quot;</span>
+            <span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span>
+			<span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Comma-delimited output (, default is | without quotes)&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-l&quot;</span><span class="p">,</span><span class="s">&quot;--lang&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;lang&quot;</span>
+            <span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span>
+			<span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Include language fields&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-j&quot;</span><span class="p">,</span><span class="s">&quot;--geojson&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;geojson&quot;</span>
+            <span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span>
+			<span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Output is geojson format (Foursquare and Twitter only) </span><span class="se">\</span>
+<span class="s">                    Caution: dataset must fit in memory.&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-o&quot;</span><span class="p">,</span><span class="s">&quot;--origin&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;origin&quot;</span>
+            <span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span>
+			<span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Include source/origin fields&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-p&quot;</span><span class="p">,</span><span class="s">&quot;--pretty&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;pretty&quot;</span>
+            <span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span>
+			<span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Pretty JSON output of full records&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-s&quot;</span><span class="p">,</span> <span class="s">&quot;--urls&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;urls&quot;</span>
+            <span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span>
+			<span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Include urls fields&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-t&quot;</span><span class="p">,</span><span class="s">&quot;--structure&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;struct&quot;</span>
+            <span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span>
+			<span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Include thread linking fields&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-r&quot;</span><span class="p">,</span><span class="s">&quot;--rules&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;rules&quot;</span>
+            <span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span>
+			<span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Include rules fields&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-u&quot;</span><span class="p">,</span><span class="s">&quot;--user&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;user&quot;</span>
+            <span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span>
+			<span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Include user fields&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-v&quot;</span><span class="p">,</span><span class="s">&quot;--version&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;ver&quot;</span><span class="p">,</span> 
+            <span class="n">default</span><span class="o">=</span><span class="bp">False</span>
+			<span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Show version number&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-x&quot;</span><span class="p">,</span><span class="s">&quot;--explain&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;explain&quot;</span><span class="p">,</span> 
+            <span class="n">default</span><span class="o">=</span><span class="bp">False</span>
+			<span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Show field names in output for sample input records&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-z&quot;</span><span class="p">,</span><span class="s">&quot;--publisher&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;pub&quot;</span><span class="p">,</span> 
+            <span class="n">default</span><span class="o">=</span><span class="s">&quot;twitter&quot;</span>
+			<span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Publisher (default is twitter), twitter, newsgator, disqus, </span><span class="se">\</span>
+<span class="s">                    wordpress, wpcomments, tumblr, foursquare, getglue, stocktwits, stocktwits-native&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-k&quot;</span><span class="p">,</span><span class="s">&quot;--keypath&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;keypath&quot;</span><span class="p">,</span> 
+            <span class="n">default</span><span class="o">=</span><span class="bp">None</span>
+			<span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;returns a value from a path of the form &#39;key:value&#39;&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-D&quot;</span><span class="p">,</span><span class="s">&quot;--database&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;db&quot;</span><span class="p">,</span> 
+            <span class="n">default</span><span class="o">=</span><span class="bp">False</span>
+			<span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;directs stdout to file objects for uploading to mysql db tables&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+</div>
+<span class="k">if</span> <span class="s">&quot;__main__&quot;</span> <span class="o">==</span> <span class="n">__name__</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Use gnacs delimited field parsing libraries as a command line tool to parse a series of JSON</span>
+<span class="sd">    formatted actvities on the command line.&quot;&quot;&quot;</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">gnacs_args</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">ver</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;*&quot;</span><span class="o">*</span><span class="mi">70</span>
+        <span class="k">print</span> <span class="s">&quot;Gnacs Version: </span><span class="si">%s</span><span class="s">&quot;</span><span class="o">%</span><span class="n">__version__</span>
+        <span class="k">print</span> <span class="s">&quot;Please see https://github.com/DrSkippy27/Gnacs for updates or&quot;</span>
+        <span class="k">print</span> <span class="s">&quot;sudo pip install gnacs --upgrade to install the latest version.&quot;</span>
+        <span class="k">print</span> <span class="s">&quot;*&quot;</span><span class="o">*</span><span class="mi">70</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+    <span class="c">#</span>
+    <span class="n">delim</span> <span class="o">=</span> <span class="s">&quot;|&quot;</span>
+    <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">csv</span><span class="p">:</span>
+        <span class="n">delim</span> <span class="o">=</span> <span class="s">&quot;,&quot;</span>
+    <span class="k">elif</span> <span class="n">options</span><span class="o">.</span><span class="n">geojson</span><span class="p">:</span>
+        <span class="n">options</span><span class="o">.</span><span class="n">geo</span> <span class="o">=</span> <span class="bp">True</span> 
+        <span class="c"># NOTE: this is an in-memory structure</span>
+        <span class="c">#geo_d = {&quot;type&quot;: &quot;FeatureCollection&quot;, &quot;features&quot;: []}</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;{&quot;type&quot;: &quot;FeatureCollection&quot;, &quot;features&quot;: [&#39;</span><span class="p">)</span>
+    <span class="c">#ß</span>
+    <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;word&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">options</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;wp&quot;</span><span class="p">):</span>
+        <span class="n">processing_obj</span> <span class="o">=</span> <span class="n">wpacscsv</span><span class="o">.</span><span class="n">WPacsCSV</span><span class="p">(</span><span class="n">delim</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">keypath</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">user</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">rules</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">lang</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">struct</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">options</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;disq&quot;</span><span class="p">):</span>
+        <span class="n">processing_obj</span> <span class="o">=</span> <span class="n">diacscsv</span><span class="o">.</span><span class="n">DiacsCSV</span><span class="p">(</span><span class="n">delim</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">keypath</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">user</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">rules</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">lang</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">struct</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">options</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;tumb&quot;</span><span class="p">):</span> 
+        <span class="n">processing_obj</span> <span class="o">=</span> <span class="n">tblracscsv</span><span class="o">.</span><span class="n">TblracsCSV</span><span class="p">(</span><span class="n">delim</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">keypath</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">user</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">rules</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">lang</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">struct</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">options</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;four&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">options</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;fsq&quot;</span><span class="p">):</span>
+        <span class="n">processing_obj</span> <span class="o">=</span> <span class="n">fsqacscsv</span><span class="o">.</span><span class="n">FsqacsCSV</span><span class="p">(</span><span class="n">delim</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">keypath</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">geo</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">user</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">rules</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">lang</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">struct</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">options</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;get&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">options</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;gg&quot;</span><span class="p">):</span>
+        <span class="n">processing_obj</span> <span class="o">=</span> <span class="n">ggacscsv</span><span class="o">.</span><span class="n">GgacsCSV</span><span class="p">(</span><span class="n">delim</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">keypath</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">user</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">rules</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">urls</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">origin</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">options</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;st&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">options</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&quot;native&quot;</span><span class="p">):</span>
+        <span class="n">processing_obj</span> <span class="o">=</span> <span class="n">stntvcsv</span><span class="o">.</span><span class="n">StntvCSV</span><span class="p">(</span><span class="n">delim</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">keypath</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">user</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">struct</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">influence</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">options</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;st&quot;</span><span class="p">):</span>
+        <span class="n">processing_obj</span> <span class="o">=</span> <span class="n">stacscsv</span><span class="o">.</span><span class="n">StacsCSV</span><span class="p">(</span><span class="n">delim</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">user</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">struct</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">influence</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">options</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;news&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">options</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;ng&quot;</span><span class="p">):</span>
+        <span class="n">processing_obj</span> <span class="o">=</span> <span class="n">ngacscsv</span><span class="o">.</span><span class="n">NGacsCSV</span><span class="p">(</span><span class="n">delim</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">keypath</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">urls</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">processing_obj</span> <span class="o">=</span> <span class="n">twacscsv</span><span class="o">.</span><span class="n">TwacsCSV</span><span class="p">(</span><span class="n">delim</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">keypath</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">geo</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">user</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">rules</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">urls</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">lang</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">influence</span>
+			<span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">struct</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">db</span><span class="p">:</span>
+        <span class="c"># replace twacs object with the new code. note that twacsDB has the necessary method </span>
+        <span class="c">#   in place to create classic gnacs output ( csv() ), with only small differences.</span>
+        <span class="c">#   these include possibly different default values (NULL or \N instead of &quot;None&quot;),</span>
+        <span class="c">#   and replacement of some single-item lists with the contents of the list. i </span>
+        <span class="c">#   imaging that we can consolidate the twacscsv.TwacsCSV and twacsDB.Twacs objects</span>
+        <span class="c">#   in the future for easier management of the code. (JM)</span>
+        <span class="n">processing_obj</span> <span class="o">=</span> <span class="n">twacsDB</span><span class="o">.</span><span class="n">Twacs</span><span class="p">(</span><span class="n">delim</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">keypath</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">geo</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">rules</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">urls</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">lang</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">influence</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">struct</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+        <span class="c"># create a new data directory (change as needed)</span>
+        <span class="n">data_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;HOME&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&quot;/gnacs_db&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">data_dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
+        <span class="c">#</span>
+        <span class="c"># this section is dependent on the particular output choice / table schema! </span>
+        <span class="c">#</span>
+        <span class="c"># open file objects for writing below </span>
+        <span class="n">acs_f</span> <span class="o">=</span> <span class="n">codecs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span> <span class="n">data_dir</span> <span class="o">+</span> <span class="s">&#39;/table_activities.csv&#39;</span><span class="p">,</span> <span class="s">&#39;wb&#39;</span><span class="p">,</span> <span class="s">&#39;utf8&#39;</span><span class="p">)</span> 
+        <span class="n">ustatic_f</span> <span class="o">=</span> <span class="n">codecs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span> <span class="n">data_dir</span> <span class="o">+</span> <span class="s">&#39;/table_users_static.csv&#39;</span><span class="p">,</span> <span class="s">&#39;wb&#39;</span><span class="p">,</span> <span class="s">&#39;utf8&#39;</span><span class="p">)</span> 
+        <span class="n">udyn_f</span> <span class="o">=</span> <span class="n">codecs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span> <span class="n">data_dir</span> <span class="o">+</span> <span class="s">&#39;/table_users_dynamic.csv&#39;</span><span class="p">,</span> <span class="s">&#39;wb&#39;</span><span class="p">,</span> <span class="s">&#39;utf8&#39;</span><span class="p">)</span> 
+        <span class="n">hash_f</span> <span class="o">=</span> <span class="n">codecs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span> <span class="n">data_dir</span> <span class="o">+</span> <span class="s">&#39;/table_hashtags.csv&#39;</span><span class="p">,</span> <span class="s">&#39;wb&#39;</span><span class="p">,</span> <span class="s">&#39;utf8&#39;</span><span class="p">)</span> 
+    <span class="c">#</span>
+    <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">first_geo</span> <span class="o">=</span> <span class="bp">True</span> 
+    <span class="c">#</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">fileinput</span><span class="o">.</span><span class="n">FileInput</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">file_name</span><span class="p">,</span><span class="n">openhook</span><span class="o">=</span><span class="n">fileinput</span><span class="o">.</span><span class="n">hook_compressed</span><span class="p">):</span>
+        <span class="n">cnt</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">recs</span> <span class="o">=</span> <span class="p">[</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">strip</span><span class="p">())]</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c"># maybe a missing line feed?</span>
+                <span class="n">recs</span> <span class="o">=</span> <span class="p">[</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;}{&quot;</span><span class="p">,</span> <span class="s">&quot;}GNIP_SPLIT{&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;GNIP_SPLIT&quot;</span><span class="p">)]</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;Invalid JSON record (</span><span class="si">%d</span><span class="s">) </span><span class="si">%s</span><span class="s">, skipping</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
+                <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">pretty</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">recs</span><span class="p">:</span>
+                <span class="k">print</span> <span class="n">json_formatter</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="k">continue</span> 
+        <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">recs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">record</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c"># ignore blank lines</span>
+                <span class="k">continue</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">explain</span><span class="p">:</span>
+                    <span class="n">record</span> <span class="o">=</span> <span class="n">reflect_json</span><span class="o">.</span><span class="n">reflect_json</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">%</span><span class="n">processing_obj</span><span class="o">.</span><span class="n">procRecord</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span> <span class="n">record</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="n">options</span><span class="o">.</span><span class="n">geojson</span><span class="p">:</span>
+                    <span class="c"># geo-tag coords</span>
+                    <span class="n">geo_rec</span> <span class="o">=</span> <span class="n">processing_obj</span><span class="o">.</span><span class="n">asGeoJSON</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span> <span class="n">record</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">geo_rec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">first_geo</span><span class="p">:</span> 
+                            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;,&quot;</span><span class="p">)</span>
+                        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">geo_rec</span><span class="p">))</span>
+                        <span class="n">first_geo</span> <span class="o">=</span> <span class="bp">False</span>
+                <span class="k">elif</span> <span class="n">options</span><span class="o">.</span><span class="n">db</span><span class="p">:</span>
+                    <span class="n">compRE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&quot;GNIPREMOVE&quot;</span><span class="p">)</span> 
+                    <span class="n">tmp_combined_rec</span> <span class="o">=</span> <span class="n">processing_obj</span><span class="o">.</span><span class="n">procRecord</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">emptyField</span><span class="o">=</span><span class="s">&quot;</span><span class="se">\\</span><span class="s">N&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">compRE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">tmp_combined_rec</span><span class="p">):</span> 
+                        <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;Skipping compliance activity: ({}) {}</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span> <span class="n">tmp_combined_rec</span><span class="p">)</span> <span class="p">)</span> 
+                        <span class="k">continue</span>
+                    <span class="c"># otherwise, write to appropriate file objects (from above)</span>
+                    <span class="n">flag</span> <span class="o">=</span> <span class="s">&quot;GNIPSPLIT&quot;</span>      <span class="c"># also hardcoded in twacsDB.py</span>
+                    <span class="n">acs_str</span><span class="p">,</span> <span class="n">ustatic_str</span><span class="p">,</span> <span class="n">udyn_str</span><span class="p">,</span> <span class="n">hash_str</span> <span class="o">=</span> <span class="n">tmp_combined_rec</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span> 
+                    <span class="c"># clean up any leading/trailing pipes </span>
+                    <span class="n">acs_str</span> <span class="o">=</span> <span class="n">acs_str</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&quot;|&quot;</span><span class="p">)</span>
+                    <span class="n">ustatic_str</span> <span class="o">=</span> <span class="n">ustatic_str</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&quot;|&quot;</span><span class="p">)</span>
+                    <span class="n">udyn_str</span> <span class="o">=</span> <span class="n">udyn_str</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&quot;|&quot;</span><span class="p">)</span>
+                    <span class="n">hash_str</span> <span class="o">=</span> <span class="n">hash_str</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&quot;|&quot;</span><span class="p">)</span>                  <span class="c"># id|tag1|id|tag2|...</span>
+                    <span class="n">hash_list</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">&quot;[^|]+\|[^|]+&quot;</span><span class="p">,</span> <span class="n">hash_str</span><span class="p">)</span>       <span class="c"># [ &#39;id|tag1&#39;, &#39;id|tag2&#39;, ... ] </span>
+                    <span class="c">#</span>
+                    <span class="n">acs_f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">acs_str</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+                    <span class="n">ustatic_f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ustatic_str</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+                    <span class="n">udyn_f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">udyn_str</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+                    <span class="p">[</span> <span class="n">hash_f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">hash_list</span> <span class="p">]</span> 
+                    <span class="c">#</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">%</span><span class="n">processing_obj</span><span class="o">.</span><span class="n">procRecord</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span> <span class="n">record</span><span class="p">))</span>
+            <span class="c"># catch I/O exceptions associated with writing to stdout (e.g. when output is piped to &#39;head&#39;)</span>
+            <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">break</span>
+            <span class="k">except</span> <span class="ne">UnicodeEncodeError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;UnicodeEncodeError: error={} ({})</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">cnt</span><span class="p">))</span>
+                <span class="c"># use this if you want to see the full troublesome records  </span>
+                <span class="c">#sys.stderr.write(&quot;Bad unicode encoding: error={} ({}), record={}\n&quot;.format(e, cnt, record))</span>
+
+    <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">geojson</span><span class="p">:</span>
+        <span class="c"># sys.stdout.write(json.dumps(geo_d) + &quot;\n&quot;)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;]}</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>            
+            
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">gnacs 0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Scott Hendrickson, Josh Montague.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
