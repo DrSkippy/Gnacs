@@ -50,7 +50,10 @@ help:
 clean:
 	rm -rf $(BUILDDIR)/*
 
-html:
+outdir:
+	mkdir -p $(HTMLDIR)
+
+html: outdir
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(HTMLDIR) 
 	touch $(HTMLDIR)/.nojekyll 
 	@echo

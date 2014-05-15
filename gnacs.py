@@ -28,7 +28,7 @@ except ImportError:
 reload(sys)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 
-def main():
+def cmdline():
     parser = OptionParser()
     parser.add_option("-a","--status", action="store_true", dest="status", 
             default=False, help="Version, status, etc.")
@@ -158,7 +158,7 @@ def main():
                         first_geo = False
                 elif options.db:
                     compRE = re.compile(r"GNIPREMOVE") 
-                    tmp_combined_rec = processing_obj.procRecord(cnt, record)
+                    tmp_combined_rec = processing_obj.procRecord(cnt, record, emptyField="\\N")
                     if compRE.search(tmp_combined_rec): 
                         sys.stderr.write("Skipping compliance activity: ({}) {}\n".format(cnt, tmp_combined_rec) ) 
                         continue
@@ -172,11 +172,6 @@ def main():
                     hash_str = hash_str.strip("|")                  # id|tag1|id|tag2|...
                     hash_list = re.findall("[^|]+\|[^|]+", hash_str)       # [ 'id|tag1', 'id|tag2', ... ] 
                     #
-                    # debug
-#                    sys.stdout.write(u"\n\n###### acs_str ######\n{}".format(acs_str) )
-#                    sys.stdout.write(u"\n###### ustatic_str ######\n{}".format(ustatic_str) )
-#                    sys.stdout.write(u"\n###### udyn_str ######\n{}".format(udyn_str) )
-                    # 
                     acs_f.write(acs_str + "\n")
                     ustatic_f.write(ustatic_str + "\n")
                     udyn_f.write(udyn_str + "\n")
@@ -206,4 +201,4 @@ def main():
             
             
 if __name__ == "__main__":
-    main()
+    cmdline()

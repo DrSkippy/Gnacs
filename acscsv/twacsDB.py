@@ -1,131 +1,129 @@
 # -*- coding: UTF-8 -*-
-__author__="Scott Hendrickson"
+__author__="Scott Hendrickson, Josh Montague"
 __license__="Simplified BSD"
 
 import sys
 import acscsv
-import inspect
 from datetime import datetime
-import itertools
 import re
 
-# move to acscsv?
-class _field(object):
-    """
-    Base class for extracting the desired value at the end of a series of keys in a JSON Activity 
-    Streams payload. Set the application-wide default value (for e.g. missing values) here, 
-    but also use child classes to override when necessary. Subclasses also need to define the 
-    key-path (path) to the desired location by overwriting the path attr.
-    """
-    # set some default values; these can be overwritten in custom classes 
-    default_t_fmt = "%Y-%m-%d %H:%M:%S"
-    #default_value = "None"
-    default_value = "\\N"           # escaped \N ==> MySQL NULL
-    value = None                    # str representation of the field, often = str( self.value_list ) 
-    value_list = [ default_value ]  # overwrite when value is most appropriately a list 
-    path = []                       # dict key-path to follow for desired value
-
-    def __init__(self, json_record):
-        self.value = self.walk_path(json_record)
-
-    def __repr__(self):
-        return self.value
-
-    def walk_path(self, json_record):
-        res = json_record
-        for k in self.path:
-            if k not in res:
-                return self.default_value
-            res = res[k]
-        # handle the special case where the walk_path found null (JSON) which converts to 
-        # a Python None. Only use "None" (str version) if it's assigned to self.default_value 
-        res = res if res is not None else self.default_value
-        return res
-
-
-    def fix_length(self, iterable, limit=None):
-        """
-        Take an iterable (typically a list) and an optional maximum length (limit). 
-        If limit is not given, and the input iterable is not equal to self.default_value
-        (typically "None"), the input iterable is returned. If limit is given, the return
-        value is a list that is either truncated to the first limit items, or padded 
-        with self.default_value until it is of size limit. Note: strings are iterables, 
-        so if you pass this function a string, it will (optionally) truncate the 
-        number of characters in the string according to limit. 
-        """
-        res = [] 
-
-        if limit is None:
-            # no limits on the length of the result, so just return the original iterable
-            res = iterable
-        else:
-            #if len(iterable) == 0:
-            if iterable == self.default_value or len(iterable) == 0:
-                # if walk_path() finds the final key, but the value is an empty list 
-                #   (common for e.g. the contents of twitter_entities) 
-                #   overwrite self.value with a list of self.default_value and of length limit
-                res = [ self.default_value ]*limit
-            else:
-                # found something useful in the iterable, either pad the list or truncate 
-                #   to end up with something of the proper length 
-                current_length = len( iterable ) 
-                if current_length < limit:
-                    res = iterable + [ self.default_value 
-                                        for _ in range(limit - current_length) ]
-                else:  
-                    res = iterable[:limit]
-        return res
-
-
-class _limited_field(_field):
-    #TODO: is there a better way that this class and the fix_length() method in _field class
-    #       could be combined?
-    """
-    Takes JSON record (in python dict form) and optionally a maximum length (limit, 
-    with default length=5). Uses parent class _field() to assign the appropriate value 
-    to self.value. When self.value is a list of dictionaries, 
-    inheriting from _limited_field() class allows for the extraction and combination of 
-    an arbitrary number of fields within self.value into self.value_list.
-
-    Ex: if your class would lead to having 
-    self.value = [ {'a': 1, 'b': 2, 'c': 3}, {'a': 4, 'b': 5, 'c': 6} ], and what you'd like 
-    is a list that looks like [ 1, 2, 4, 5 ], inheriting from _limited_field() allows you 
-    to overwrite the fields list ( fields=["a", "b"] ) to obtain this result. 
-    Finally, self.value is set to a string representation of the final self.value_list.
-    """
-    fields = None 
-    
-    #TODO: set limit=None by default and just return as many as there are, otherwise (by specifying 
-    #    limit), return a maximum of limit.
-
-    def __init__(self, json_record, limit=1):
-        super(
-            _limited_field 
-            , self).__init__(json_record)
-        # self.value is possibly a list of dicts for each activity media object 
-        if self.fields:
-            # start with default list full of the default_values
-            self.value_list = [ self.default_value ]*( len(self.fields)*limit )
-            if self.value != self.default_value: 
-                for i,x in enumerate(self.value):   # iterate over the dicts in the list
-                    if i < limit:                   # ... up until you reach limit 
-                        for j,y in enumerate(self.fields):      # iterate over the dict keys 
-                            self.value_list[ len( self.fields )*i + j ] = x[ self.fields[j] ] 
-            # finally, str-ify the list
-            self.value = str( self.value_list )
-
-
-# TODO:
-# - consolidate _limited_field() & fix_length() if possible 
-# - replace 2-level dict traversal (eg profileLocation base class) with acscsv.walk_path() or 
-#       similar helper method 
+## move to acscsv?
+#class _field(object):
+#    """
+#    Base class for extracting the desired value at the end of a series of keys in a JSON Activity 
+#    Streams payload. Set the application-wide default value (for e.g. missing values) here, 
+#    but also use child classes to override when necessary. Subclasses also need to define the 
+#    key-path (path) to the desired location by overwriting the path attr.
+#    """
+#    # set some default values; these can be overwritten in custom classes 
+#    default_t_fmt = "%Y-%m-%d %H:%M:%S"
+#    #default_value = "None"
+#    default_value = "\\N"           # escaped \N ==> MySQL NULL
+#    value = None                    # str representation of the field, often = str( self.value_list ) 
+#    value_list = [ default_value ]  # overwrite when value is most appropriately a list 
+#    path = []                       # dict key-path to follow for desired value
+#
+#    def __init__(self, json_record):
+#        self.value = self.walk_path(json_record)
+#
+#    def __repr__(self):
+#        return self.value
+#
+#    def walk_path(self, json_record):
+#        res = json_record
+#        for k in self.path:
+#            if k not in res:
+#                return self.default_value
+#            res = res[k]
+#        # handle the special case where the walk_path found null (JSON) which converts to 
+#        # a Python None. Only use "None" (str version) if it's assigned to self.default_value 
+#        res = res if res is not None else self.default_value
+#        return res
+#
+#
+#    def fix_length(self, iterable, limit=None):
+#        """
+#        Take an iterable (typically a list) and an optional maximum length (limit). 
+#        If limit is not given, and the input iterable is not equal to self.default_value
+#        (typically "None"), the input iterable is returned. If limit is given, the return
+#        value is a list that is either truncated to the first limit items, or padded 
+#        with self.default_value until it is of size limit. Note: strings are iterables, 
+#        so if you pass this function a string, it will (optionally) truncate the 
+#        number of characters in the string according to limit. 
+#        """
+#        res = [] 
+#
+#        if limit is None:
+#            # no limits on the length of the result, so just return the original iterable
+#            res = iterable
+#        else:
+#            #if len(iterable) == 0:
+#            if iterable == self.default_value or len(iterable) == 0:
+#                # if walk_path() finds the final key, but the value is an empty list 
+#                #   (common for e.g. the contents of twitter_entities) 
+#                #   overwrite self.value with a list of self.default_value and of length limit
+#                res = [ self.default_value ]*limit
+#            else:
+#                # found something useful in the iterable, either pad the list or truncate 
+#                #   to end up with something of the proper length 
+#                current_length = len( iterable ) 
+#                if current_length < limit:
+#                    res = iterable + [ self.default_value 
+#                                        for _ in range(limit - current_length) ]
+#                else:  
+#                    res = iterable[:limit]
+#        return res
+#
+#
+#class acscsv._limited_field(acscsv._field):
+#    #TODO: is there a better way that this class and the fix_length() method in _field class
+#    #       could be combined?
+#    """
+#    Takes JSON record (in python dict form) and optionally a maximum length (limit, 
+#    with default length=5). Uses parent class _field() to assign the appropriate value 
+#    to self.value. When self.value is a list of dictionaries, 
+#    inheriting from acscsv._limited_field() class allows for the extraction and combination of 
+#    an arbitrary number of fields within self.value into self.value_list.
+#
+#    Ex: if your class would lead to having 
+#    self.value = [ {'a': 1, 'b': 2, 'c': 3}, {'a': 4, 'b': 5, 'c': 6} ], and what you'd like 
+#    is a list that looks like [ 1, 2, 4, 5 ], inheriting from acscsv._limited_field() allows you 
+#    to overwrite the fields list ( fields=["a", "b"] ) to obtain this result. 
+#    Finally, self.value is set to a string representation of the final self.value_list.
+#    """
+#    fields = None 
+#    
+#    #TODO: set limit=None by default and just return as many as there are, otherwise (by specifying 
+#    #    limit), return a maximum of limit.
+#
+#    def __init__(self, json_record, limit=1):
+#        super(
+#            acscsv._limited_field 
+#            , self).__init__(json_record)
+#        # self.value is possibly a list of dicts for each activity media object 
+#        if self.fields:
+#            # start with default list full of the default_values
+#            self.value_list = [ self.default_value ]*( len(self.fields)*limit )
+#            if self.value != self.default_value: 
+#                for i,x in enumerate(self.value):   # iterate over the dicts in the list
+#                    if i < limit:                   # ... up until you reach limit 
+#                        for j,y in enumerate(self.fields):      # iterate over the dict keys 
+#                            self.value_list[ len( self.fields )*i + j ] = x[ self.fields[j] ] 
+#            # finally, str-ify the list
+#            self.value = str( self.value_list )
+#
+#
+## TODO:
+## - consolidate acscsv._limited_field() & fix_length() if possible 
+## - replace 2-level dict traversal (eg profileLocation base class) with acscsv.walk_path() or 
+##       similar helper method 
 
 
 ########################################
 #   example class 
 ########################################
  
-class example_user_rainbows(_field):
+class example_user_rainbows(acscsv._field):
     """
     In this ficticious example, take a dict (data) and assign to self.value a pipe-delimited list 
     of the users's rainbow color choices. Values are extracted from the dictionary at the end of 
@@ -161,7 +159,7 @@ class example_user_rainbows(_field):
         self.value. 
         """
         super(
-                example_class 
+                example_user_rainbows
                 , self).__init__(json_record)
         #
         # include a short note here for the next user that describes what self.value becomes, 
@@ -179,7 +177,7 @@ class example_user_rainbows(_field):
 #   activity type 
 ########################################
 
-class field_activity_type(_field):
+class field_activity_type(acscsv._field):
     """Assign to self.value the appropriate value of Tweet, Retweet, or Reply"""
     path = []
     
@@ -213,14 +211,14 @@ class field_activity_type(_field):
 #   top-level fields 
 ########################################
 
-class field_verb(_field):
+class field_verb(acscsv._field):
     """Take a dict, assign to self.value the value in the top-level verb key.""" 
     path = ["verb"]
     # overwrite this default value because records missing this field should be called out (badness) 
     default_value = "Unidentified meta message"
     
 
-class field_id(_field):
+class field_id(acscsv._field):
     """Take a dict, assign to self.value the value in the top-level id key.""" 
     path = ["id"]
     
@@ -232,7 +230,7 @@ class field_id(_field):
         self.value = self.value.split(":")[2]
 
 
-class field_postedtime(_field):
+class field_postedtime(acscsv._field):
     """
     Take a dict, assign to self.value the value in the top-level postedTime key. Timestamp is 
     formatted according to input_fmt, which is set in the constructor.
@@ -254,17 +252,17 @@ class field_postedtime(_field):
                             self.default_t_fmt ) 
    
 
-class field_body(_field):
+class field_body(acscsv._field):
     """Take a dict, assign to self.value the value in top-level body key."""
     path = ["body"]
     
 
-class field_link(_field):
+class field_link(acscsv._field):
     """Take a dict, assign to self.value the value in top-level link key."""
     path = ["link"]
     
 
-class field_twitter_lang(_field):
+class field_twitter_lang(acscsv._field):
     """Take a dict, assign to self.value the value of top-level twitter_lang key."""
     path = ["twitter_lang"]
     
@@ -273,7 +271,7 @@ class field_twitter_lang(_field):
 #   'actor' fields 
 ########################################
 
-class field_actor_id(_field):
+class field_actor_id(acscsv._field):
     """
     Assign to self.value the numerical value of actor.id (after stripping off 
     the leading 'id:twitter...' characters.
@@ -288,7 +286,7 @@ class field_actor_id(_field):
         self.value = self.value.split(":")[2]
 
 
-class field_actor_postedtime(_field):
+class field_actor_postedtime(acscsv._field):
     """
     Assign to self.value the value of actor.postedTime (input format is defined in the 
     constructor, output format is default unless overwritten).
@@ -307,7 +305,7 @@ class field_actor_postedtime(_field):
         self.value = datetime.strptime(self.value, input_fmt).strftime(self.default_t_fmt) 
 
 
-class field_actor_lang(_field):
+class field_actor_lang(acscsv._field):
     """Assign to self.value the first value in the list at actor.languages"""
     path = ["actor", "languages"]
     
@@ -320,27 +318,27 @@ class field_actor_lang(_field):
         self.value = self.value[0]
 
 
-class field_actor_displayname(_field):
+class field_actor_displayname(acscsv._field):
     """Assign to self.value the value of actor.displayName"""
     path = ["actor", "displayName"]
 
 
-class field_actor_preferredusername(_field):
+class field_actor_preferredusername(acscsv._field):
     """Assign to self.value the value of actor.preferredUsername"""
     path = ["actor", "preferredUsername"]
  
 
-class field_actor_summary(_field):
+class field_actor_summary(acscsv._field):
     """Assign to self.value the value of actor.summary"""
     path = ["actor", "summary"]
 
 
-class field_actor_acct_link(_field):
+class field_actor_acct_link(acscsv._field):
     """Assign to self.value the value of actor.link"""
     path = ["actor", "link"]
 
 
-class field_actor_links(_field):
+class field_actor_links(acscsv._field):
     """
     Assign to self.value a string repr of a list of the links contained in actor.links (or 
     default_value if the corresponding dict is empty). The number of links included in the 
@@ -358,12 +356,12 @@ class field_actor_links(_field):
             self.value_list = self.fix_length( self.value_list, limit )
 
 
-class field_actor_twittertimezone(_field):
+class field_actor_twittertimezone(acscsv._field):
     """Assign to self.value the value of actor.twitterTimeZone"""
     path = ["actor", "twitterTimeZone"]
 
 
-class field_actor_utcoffset_DB(_field):
+class field_actor_utcoffset_DB(acscsv._field):
     """Assign to self.value the value of actor.utcOffset."""
     path = ["actor", "utcOffset"]
     
@@ -382,7 +380,7 @@ class field_actor_utcoffset(field_actor_utcoffset_DB):
         self.value = str( self.value )
 
 
-class field_actor_verified(_field):
+class field_actor_verified(acscsv._field):
     """
     Assign to self.value a 0/1 boolean repr of the value of actor.verified. Default is False (0).
     """
@@ -400,12 +398,12 @@ class field_actor_verified(_field):
             sys.stderr.write("Unable to convert Verified field, error={}".format(e))
 
 
-class field_actor_loc_displayname(_field):
+class field_actor_loc_displayname(acscsv._field):
     """assign to self.value the value of actor.location.displayName"""
     path = ["actor", "location", "displayName"]
     
 
-class field_actor_followers_DB(_field):
+class field_actor_followers_DB(acscsv._field):
     """Assign to self.value the value of actor.followersCount."""
     path = ["actor", "followersCount"]
     # self.value is an int  
@@ -422,7 +420,7 @@ class field_actor_followers(field_actor_followers_DB):
         self.value = str( self.value )
   
  
-class field_actor_friends_DB(_field):
+class field_actor_friends_DB(acscsv._field):
     """Assign to self.value the value of actor.friendsCount."""
     path = ["actor", "friendsCount"]
     # self.value is an int
@@ -439,7 +437,7 @@ class field_actor_friends(field_actor_friends_DB):
         self.value = str( self.value )
 
 
-class field_actor_listed_DB(_field):
+class field_actor_listed_DB(acscsv._field):
     """Assign to self.value the value of actor.listedCount"""
     path = ["actor", "listedCount"]
     # self.value is an int
@@ -456,7 +454,7 @@ class field_actor_listed(field_actor_listed_DB):
         self.value = str( self.value )
 
 
-class field_actor_statuses_DB(_field):
+class field_actor_statuses_DB(acscsv._field):
     """Assign to self.value the value of actor.statusesCount"""
     path = ["actor", "statusesCount"]
     # self.value is an int 
@@ -479,7 +477,7 @@ class field_actor_statuses(field_actor_statuses_DB):
 #   'generator' fields 
 ########################################
 
-class field_generator_displayname(_field):
+class field_generator_displayname(acscsv._field):
     """Assign to self.value the value of generator.displayName"""
     path = ["generator", "displayName"]
     
@@ -489,7 +487,7 @@ class field_generator_displayname(_field):
 #   'gnip' fields 
 ########################################
 
-class field_gnip_rules(_field):
+class field_gnip_rules(acscsv._field):
     """assign to self.value the value of 'gnip', 'matching_rules'"""
     path = ["gnip", "matching_rules"]
     
@@ -506,7 +504,7 @@ class field_gnip_rules(_field):
         self.value = str( self.value )
 
 
-class field_gnip_urls(_field):
+class field_gnip_urls(acscsv._field):
     """Assign to self.value the list of 'expanded_url' values within 'gnip', 'urls'"""
     path = ["gnip", "urls"]
     
@@ -520,17 +518,17 @@ class field_gnip_urls(_field):
             self.value = str( self.value_list ) 
 
 
-class field_gnip_lang(_field):
+class field_gnip_lang(acscsv._field):
     path = ["gnip","language","value"]
     
 
 # profileLocations
 
-class field_gnip_pl_displayname(_limited_field):
+class field_gnip_pl_displayname(acscsv._limited_field):
     """Assign to self.value the value of gnip.profileLocation.displayName."""
     path = ["gnip", "profileLocations"]
     fields = ["displayName"]
-    # use default limit=1 in _limited_field constructor
+    # use default limit=1 in acscsv._limited_field constructor
     def __init__(self, json_record):
         super(
             field_gnip_pl_displayname 
@@ -540,13 +538,13 @@ class field_gnip_pl_displayname(_limited_field):
             self.value = self.value_list[0]
 
 
-class field_gnip_pl_objecttype(_limited_field):
+class field_gnip_pl_objecttype(acscsv._limited_field):
     """Assign to self.value the value of gnip.profileLocations.objectType."""
     path = ["gnip", "profileLocations"]
     fields = ["objectType"]
 
 # for nested dicts, use one-level-deeper "subfield" 
-class _field_gnip_pl_base(_limited_field):
+class _field_gnip_pl_base(acscsv._limited_field):
     """
     Abstract a bunch of the boilerplate needed to check for and extract the things in 
     in gnip.profileLocations. 
@@ -564,7 +562,7 @@ class _field_gnip_pl_base(_limited_field):
                 and self.fields is not None \
                 and self.subfield is not None \
                 and self.subfield in self.value:
-            # _limited_field constructor builds self.value_list
+            # acscsv._limited_field constructor builds self.value_list
             self.value = self.value_list[0][self.subfield]
             #self.value = self.value[self.subfield] 
         else:
@@ -626,7 +624,7 @@ class field_gnip_pl_geo_coords(_field_gnip_pl_base):
 
 # klout 
 
-class field_gnip_klout_score(_field):
+class field_gnip_klout_score(acscsv._field):
     """Assign to self.value the value of gnip.klout_score."""
     path = ["gnip", "klout_score"]
     default_value = 0
@@ -640,7 +638,7 @@ class field_gnip_klout_score(_field):
             self.value = str( self.value )
 
 
-class field_gnip_klout_user_id(_field):
+class field_gnip_klout_user_id(acscsv._field):
     """Assign to self.value the value of gnip.klout_user_id"""
     path = ["gnip", "klout_profile"]
     
@@ -653,7 +651,7 @@ class field_gnip_klout_user_id(_field):
             self.value = self.value["klout_user_id"]
     
 
-class field_gnip_klout_topics(_limited_field):
+class field_gnip_klout_topics(acscsv._limited_field):
     """
     Assign to self.value_list (and .value) pairs of gnip.klout_profile.displayName 
     and .klout_topic_id. Up to limit number of these combinations. 
@@ -674,7 +672,7 @@ class field_gnip_klout_topics(_limited_field):
 
 # URLs
 
-class field_twitter_urls_url(_limited_field):
+class field_twitter_urls_url(acscsv._limited_field):
     """
     """
     path = ["twitter_entities", "urls"]
@@ -686,7 +684,7 @@ class field_twitter_urls_url(_limited_field):
             , self).__init__(json_record, limit=limit)
  
 
-class field_twitter_urls_expanded_url(_limited_field):
+class field_twitter_urls_expanded_url(acscsv._limited_field):
     """    
     """
     path = ["twitter_entities", "urls"]
@@ -698,7 +696,7 @@ class field_twitter_urls_expanded_url(_limited_field):
             , self).__init__(json_record, limit=limit)
 
 
-class field_twitter_urls_display_url(_limited_field):
+class field_twitter_urls_display_url(acscsv._limited_field):
     """
     """
     path = ["twitter_entities", "urls"]
@@ -710,7 +708,7 @@ class field_twitter_urls_display_url(_limited_field):
             , self).__init__(json_record, limit=limit)
 
 
-class field_twitter_urls_tco_expanded_DB(_limited_field):
+class field_twitter_urls_tco_expanded_DB(acscsv._limited_field):
     """
     combination of two classes above
     """
@@ -725,7 +723,7 @@ class field_twitter_urls_tco_expanded_DB(_limited_field):
 
 # hashtags
 
-class field_twitter_hashtags_text(_field):
+class field_twitter_hashtags_text(acscsv._field):
     """
     Assign to self.value a list of twitter_entities.hashtags.text. This class maintains 
     consistency with classic Gnacs behavior.
@@ -744,7 +742,7 @@ class field_twitter_hashtags_text(_field):
         #   the db-specific configuration...
 
 
-class field_twitter_hashtags_text_DB(_limited_field):
+class field_twitter_hashtags_text_DB(acscsv._limited_field):
     """
     Combine the first 'limit' hashtags found in the payload into a list and assign to 
     self.value. If there are less than 'limit', the list is padded with 
@@ -760,7 +758,7 @@ class field_twitter_hashtags_text_DB(_limited_field):
 
 # symbols
 
-class field_twitter_symbols_text_DB(_limited_field):
+class field_twitter_symbols_text_DB(acscsv._limited_field):
     """
     Assign to self.value a list of twitter_entities.symbols 'text's.
     This one is a little experimental... haven't seen it in the wild (Activity Streams) yet, 
@@ -776,7 +774,7 @@ class field_twitter_symbols_text_DB(_limited_field):
 
 # mentions
 
-class field_twitter_mentions_id_name_DB(_limited_field):
+class field_twitter_mentions_id_name_DB(acscsv._limited_field):
     """
     Assign to self.value a list of 'limit' twitter_entities.user_mentions.screen_name and .id pairs 
     (in order, but in a flat list).
@@ -791,7 +789,7 @@ class field_twitter_mentions_id_name_DB(_limited_field):
 
 # media
 
-class field_twitter_media_id_url_DB(_limited_field):
+class field_twitter_media_id_url_DB(acscsv._limited_field):
     """
     Assign to self.value a list of twitter_entities.media.id and .expanded_url pairs
     """
@@ -808,12 +806,12 @@ class field_twitter_media_id_url_DB(_limited_field):
 #   'geo' & 'location' fields (related) 
 ########################################
 
-class field_geo_type(_field):
+class field_geo_type(acscsv._field):
     """Assign to self.value the value of geo.type."""
     path = ["geo", "type"]
     
 
-class field_geo_coords(_field):
+class field_geo_coords(acscsv._field):
     """
     Assign to self.value the value of geo.coordinates. This is the coordinate pair 
     of the user-enabled tweet geotag.
@@ -832,17 +830,17 @@ class field_geo_coords(_field):
         self.value = str( self.value )
 
 
-class field_location_type(_field):
+class field_location_type(acscsv._field):
     """Assign to self.value the value of location.geo.type."""
     path = ["location", "geo", "type"]
 
 
-class field_location_displayname(_field):
+class field_location_displayname(acscsv._field):
     """Assign to self.value the value of location.displayName"""
     path = ["location", "displayName"]
 
 
-class field_location_coords(_field):
+class field_location_coords(acscsv._field):
     """
     Assign to self.value the value of location.geo.coordsindates . This the bounding 
     polygon from the original activity payload from Twitter.
@@ -860,7 +858,7 @@ class field_location_coords(_field):
             self.value = str( self.value[0] ) 
 
 
-class field_location_twittercountry(_field):
+class field_location_twittercountry(acscsv._field):
     """Assign to self.value the value of location.twitter_country_code."""
     path = ["location", "twitter_country_code"]
 
@@ -870,18 +868,18 @@ class field_location_twittercountry(_field):
 #   other top-level fields 
 ########################################
 
-class field_inreplyto_link(_field):
+class field_inreplyto_link(acscsv._field):
     """Assign to self.value the value of inReplyTo.link"""
     path = ["inReplyTo", "link"]
     
 
-class field_object_id(_field):
+class field_object_id(acscsv._field):
     """Assign to self.value the value of object.id"""
     path = ["object", "id"]
     
 
 
-class field_object_postedtime(_field):
+class field_object_postedtime(acscsv._field):
     """Assign to self.value the value of object.postedTime"""
     path = ["object", "postedTime"]
     
@@ -1047,7 +1045,7 @@ class Twacs(acscsv.AcsCSV):
         t_fmt = "%Y-%m-%d %H:%M:%S"
         now = datetime.utcnow().strftime( t_fmt )
 
-        default_value = _field({}).default_value
+        default_value = acscsv._field({}).default_value
 
         # hash_list will be [ id, tag1, id, tag2, ... ] and will be split in gnacs.py
         hash_list = [] 
