@@ -1,10 +1,7 @@
 Command Line Application
 ========================
 
-    .. argparse:: 
-        :module: gnacs
-        :func: gnacs_args
-        :prog: Gnacs
-
     .. autofunction:: gnacs.gnacs_args
+
+
 
