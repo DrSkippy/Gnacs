@@ -187,7 +187,7 @@ class AcsCSV(object):
         else:
             return x
 
-    def asString(self, l, emptyField="None"):
+    def asString(self, l, emptyField):
         """Returns a delimited list object as a properly delimited string."""
         if l is None:
             return None

@@ -2,6 +2,12 @@
 
 ## Gnip Normalized Activities Parser
 
+Parses JSON activity sterams from Gnip straming APIs (Powertrack, Historical, Search API)
+and provides delimited, ordered fields as output.  Extended options allow multi-file output
+approprite for loading into a relational database or GeoJSON output appropriate for
+immediat rendering on e.g. github.com.
+
+
 ### Install
 If you have a `c` complier installed (e.g. gcc, or Xcode on OS X):
 
@@ -13,13 +19,11 @@ If you don't have a c complier:
      `sudo pip install gnacs --no-deps` 
      `sudo pip install gnacs --no-deps --upgrade` (if you have installed before)
 
-In order to regenerate the documentation, also use:
+In order to regenerate the documentation, you will need:
 
      `sudo pip install sphinx autodoc ghp-import sphinx-argparse` 
 
 To view the Sphinx docs go [here](https://drskippy27.github.io/Gnacs/)
-
-   
 
 ### Supported publishers:
 * Twitter
@@ -27,34 +31,46 @@ To view the Sphinx docs go [here](https://drskippy27.github.io/Gnacs/)
 * Wordpress
 * Tumblr
 * Foursquare 
-* GetGlue
-* Stocktwits (native format only) 
+* Stocktwits 
 
-Parsed activities are output as pipe-delimited records with user-chosen subset of the activity fields.
+### Usage ###
+> ./gnacs.py -h
+usage: gnacs.py [-h] [-a] [-g] [-i] [-c] [-l] [-j] [-o] [-p] [-s] [-t] [-r]
+                [-u] [-v] [-x] [-z PUB] [-k KEYPATH] [-D]
+                [file_name]
 
-    $ ./gnacs.py -h
-    Usage: gnacs.py [options]
-        Options:
-        -h, --help            Show this help message and exit
-        -a, --status          Version, status, etc.
-        -g, --geo             Include geo fields
-        -j, --geojson         Output GeoJSON-spec FeatureCollection of coordinate pairs 
-                                (Foursquare activities + geotagged Twitter activities)
-        -i, --influence       Show user's influence metrics
-        -c, --csv             Comma-delimited output (default is | without quotes)
-        -l, --lang            Include language fields
-        -p, --pretty          Pretty JSON output of full records
-        -s, --urls            Include urls fields
-        -t, --structure       Include thread linking fields
-        -r, --rules           Include rules fields
-        -u, --user            Include user fields
-        -x, --explain         Show field names in output for sample input records
-        -z PUB, --publisher=PUB
-                              Publisher (default is twitter), twitter, disqus,
-                              wordpress, wpcomments, tumblr, foursquare, getglue,
-                              stocktwits
+Parse seqeunce of JSON formated activities.
 
+positional arguments:
+  file_name             Input file name (optional).
 
+optional arguments:
+  -h, --help            show this help message and exit
+  -a, --status          Version, status, etc.
+  -g, --geo             Include geo fields
+  -i, --influence       Show user's influence metrics
+  -c, --csv             Comma-delimited output (, default is | without quotes)
+  -l, --lang            Include language fields
+  -j, --geojson         Output is geojson format (Foursquare and Twitter only)
+                        Caution: dataset must fit in memory.
+  -o, --origin          Include source/origin fields
+  -p, --pretty          Pretty JSON output of full records
+  -s, --urls            Include urls fields
+  -t, --structure       Include thread linking fields
+  -r, --rules           Include rules fields
+  -u, --user            Include user fields
+  -v, --version         Show version number
+  -x, --explain         Show field names in output for sample input records
+  -z PUB, --publisher PUB
+                        Publisher (default is twitter), twitter, newsgator,
+                        disqus, wordpress, wpcomments, tumblr, foursquare,
+                        getglue, stocktwits, stocktwits-native
+  -k KEYPATH, --keypath KEYPATH
+                        returns a value from a path of the form 'key:value'
+  -D, --database        directs stdout to file objects for uploading to mysql
+                        db tables
+
+### Use Examples ###
 Sample files are included in the data directory, for example:
 
     $ ./gnacs.py -p data/tumblr.sample.json 
@@ -90,6 +106,15 @@ Sample files are included in the data directory, for example:
     tag:search.twitter.com,2005:309063808129835008|2013-03-05T22:12:08.000Z|Mi mas sentido pésame para los familiares del Presidente Chávez y para todos sus seguidores. Q.E.P.D
     ...
 
+    $ ./gnacs.py data/twitter_sample.json.gz -z twitter 
+    tag:search.twitter.com,2005:351835320817426433|2013-07-01T22:50:51.000Z|Como cuando grito ¡¡*José*!! y la mayoria de mis primos voltea ...
+    tag:search.twitter.com,2005:351835321006170112|2013-07-01T22:50:51.000Z|Tweeting for no reason
+    tag:search.twitter.com,2005:351835321056509952|2013-07-01T22:50:51.000Z|And I'm the one that always gets hit on. OKAAAAY.
+    tag:search.twitter.com,2005:351835320297328640|2013-07-01T22:50:51.000Z|@CheniseFowlisX yeah 😂
+    tag:search.twitter.com,2005:351835321220075524|2013-07-01T22:50:52.000Z|@justinbagdr no, non mi far star meglio.
+    tag:search.twitter.com,2005:351835321471746048|2013-07-01T22:50:52.000Z|😕 Hmm...
+    ...
+
 
     $ cat data/disqus_sample.json | ./gnacs.py -z disqus -ult
     tag:gnip.disqus.com:2012:comment/hosqas/post/2013-03-19T08:30:38|2013-03-19T12:30:38+00:00|So Bush, Cheney and oil cartels did something for US after all these wars and massacres.|en|5gat|4okb2q|http://cnnpreview.turner.com:82/interactive/2013/03/world/baby-noor/index.html|hoit02|uivnl|rvd3a
@@ -99,8 +124,6 @@ Sample files are included in the data directory, for example:
     GNIPREMOVE|delete|tag:gnip.disqus.com:2012:comment/hosl5z
     tag:gnip.disqus.com:2012:comment/host4q/update/2013-03-19T08:28:00/9d34ac326ba4c07c6ede2bb9498c31373794ae7c8a495823bd038c86f8045c44|2013-03-19T12:28:00+00:00|These so-called "journalists" remind of this bunch of biddies:  http://www.youtube.com/watch?v=jbhnRuJBHLs|en|i8ey|q221nc|http://newsbusters.org/blogs/tim-graham/2013/03/19/washpost-misleads-catholics-jokes-pope-francis-infallible-man|hos7ya|vjs3d|78ia4
     ...
-
-
 
     $ ./gnacs.py -jz twitter data/twitter_sample.json
     {type: "FeatureCollection", features: [{geometry: {type: "Point",coordinates: [-101.0379045,47.29088246]},type: "Feature",properties: {id: "tag:search.twitter.com,2005:351835317604593666"}},{geometry: {type: "Point",coordinates: [139.84273005,35.70675048]},type: "Feature",properties: {id: "tag:search.twitter.com,2005:351835317747191808"}}, ...

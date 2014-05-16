@@ -30,7 +30,7 @@ reload(sys)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 
 def gnacs_args():
-    """Parse comand line arguemnts for command line utility"""
+    """Parse comand line arguemnts for defining input and output of command line utility."""
     parser = argparse.ArgumentParser(
             description="Parse seqeunce of JSON formated activities.")
     parser.add_argument("file_name", metavar= "file_name", nargs="?"
@@ -92,8 +92,8 @@ def gnacs_args():
     return parser
 
 if "__main__" == __name__:
-    """Use gnacs delimited field parsing libraries as a command line tool to parse a series of JSON
-    formatted actvities on the command line."""
+    """Use gnacs delimited-field parsing libraries as a command line tool to parse a series of JSON
+    formatted actvities from file, compressed file or standard input (stdin)."""
     
     options = gnacs_args().parse_args()
     if options.ver:
@@ -104,13 +104,14 @@ if "__main__" == __name__:
         print "*"*70
         sys.exit()
     #
-    delim = "|"
+    delim = "|"     # default delimiter
     if options.csv:
-        delim = ","
+        delim = "," # csv delimiter
     elif options.geojson:
         options.geo = True 
-        # NOTE: this is an in-memory structure
-        #geo_d = {"type": "FeatureCollection", "features": []}
+        # NOTE: When using geojson, we have an in-memory structure
+        # example record is geo_d = {"type": "FeatureCollection", "features": []}
+        # so we do this in two parts. See below for completion of structure.
         sys.stdout.write('{"type": "FeatureCollection", "features": [')
     #
     if options.pub.lower().startswith("word") or options.pub.lower().startswith("wp"):
@@ -262,7 +263,7 @@ if "__main__" == __name__:
                     udyn_f.write(udyn_str + "\n")
                     [ hash_f.write(x + "\n") for x in hash_list ] 
                 else:
-                    sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
+                    sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record, emptyField="None"))
             # catch I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
             except IOError:
                 try:

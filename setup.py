@@ -13,7 +13,7 @@ if '__main__' == __name__:
         url='https://github.com/DrSkippy27/Gnacs',
         download_url='https://github.com/DrSkippy27/Gnacs/tags/%s'%(GNACS_VERSION_NUMBER),
         license='LICENSE.txt',
-        description='Gnip normalized activity JSON to csv parser (Disqus Comments, Wordpress, Twitter, Tumblr, Foursquare, GetGlue, StockTwits)',
+        description='Gnip normalized activity JSON to csv parser (Disqus Comments, Wordpress, Twitter, Tumblr, Foursquare, StockTwits)',
         install_requires=[
                     "ujson >= 1.2",
                         ]
