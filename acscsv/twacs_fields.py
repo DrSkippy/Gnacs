@@ -21,7 +21,9 @@ import re
 ########################################
 
 class field_activity_type(acscsv._field):
-    """Take a dict, assign to self.value the appropriate value of Tweet, Retweet, or Reply"""
+    """
+    Take a dict, assign to self.value the appropriate value of Tweet, Retweet, or Reply. This 
+    class is being held onto for now, but may not be needed in future."""
     path = []
     
     def __init__(self, json_record):
