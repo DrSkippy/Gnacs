@@ -425,9 +425,10 @@ class field_actor_links(acscsv._field):
         super(
             field_actor_links
             , self).__init__(json_record)
-        if self.value != self.default_value and len( self.value ) == 0:
-            # found the list but it's empty -- how often does this happen?
-            self.value = self.default_value
+        # should be handled by acscsv._field.walk_json()
+#        if self.value != self.default_value and len( self.value ) == 0:
+#            # found the list but it's empty -- how often does this happen?
+#            self.value = self.default_value
 
 
 class field_actor_twittertimezone(acscsv._field):
@@ -500,9 +501,9 @@ class field_twitter_entities_urls(acscsv._field):
         super(
             field_twitter_entities_urls 
             , self).__init__(json_record)
-        # self.value is possibly a list of dicts for each activity url 
-        if self.value != self.default_value and len( self.value ) == 0:
-            self.value = self.default_value
+#        # self.value is possibly a list of dicts for each activity url 
+#        if self.value != self.default_value and len( self.value ) == 0:
+#            self.value = self.default_value
 
 
 # hashtags
@@ -514,9 +515,9 @@ class field_twitter_entities_hashtags(acscsv._field):
         super(
             field_twitter_entities_hashtags 
             , self).__init__(json_record)
-        # self.value is possibly a list of dicts for each activity hashtag 
-        if self.value != self.default_value and len( self.value ) == 0:
-            self.value = self.default_value
+#        # self.value is possibly a list of dicts for each activity hashtag 
+#        if self.value != self.default_value and len( self.value ) == 0:
+#            self.value = self.default_value
 
 
 # symbols
@@ -528,9 +529,9 @@ class field_twitter_entities_symbols(acscsv._field):
         super(
             field_twitter_entities_symbols 
             , self).__init__(json_record)
-        # self.value is possibly a list of dicts for each activity symbol 
-        if self.value != self.default_value and len( self.value ) == 0:
-            self.value = self.default_value
+#        # self.value is possibly a list of dicts for each activity symbol 
+#        if self.value != self.default_value and len( self.value ) == 0:
+#            self.value = self.default_value
 
 
 # mentions
@@ -542,9 +543,9 @@ class field_twitter_entities_user_mentions(acscsv._field):
         super(
             field_twitter_entities_user_mentions 
             , self).__init__(json_record)
-        # self.value is possibly a list of dicts for each activity user_mention 
-        if self.value != self.default_value and len( self.value ) == 0:
-            self.value = self.default_value
+#        # self.value is possibly a list of dicts for each activity user_mention 
+#        if self.value != self.default_value and len( self.value ) == 0:
+#            self.value = self.default_value
 
 
 # media
@@ -556,9 +557,9 @@ class field_twitter_entities_media(acscsv._field):
         super(
             field_twitter_entities_media 
             , self).__init__(json_record)
-        # self.value is possibly a list of dicts for each activity media 
-        if self.value != self.default_value and len( self.value ) == 0:
-            self.value = self.default_value
+#        # self.value is possibly a list of dicts for each activity media 
+#        if self.value != self.default_value and len( self.value ) == 0:
+#            self.value = self.default_value
 
 
 
