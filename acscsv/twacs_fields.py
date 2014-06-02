@@ -13,7 +13,6 @@ import re
 #- add a helper field_found() boolean method to _field.walk_json() for easier
 #    construction of checking for default_value (e.g. if self.found(): ... ) 
 #   add a custom version of this method for subsequent checking (eg empty list?) 
-#- create a more general class for when the value is a list of things (ie check for len = 0 ) ?
 #
 
 ########################################
