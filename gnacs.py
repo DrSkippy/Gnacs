@@ -178,12 +178,7 @@ if "__main__" == __name__:
 			, options.influence
 			, options.struct)
     if options.db:
-        # replace twacs object with the new code. note that twacsDB has the necessary method 
-        #   in place to create classic gnacs output ( csv() ), with only small differences.
-        #   these include possibly different default values (NULL or \N instead of "None"),
-        #   and replacement of some single-item lists with the contents of the list. i 
-        #   imaging that we can consolidate the twacscsv.TwacsCSV and twacsDB.Twacs objects
-        #   in the future for easier management of the code. (JM)
+        # different twacs module!
         processing_obj = twacsDB.Twacs(delim
 			, options.keypath
 			, options.geo
@@ -194,13 +189,11 @@ if "__main__" == __name__:
 			, options.influence
 			, options.struct
 			, options.db)
+        #
         # create a new data directory (change as needed)
         data_dir = os.environ['HOME'] + "/gnacs_db"
         if not os.path.exists(data_dir):
             os.mkdir(data_dir)
-        #
-        # this section is dependent on the particular output choice / table schema! 
-        #
         # open file objects for writing below 
         acs_f = codecs.open( data_dir + '/table_activities.csv', 'wb', 'utf8') 
         ustatic_f = codecs.open( data_dir + '/table_users_static.csv', 'wb', 'utf8') 
