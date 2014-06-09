@@ -1052,6 +1052,8 @@ class Twacs(acscsv.AcsCSV):
 
     def multi_file_DB_1(self, d, record):
         """
+        !! Superceded by multi_file_DB(), above !!
+
         Custom output format designed for loading multiple database tables.
         Creates 3 separate lists of activity fields, joins them on a GNIPSPLIT to be split 
         at the gnacs.py level and written to separate files.      
