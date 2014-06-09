@@ -120,7 +120,8 @@ if "__main__" == __name__:
 			, options.user
 			, options.rules
 			, options.lang
-			, options.struct)
+			, options.struct
+            )
     elif options.pub.lower().startswith("disq"):
         processing_obj = diacscsv.DiacsCSV(delim
 			, options.keypath
@@ -128,14 +129,16 @@ if "__main__" == __name__:
 			, options.rules
 			, options.lang
 			, options.struct
-			, options.status)
+			, options.status
+            )
     elif options.pub.lower().startswith("tumb"): 
         processing_obj = tblracscsv.TblracsCSV(delim
 			, options.keypath
 			, options.user
 			, options.rules
 			, options.lang
-			, options.struct)
+			, options.struct
+            )
     elif options.pub.lower().startswith("four") or options.pub.lower().startswith("fsq"):
         processing_obj = fsqacscsv.FsqacsCSV(delim
 			, options.keypath
@@ -143,42 +146,37 @@ if "__main__" == __name__:
 			, options.user
 			, options.rules
 			, options.lang
-			, options.struct)
+			, options.struct
+            )
     elif options.pub.lower().startswith("get") or options.pub.lower().startswith("gg"):
         processing_obj = ggacscsv.GgacsCSV(delim
 			, options.keypath
 			, options.user
 			, options.rules
 			, options.urls
-			, options.origin)
+			, options.origin
+            )
     elif options.pub.lower().startswith("st") and options.pub.lower().endswith("native"):
         processing_obj = stntvcsv.StntvCSV(delim
 			, options.keypath
 			, options.user
 			, options.struct
-			, options.influence)
+			, options.influence
+            )
     elif options.pub.lower().startswith("st"):
         processing_obj = stacscsv.StacsCSV(delim
 			, options.user
 			, options.struct
-			, options.influence)
+			, options.influence
+            )
     elif options.pub.lower().startswith("news") or options.pub.lower().startswith("ng"):
         processing_obj = ngacscsv.NGacsCSV(delim
 			, options.keypath
 			, options.urls
-			, options.user)
-    else:
-        processing_obj = twacscsv.TwacsCSV(delim
-			, options.keypath
-			, options.geo
 			, options.user
-			, options.rules
-			, options.urls
-			, options.lang
-			, options.influence
-			, options.struct)
-    if options.db:
-        # different twacs module!
+            )
+    # different twacs module!
+    elif options.db:
         processing_obj = twacsDB.Twacs(delim
 			, options.keypath
 			, options.geo
@@ -188,8 +186,8 @@ if "__main__" == __name__:
 			, options.lang
 			, options.influence
 			, options.struct
-			, options.db)
-        #
+			, options.db
+            )
         # create a new data directory (change as needed)
         data_dir = os.environ['HOME'] + "/gnacs_db"
         if not os.path.exists(data_dir):
@@ -199,6 +197,32 @@ if "__main__" == __name__:
         ustatic_f = codecs.open( data_dir + '/table_users_static.csv', 'wb', 'utf8') 
         udyn_f = codecs.open( data_dir + '/table_users_dynamic.csv', 'wb', 'utf8') 
         hash_f = codecs.open( data_dir + '/table_hashtags.csv', 'wb', 'utf8') 
+    else:
+        processing_obj = twacscsv.TwacsCSV(delim
+			, options.keypath
+			, options.geo
+			, options.user
+			, options.rules
+			, options.urls
+			, options.lang
+			, options.influence
+			, options.struct
+            )
+#    # >> replacing this command-line option with an executable module framework << 2014-06-09 (JM)
+#    # use this command-line flag as an opportunity to test new modules and customize the output
+#    if options.test:
+#        # use this as a platform for testing new acscsv modules
+#        # drop in the new_module.NewClass(all necessary options) to get your processing_obj 
+#        processing_obj = twacscsv.TwacsCSV(delim
+#			, options.keypath
+#			, options.geo
+#			, options.user
+#			, options.rules
+#			, options.urls
+#			, options.lang
+#			, options.influence
+#			, options.struct
+#            )
     #
     cnt = 0
     first_geo = True 
@@ -234,6 +258,8 @@ if "__main__" == __name__:
                             sys.stdout.write(",")
                         sys.stdout.write(json.dumps(geo_rec))
                         first_geo = False
+                # start of database table output
+                # record is parsed and returned as a single list, split and trimmed of delimiters
                 elif options.db:
                     compRE = re.compile(r"GNIPREMOVE") 
                     tmp_combined_rec = processing_obj.procRecord(cnt, record, emptyField="\\N")
