@@ -1,15 +1,15 @@
 # -*- coding: UTF-8 -*-
-__author__="Scott Hendrickson, Josh Montague"
+__author__="Josh Montague"
 __license__="Simplified BSD"
 
 import sys
 import acscsv
+from twacs_fields import *
+import twacscsv     # this is the class whose output we're overwriting
 from datetime import datetime
 import re
 
-
-
-
+# this needs to inherit from e.g twacscsv (but from the "fixed" version)
 class TestClass(acscsv.AcsCSV):
     def __init__(self
             # add more as needed
@@ -169,7 +169,8 @@ class TestClass(acscsv.AcsCSV):
                     )
        
 if __name__ == "__main__":
-    # run this thing to test your code? 
+    # $ cat data | ./test_module.py 
+    # <correct output>
 
 
 
