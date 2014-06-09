@@ -4,7 +4,7 @@ __all__ = [
         ,'twacscsv'
         ,'wpacscsv'
         ,'fsqacscsv'
-        ,'stntvcsv'
+        ,'stocktwits_native'
         ,'stacscsv'
         ,'twacscsv'
         ,'twacsDB'
