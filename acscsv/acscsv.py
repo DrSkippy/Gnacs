@@ -2,9 +2,21 @@
 # -*- coding: UTF-8 -*-
 __author__="Scott Hendrickson"
 __license__="Simplified BSD"
+
 import sys
 import datetime
-import json
+import fileinput
+from StringIO import StringIO
+# use fastest option available
+try:
+    import ujson as json
+except ImportError:
+    try:
+        import json
+    except ImportError:
+        import simplejson as json
+
+
 
 gnipError = "GNIPERROR"
 gnipRemove = "GNIPREMOVE"
@@ -133,6 +145,23 @@ class _limited_field(_field):
 # - replace 2-level dict traversal (eg profileLocation base class) with acscsv.walk_path() or 
 #       similar helper method 
 
+class Hook_StringIO():
+    """
+    Reverse-engineer the openhook constructor to accept StringIO. Pass the StringIO object 
+    through so FileInput will read a string. Think of it as a stupid version of open() that 
+    returns the thing it's passed.
+    """
+
+    def __init__(self, stringio):
+        self.stringio = stringio
+
+    def __call__(self, x, y):
+        """
+        Note that x and y are ignored - they're only included to match the signature of 
+        FileInput's openhook argument.
+        """
+        return self.stringio
+
 
 class AcsCSV(object):
     """Base class for all delimited list objects. Basic delimited list utility functions"""
@@ -140,8 +169,32 @@ class AcsCSV(object):
         self.delim = delim
         if delim == "":
             print >>sys.stderr, "Warning - Output has Null delimiter"
-        self.cnt = None
         self.options_keypath = options_keypath
+
+
+    def file_reader(self, options_filename=None):
+        """Read arbitrary input file(s), yield individual record lines."""
+        line_number = 0
+        if isinstance(options_filename, StringIO):
+            hook = Hook_StringIO(options_filename) 
+        else:
+            hook = fileinput.hook_compressed
+        for r in fileinput.FileInput(options_filename, openhook=hook):  
+            line_number += 1
+            try:
+                recs = [json.loads(r.strip())]
+            except ValueError:
+                try:
+                    # maybe a missing line feed?
+                    recs = [json.loads(x) for x in r.strip().replace("}{", "}GNIP_SPLIT{").split("GNIP_SPLIT")]
+                except ValueError:
+                    sys.stderr.write("Invalid JSON record (%d) %s, skipping\n"%(line_number, r.strip()))
+                    continue
+            for record in recs:
+                if len(record) == 0:
+                    continue
+                yield line_number, record
+
 
     def cleanField(self,f):
         """Clean fields of new lines and delmiter."""
@@ -188,18 +241,22 @@ class AcsCSV(object):
                 l[i] = emptyField
         return self.delim.join(l)
 
-    def procRecord(self, cnt, x, emptyField="None"):
+    def get_source_list(self, x):
         """Wrapper for the core activity parsing function."""
-        self.cnt = cnt
         source_list = self.procRecordToList(x)
         if self.options_keypath:
             source_list.append(self.keyPath(x))
         # ensure no pipes, newlines, etc
         #TODO: remove calls to cleanField() in submodules
         source_list = [ self.cleanField(x) for x in source_list ]
-        return self.asString(source_list, emptyField)
+        return source_list
 
-    def asGeoJSON(self, cnt, x):
+
+    def procRecord(self, x, emptyField="None"):
+        return self.asString(self.get_source_list(x), emptyField)
+
+
+    def asGeoJSON(self, x):
         """Get results as GeoJSON representation."""
         recordList = self.procRecordToList(x)
         if self.__class__.__name__ == "TwacsCSV" and self.options_geo:
