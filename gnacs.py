@@ -15,8 +15,7 @@ import re
 import os
 import argparse
 from acscsv import *
-# ujson is 20% faster
-import json as json_formatter
+# use fastest option available
 try:
     import ujson as json
 except ImportError:
@@ -157,7 +156,7 @@ if "__main__" == __name__:
 			, options.origin
             )
     elif options.pub.lower().startswith("st") and options.pub.lower().endswith("native"):
-        processing_obj = stntvcsv.StntvCSV(delim
+        processing_obj = stocktwits_native.StocktwitsNative(delim
 			, options.keypath
 			, options.user
 			, options.struct
@@ -208,97 +207,68 @@ if "__main__" == __name__:
 			, options.influence
 			, options.struct
             )
-#    # >> replacing this command-line option with an executable module framework << 2014-06-09 (JM)
-#    # use this command-line flag as an opportunity to test new modules and customize the output
-#    if options.test:
-#        # use this as a platform for testing new acscsv modules
-#        # drop in the new_module.NewClass(all necessary options) to get your processing_obj 
-#        processing_obj = twacscsv.TwacsCSV(delim
-#			, options.keypath
-#			, options.geo
-#			, options.user
-#			, options.rules
-#			, options.urls
-#			, options.lang
-#			, options.influence
-#			, options.struct
-#            )
     #
-    cnt = 0
     first_geo = True 
     #
-    for r in fileinput.FileInput(options.file_name,openhook=fileinput.hook_compressed):
-        cnt += 1
-        try:
-            recs = [json.loads(r.strip())]
-        except ValueError:
-            try:
-                # maybe a missing line feed?
-                recs = [json.loads(x) for x in r.strip().replace("}{", "}GNIP_SPLIT{").split("GNIP_SPLIT")]
-            except ValueError:
-                sys.stderr.write("Invalid JSON record (%d) %s, skipping\n"%(cnt, r.strip()))
-                continue
+    for line_number, record in processing_obj.file_reader(options.file_name): 
         if options.pretty:
-            for record in recs:
-                print json_formatter.dumps(record, indent=3, ensure_ascii=False)
+            print json.dumps(record, indent=3, ensure_ascii=False)
             continue 
-        for record in recs:
-            if len(record) == 0:
-                # ignore blank lines
-                continue
+        try:
+            if options.explain:
+                record = reflect_json.reflect_json(record)
+                sys.stdout.write("%s\n"%processing_obj.procRecord(record))
+            elif options.geojson:
+                # geo-tag coords
+                geo_rec = processing_obj.asGeoJSON(record)
+                if geo_rec is not None:
+                    if not first_geo: 
+                        sys.stdout.write(",")
+                    sys.stdout.write(json.dumps(geo_rec))
+                    first_geo = False
+            # start of database table output
+            # record is parsed and returned as a single list, split and trimmed of delimiters
+            elif options.db:
+                #
+                # TODO: swap procRecord call for get_source_list(), split accordingly, clean 
+                #           up next 30 loc
+                compRE = re.compile(r"GNIPREMOVE") 
+                tmp_combined_rec = processing_obj.procRecord(record, emptyField="\\N")
+                if compRE.search(tmp_combined_rec): 
+                    sys.stderr.write("Skipping compliance activity: ({}) {}\n"
+                            .format(line_number, tmp_combined_rec) ) 
+                    continue
+                # otherwise, write to appropriate file objects (from above)
+                flag = "GNIPSPLIT"      # also hardcoded in twacsDB.py
+                acs_str, ustatic_str, udyn_str, hash_str = tmp_combined_rec.split(flag) 
+                # clean up any leading/trailing pipes 
+                acs_str = acs_str.strip("|")
+                ustatic_str = ustatic_str.strip("|")
+                udyn_str = udyn_str.strip("|")
+                hash_str = hash_str.strip("|")                    # id|tag1|id|tag2|...
+                hash_list = re.findall("[^|]+\|[^|]+", hash_str)  # [ 'id|tag1', 'id|tag2', ... ] 
+                #
+                acs_f.write(acs_str + "\n")
+                ustatic_f.write(ustatic_str + "\n")
+                udyn_f.write(udyn_str + "\n")
+                [ hash_f.write(x + "\n") for x in hash_list ] 
+            else:
+                sys.stdout.write("%s\n"%processing_obj.procRecord(record, emptyField="None"))
+        # catch I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
+        except IOError:
             try:
-                if options.explain:
-                    record = reflect_json.reflect_json(record)
-                    sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
-                elif options.geojson:
-                    # geo-tag coords
-                    geo_rec = processing_obj.asGeoJSON(cnt, record)
-                    if geo_rec is not None:
-                        if not first_geo: 
-                            sys.stdout.write(",")
-                        sys.stdout.write(json.dumps(geo_rec))
-                        first_geo = False
-                # start of database table output
-                # record is parsed and returned as a single list, split and trimmed of delimiters
-                elif options.db:
-                    compRE = re.compile(r"GNIPREMOVE") 
-                    tmp_combined_rec = processing_obj.procRecord(cnt, record, emptyField="\\N")
-                    if compRE.search(tmp_combined_rec): 
-                        sys.stderr.write("Skipping compliance activity: ({}) {}\n"
-                                .format(cnt, tmp_combined_rec) ) 
-                        continue
-                    # otherwise, write to appropriate file objects (from above)
-                    flag = "GNIPSPLIT"      # also hardcoded in twacsDB.py
-                    acs_str, ustatic_str, udyn_str, hash_str = tmp_combined_rec.split(flag) 
-                    # clean up any leading/trailing pipes 
-                    acs_str = acs_str.strip("|")
-                    ustatic_str = ustatic_str.strip("|")
-                    udyn_str = udyn_str.strip("|")
-                    hash_str = hash_str.strip("|")                    # id|tag1|id|tag2|...
-                    hash_list = re.findall("[^|]+\|[^|]+", hash_str)  # [ 'id|tag1', 'id|tag2', ... ] 
-                    #
-                    acs_f.write(acs_str + "\n")
-                    ustatic_f.write(ustatic_str + "\n")
-                    udyn_f.write(udyn_str + "\n")
-                    [ hash_f.write(x + "\n") for x in hash_list ] 
-                else:
-                    sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record, emptyField="None"))
-            # catch I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
+                sys.stdout.close()
             except IOError:
-                try:
-                    sys.stdout.close()
-                except IOError:
-                    pass
-                try:
-                    sys.stderr.close()
-                except IOError:
-                    pass
-                break
-            except UnicodeEncodeError, e:
-                sys.stderr.write("UnicodeEncodeError: error={} ({})\n".format(e, cnt))
-                # use this if you want to see the full troublesome records  
-                #sys.stderr.write("Bad unicode encoding: error={} ({}), record={}\n".format(e, cnt, record))
-
+                pass
+            try:
+                sys.stderr.close()
+            except IOError:
+                pass
+            break
+        except UnicodeEncodeError, e:
+            sys.stderr.write("UnicodeEncodeError: error={} ({})\n".format(e, line_number))
+            # use this if you want to see the full troublesome records  
+            #sys.stderr.write("Bad unicode encoding: error={} ({}), record={}\n".format(e, line_number, record))
+    # close the geojson data structure
     if options.geojson:
-        # sys.stdout.write(json.dumps(geo_d) + "\n")
         sys.stdout.write(']}\n')            
