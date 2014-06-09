@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-__author__="Jinsub Hong"
+__author__="Jinsub Hong, Josh Montague"
 __license__="Simplified BSD"
+
 import sys
 import acscsv
 
-class StntvCSV(acscsv.AcsCSV):
+class StocktwitsNative(acscsv.AcsCSV):
     """Native stocktwits actvities."""
     def __init__(self, delim, options_keypath,options_user,options_struct,options_influence):
-        super(StntvCSV, self).__init__(delim,options_keypath)
+        super(StocktwitsNative, self).__init__(delim,options_keypath)
         self.options_user = options_user
         self.options_struct = options_struct
         self.options_influence = options_influence
