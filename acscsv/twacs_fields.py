@@ -27,16 +27,18 @@ class field_activity_type(acscsv._field):
     
     def __init__(self, json_record):
         super(
-            #field_structure_type
             field_activity_type
             , self).__init__(json_record)
         # self.value is None
         verb = field_verb(json_record).value 
+        rec_id = field_id(json_record).value  
         inReplyTo = "None"
         obj_objtype = "None"
         if "inReplyTo" in json_record:
-            # possible KeyError? (JM)
+            # get the url
             inReplyTo = json_record["inReplyTo"]["link"]
+            # get the original id from the url
+            rec_id = inReplyTo.split("/")[-1]
         if "object" in json_record:
             obj = json_record["object"]
             if "objectType" in obj:
@@ -48,6 +50,8 @@ class field_activity_type(acscsv._field):
             self.value = "Tweet"
         else:
             self.value = "Reply"
+        # tack on the upstream activity id (or this id, for Tweets)  
+        self.value += " ({})".format(rec_id)
 
 
 
@@ -503,27 +507,11 @@ class field_twitter_entities_urls(acscsv._field):
     """Take a dict, assign to self.value the list of dicts at twitter_entities.urls"""
     path = ["twitter_entities", "urls"]
 
-    def __init__(self, json_record):
-        super(
-            field_twitter_entities_urls 
-            , self).__init__(json_record)
-#        # self.value is possibly a list of dicts for each activity url 
-#        if self.value != self.default_value and len( self.value ) == 0:
-#            self.value = self.default_value
-
 
 # hashtags
 class field_twitter_entities_hashtags(acscsv._field):
     """Take a dict, assign to self.value the list of dicts at twitter_entities.hashtags"""
     path = ["twitter_entities", "hashtags"]
-
-    def __init__(self, json_record):
-        super(
-            field_twitter_entities_hashtags 
-            , self).__init__(json_record)
-#        # self.value is possibly a list of dicts for each activity hashtag 
-#        if self.value != self.default_value and len( self.value ) == 0:
-#            self.value = self.default_value
 
 
 # symbols
@@ -531,41 +519,17 @@ class field_twitter_entities_symbols(acscsv._field):
     """Take a dict, assign to self.value the list of dicts at twitter_entities.symbols"""
     path = ["twitter_entities", "symbols"]
 
-    def __init__(self, json_record):
-        super(
-            field_twitter_entities_symbols 
-            , self).__init__(json_record)
-#        # self.value is possibly a list of dicts for each activity symbol 
-#        if self.value != self.default_value and len( self.value ) == 0:
-#            self.value = self.default_value
-
 
 # mentions
 class field_twitter_entities_user_mentions(acscsv._field):
     """Take a dict, assign to self.value the list of dicts at twitter_entities.user_mentions"""
     path = ["twitter_entities", "user_mentions"]
 
-    def __init__(self, json_record):
-        super(
-            field_twitter_entities_user_mentions 
-            , self).__init__(json_record)
-#        # self.value is possibly a list of dicts for each activity user_mention 
-#        if self.value != self.default_value and len( self.value ) == 0:
-#            self.value = self.default_value
-
 
 # media
 class field_twitter_entities_media(acscsv._field):
     """Take a dict, assign to self.value the list of dicts at twitter_entities.media"""
     path = ["twitter_entities", "media"]
-
-    def __init__(self, json_record):
-        super(
-            field_twitter_entities_media 
-            , self).__init__(json_record)
-#        # self.value is possibly a list of dicts for each activity media 
-#        if self.value != self.default_value and len( self.value ) == 0:
-#            self.value = self.default_value
 
 
 
@@ -634,6 +598,13 @@ class field_location_geo_coordinates(acscsv._field):
     """
     path = ["location", "geo", "coordinates"]
 
+    def __init__(self, json_record):
+        super(
+            field_location_geo_coordinates 
+            , self).__init__(json_record)
+        # this list has only been observed to contain another list of the bounding vertices 
+        if self.value != self.default_value:
+            self.value = self.value[0]
 
 
 
