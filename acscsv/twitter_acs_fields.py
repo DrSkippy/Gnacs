@@ -406,7 +406,7 @@ class field_actor_link(acscsv._field):
     path = ["actor", "link"]
 
 
-class field_actor__image(acscsv._field):
+class field_actor_image(acscsv._field):
     """Take a dict, assign to self.value the value of actor.image"""
     path = ["actor", "image"]
 

@@ -4,7 +4,7 @@ __license__="Simplified BSD"
 
 import sys
 import acscsv
-from twacs_fields import *
+from twitter_acs_fields import *
 
 class TwacsCSV(acscsv.AcsCSV):
     """Subset of Twitter fields with specified delimiter.  Please see help for options"""
@@ -70,9 +70,6 @@ class TwacsCSV(acscsv.AcsCSV):
             record.append(acscsv.gnipError)
             record.append(acscsv.gnipRemove)
             return record
-        #
-        #print "get_output_list={}".format(self.get_output_list(d))
-        #
 
         # at this point, verb is an acceptable record 
         return self.get_output_list(d) 
