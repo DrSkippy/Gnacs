@@ -31,7 +31,8 @@ class _field(object):
     key-path (path) to the desired location by overwriting the path attr.
     """
     # set some default values; these can be overwritten in custom classes 
-    default_t_fmt = "%Y-%m-%d %H:%M:%S"
+    #default_t_fmt = "%Y-%m-%d %H:%M:%S"
+    default_t_fmt = "%Y-%m-%dT%H:%M:%S"
     default_value = INTERNAL_EMPTY_FIELD
     #default_value = "\\N"           # escaped \N ==> MySQL NULL
     value = None                    # str representation of the field, often = str( self.value_list ) 
@@ -44,23 +45,11 @@ class _field(object):
     def __repr__(self):
         return self.value
 
-    # original method
-#    def walk_path(self, json_record):
-#        res = json_record
-#        for k in self.path:
-#            if k not in res:
-#                return self.default_value
-#            res = res[k]
-#        # handle the special case where the walk_path found null (JSON) which converts to 
-#        # a Python None. Only use "None" (str version) if it's assigned to self.default_value 
-#        res = res if res is not None else self.default_value
-#        return res
-
     def walk_path(self, json_record):
         res = json_record
         for k in self.path:
             if k not in res or ( type(res[k]) is list and len(res[k]) == 0 ):
-                # paranthetical clause for values with empty lists e.g. twitter_entities
+                # parenthetical clause for values with empty lists e.g. twitter_entities
                 return self.default_value
             res = res[k]
         # handle the special case where the walk_path found null (JSON) which converts to 
@@ -214,11 +203,17 @@ class AcsCSV(object):
                 )
 
     def buildListString(self,l):
-        """Genereic list builder returns a string represenation of list"""
+        """Generic list builder returns a string representation of list"""
         # unicode output of list (without u's)
         res = '['
         for r in l:
-            res += "'" + r + "',"
+            # handle the various types of lists we might see
+            if isinstance(r, list):
+                res += "'" + self.buildListString(r) + "',"
+            elif isinstance(r, str):
+                res += "'" + r + "',"
+            else:
+                res += "'" + str(r) + "',"
         if res.endswith(','):
             res = res[:-1]
         res += ']'
