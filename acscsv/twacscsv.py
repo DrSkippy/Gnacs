@@ -1,14 +1,26 @@
 # -*- coding: UTF-8 -*-
-__author__="Scott Hendrickson"
+__author__="Scott Hendrickson, Josh Montague"
 __license__="Simplified BSD"
+
 import sys
 import acscsv
+from twacs_fields import *
 
 class TwacsCSV(acscsv.AcsCSV):
     """Subset of Twitter fields with specified delimiter.  Please see help for options"""
 
-    def __init__(self, delim, options_keypath, options_geo, options_user, options_rules, options_urls, options_lang, options_influence, options_struct):
-        super(TwacsCSV, self).__init__(delim,options_keypath)
+    def __init__(self
+                , delim
+                , options_keypath
+                , options_geo
+                , options_user
+                , options_rules
+                , options_urls
+                , options_lang
+                , options_influence
+                , options_struct
+                ):
+        super(TwacsCSV, self).__init__(delim, options_keypath)
         self.options_geo = options_geo 
         self.options_user = options_user
         self.options_rules = options_rules
@@ -17,15 +29,22 @@ class TwacsCSV(acscsv.AcsCSV):
         self.options_influence = options_influence
         self.options_struct = options_struct
         
-    def procRecordToList(self,d):
-        """Builds the list of output fields in determined order according to input options"""
+
+    def procRecordToList(self, d):
+        """
+        Take a JSON Activity Streams payload as a Python dictionary. Check activity for system 
+        information and compliance handling. If necessary, return the system info or compliance 
+        message. Otherwise, if the activity is valid, return the result of calling the 
+        appropriate output() method.  
+        """
         record = []
         try:
-            if "verb" in d:
-                verb = d["verb"]
-            else:
+            verb = field_verb(d).value
+            # see: http://support.gnip.com/apis/consuming_streaming_data.html#Consuming 
+            system_msgs = ["error", "warning", "info"]
+            if verb in system_msgs: 
                 msg = "Unidentified meta message"
-                for mtype in ["error", "warning", "info"]:
+                for mtype in system_msgs:
                     if mtype in d:
                         if "message" in d[mtype]:
                             msg = d[mtype]["message"]
@@ -37,7 +56,7 @@ class TwacsCSV(acscsv.AcsCSV):
                 record.append(acscsv.gnipDateTime)
                 record.append(msg)
                 return record
-            if verb == "delete":
+            elif verb == "delete":
                 record.append(d["object"]["id"])
                 record.append(acscsv.gnipDateTime)
                 record.append('-'.join([acscsv.gnipRemove, verb]))
@@ -47,212 +66,134 @@ class TwacsCSV(acscsv.AcsCSV):
                 record.append(acscsv.gnipDateTime)
                 record.append('-'.join([acscsv.gnipRemove, verb]))
                 return record
-            # always first 2 items
-            record.append(d["id"])
-            record.append(d["postedTime"])
-            # add some handling so calling gnacs without a pub is still useful
-            #   n.b.: -stocktwits is native, so no 'verb' to get here
-            #         -put more-specific fields at the beginning to catch them 
-            obj = d["object"]
-            if d["id"].rfind("getglue") != -1 : # getglue 
-                record.append(verb)     # 'body' is inconsistent in gg
-            elif "foursquareCategories" in obj or "foursquareCheckinOffset" in obj:      # fsq
-                record.append(str(obj["geo"]["coordinates"]))
-            elif "wpBlogId" in obj:     # wp
-                record.append(str(obj["wpBlogId"]))
-            elif "tumblrType" in obj:   # tumblr
-                record.append(obj["tumblrType"])
-            elif "body" in d:           # tw, disqus, stocktw,  
-                record.append(self.cleanField(d["body"]))       
-            elif "link" in d:           # ng
-                record.append(d["link"])
-            else:                       # ? 
-                record.append("None")
-            #
-            gnip = {}
-            actor = {}
-            if "gnip" in d:
-                gnip = d["gnip"]
-            if "actor" in d:    # no 'actor' in ng
-                actor = d["actor"]
-            #
-            if self.options_urls:
-                urls = "None"
-                if "urls" in gnip:
-                    urls = self.buildListString([ l["expanded_url"] for l in gnip["urls"]])
-                record.append(urls)
-                twitter_urls = "None"
-                twitter_un_urls = "None"
-                if "twitter_entities" in d:
-                    if "urls" in d["twitter_entities"]:
-                        if len(d["twitter_entities"]["urls"]) > 0:
-                            tmp_url_list = []
-                            tmp_un_url_list = []
-                            for tmp_rec in d["twitter_entities"]["urls"]:
-                                try:
-                                    if "url" in tmp_rec and tmp_rec["url"] is not None:
-                                        tmp_url_list.append(tmp_rec["url"])
-                                    else:
-                                        tmp_url_list.append("None")
-                                except TypeError:
-                                    tmp_url_list = ["twitter_entiteis:urls:url"]
-                                try:
-                                    if "expanded_url" in tmp_rec and tmp_rec["expanded_url"] is not None:
-                                        tmp_un_url_list.append(tmp_rec["expanded_url"])
-                                    else:
-                                        tmp_un_url_list.append("None")
-                                except TypeError:
-                                    tmp_un_urls_list = ["twitter_entities:urls:expanded_url"]
-                            twitter_urls = self.buildListString(tmp_url_list)
-                            twitter_un_urls = self.buildListString(tmp_un_url_list)
-                record.append(twitter_urls)
-                record.append(twitter_un_urls)
-            if self.options_lang:
-                try:
-                    record.append(str([str(l) for l in actor["languages"]]))
-                except UnicodeEncodeError, e:
-                    record.append(str("bad encoding"))
-                glang = "None"
-                if "language" in gnip:
-                    glang = gnip["language"]["value"]
-                record.append(glang)
-                tlang = "None"
-                if "twitter_lang" in d:
-                    tlang = d["twitter_lang"]
-                record.append(tlang)
-            if self.options_rules:
-                rules = '[]'
-                if "matching_rules" in gnip:
-                    rules = self.buildListString([ "%s (%s)"%(l["value"], l["tag"]) for l in gnip["matching_rules"]])
-                record.append(rules)
-            if self.options_geo:
-                geoType = "None"
-                self.geoCoordsList = None
-                geoCoords = "None"
-                if "geo" in d:
-                    if "type" in d["geo"]:
-                        geoType = d["geo"]["type"]
-                        #self.geoCoords = [str(l) for l in d["geo"]["coordinates"]]
-                        self.geoCoordsList = d["geo"]["coordinates"]
-                        geoCoords = str(self.geoCoordsList)
-                record.append(geoCoords)
-                record.append(geoType)
-                locType = "None"
-                locCoords = "None"
-                locName = "None"
-                locCountry = "None"
-                if "location" in d:
-                    locName = self.cleanField(d["location"]["displayName"])
-                    locCountry = self.cleanField(d["location"]["twitter_country_code"])
-                    if "geo" in d["location"] and d["location"]["geo"] is not None:
-                        if "type" in d["location"]["geo"]:
-                            locType = d["location"]["geo"]["type"]
-                            locCoords = str([str(l) for l in d["location"]["geo"]["coordinates"][0]])
-                record.append(locCoords)
-                record.append(locType)
-                record.append(locName)
-                record.append(locCountry)
-                record.append(str(actor["utcOffset"]))
-                dName = "None"
-                if "location" in actor and "displayName" in actor["location"]:
-                    dName = self.cleanField(actor["location"]["displayName"])
-                record.append(dName)
-                # gnip:profileLocations
-                pl_otype = "None"
-                pl_name = "None"
-                # profileLocations:address
-                pl_country = "None"
-                pl_region = "None"
-                pl_countrycode = "None"
-                pl_locality = "None"
-                # profileLocations:geo
-                pl_gtype = "None"
-                pl_coords = "None"
-                if "profileLocations" in gnip:
-                    # n.b. profileLocations is a list, suggests it might include >1 thing eventually
-                    pl = gnip["profileLocations"][0]
-                    if "objectType" in pl:
-                        pl_otype = pl["objectType"]
-                    if "displayName" in pl:
-                        pl_name = pl["displayName"]
-                    if "address" in pl:
-                        adrs = pl["address"]
-                        if "country" in adrs:
-                            pl_country = adrs["country"]
-                        if "region" in adrs:
-                            pl_region = adrs["region"]
-                        if "countryCode" in adrs:
-                            pl_countrycode = adrs["countryCode"]
-                        if "locality" in adrs:
-                            pl_locality = adrs["locality"]
-                    if "geo" in pl:
-                        geo = pl["geo"]
-                        if "type" in geo:
-                            pl_gtype = geo["type"]
-                        if "coordinates" in geo:
-                            pl_coords = str(geo["coordinates"])
-                record.append(pl_name)
-                record.append(pl_otype)
-                record.append(pl_country)
-                record.append(pl_region)
-                record.append(pl_countrycode)
-                record.append(pl_locality)
-                record.append(pl_gtype)
-                record.append(pl_coords)
-                #
-            if self.options_user:
-                record.append(self.cleanField(actor["displayName"]))
-                record.append(self.cleanField(actor["preferredUsername"]))
-                try:
-                    tmp = actor["id"].split(":")[2] #Brian's 1st attempt at Gnacsification
-                except IndexError:
-                    tmp = "actor:id"                    
-                record.append(tmp)
-            if self.options_influence:
-                klout = "None"
-                followers = "None"
-                friends = "None"
-                listed = "None"
-                statuses = "None"
-                if "klout_score" in gnip:
-                    klout = str(gnip["klout_score"])
-                followers = str(actor["followersCount"])
-                friends = str(actor["friendsCount"])
-                listed = str(actor["listedCount"])
-                statuses = str(actor["statusesCount"])
-                record.append(klout)
-                record.append(followers)
-                record.append(friends)
-                record.append(listed)
-                record.append(statuses)
-            if self.options_struct:
-                oid = "None"
-                opt = "None"
-                overb = "None"
-                inReplyTo = "None"
-                if "inReplyTo" in d:
-                    inReplyTo = d["inReplyTo"]["link"]
-                if "object" in d:
-                    obj = d["object"]
-                    if "objectType" in obj:
-                        overb = obj["objectType"]
-                if verb == "share" and overb == "activity":
-                    record.append("Retweet")
-                    if "id" in obj:
-                        oid = obj["id"]
-                    if "postedTime" in obj:
-                        opt = obj["postedTime"]
-                elif inReplyTo == "None":
-                    record.append("Tweet")
-                else:
-                    record.append("Reply")
-                record.append(inReplyTo)
-                record.append(oid)
-                record.append(opt)
-            #
-            return record
         except KeyError:
-            #sys.stderr.write("Field missing from record (%d), skipping\n"%self.cnt)
             record.append(acscsv.gnipError)
             record.append(acscsv.gnipRemove)
             return record
+        #
+        #print "get_output_list={}".format(self.get_output_list(d))
+        #
+
+        # at this point, verb is an acceptable record 
+        return self.get_output_list(d) 
+
+
+    def get_output_list(self, d):
+        """
+        Take a JSON Activity Streams payload as a Python dictionary. Specify the particular 
+        output fields (and their order) by constructing and returning a list of the 
+        desired extractor values. Default values for missing fields are set in the _field class 
+        and can be overridden.  
+        """
+        output_list = [] 
+
+        # base output = id | timestamp | body
+        output_list.append( field_id(d).value )
+        output_list.append( field_postedtime(d).value )
+        output_list.append( field_body(d).value )
+
+        # urls 
+        if self.options_urls:
+            #
+            # TODO: add back this exception handling for -x option
+            # https://github.com/DrSkippy/Gnacs/blob/16dd146fb05d02d7c1e3f282254e6718fd13303f/acscsv/twacscsv.py#L97 
+            #
+            # gnip 
+            val = field_gnip_urls(d).value
+            if isinstance(val, list): 
+                output_list.append( self.buildListString( [ x["expanded_url"] for x in val ] ) )  
+            else: 
+                output_list.append( val )  
+            # twitter
+            val = field_twitter_entities_urls(d).value  
+            if isinstance(val, list):
+                url_list = self.buildListString( [ x["url"] for x in val ] ) 
+                exp_url_list = self.buildListString( [ x["expanded_url"] for x in val ] ) 
+            else:
+                url_list = val
+                exp_url_list = val 
+            output_list.append( url_list )  
+            output_list.append( exp_url_list )  
+    
+        # languages 
+        if self.options_lang:
+            # actor
+            #   - this field has *very* infrequently contained unicode chars. drop them.
+            output_list.append( field_actor_language(d).value.encode('ascii', 'ignore') ) 
+            # classifications
+            output_list.append( field_gnip_language_value(d).value ) 
+            output_list.append( field_twitter_lang(d).value ) 
+    
+        # rules
+        if self.options_rules:
+            val = field_gnip_rules(d).value 
+            if isinstance(val, list):
+                # output: '[" value (tag)", ... ]'
+                output_list.append( 
+                    self.buildListString( 
+                        [ "{} ({})".format( x["value"], x["tag"] ) for x in field_gnip_rules(d).value ]
+                    )
+                ) 
+            else: 
+                output_list.append( val )  
+
+        # geo-related fields
+        if self.options_geo:
+            # geo-tag 
+            val = field_geo_coordinates(d).value
+            if isinstance(val, list):
+                output_list.append( str(val) ) 
+            else:
+                output_list.append( val ) 
+            output_list.append( field_geo_type(d).value )
+            val = field_location_geo_coordinates(d).value 
+            if isinstance(val, list): 
+                output_list.append( str(val) )  
+            else:
+                output_list.append( val )  
+            output_list.append( field_location_geo_type(d).value )
+            output_list.append( field_location_displayname(d).value )  
+            output_list.append( field_location_country_code(d).value )  
+            # user  
+            output_list.append( field_actor_utcoffset(d).value )  
+            output_list.append( field_actor_location_displayname(d).value )  
+            # profileLocations
+            output_list.append( field_gnip_profilelocations_displayname(d).value )  
+            output_list.append( field_gnip_profilelocations_objecttype(d).value )  
+            output_list.append( field_gnip_profilelocations_address_country(d).value )  
+            output_list.append( field_gnip_profilelocations_address_region(d).value )  
+            output_list.append( field_gnip_profilelocations_address_countrycode(d).value )  
+            output_list.append( field_gnip_profilelocations_address_locality(d).value )  
+            output_list.append( field_gnip_profilelocations_geo_type(d).value )  
+            output_list.append( field_gnip_profilelocations_geo_coordinates(d).value )  
+
+        # user
+        if self.options_user:
+            output_list.append( field_actor_displayname(d).value )  
+            output_list.append( field_actor_preferredusername(d).value )  
+            output_list.append( field_actor_id(d).value )  
+            
+        # user connections, klout
+        if self.options_influence:
+            output_list.append( field_gnip_klout_score(d).value )  
+            output_list.append( field_actor_followerscount(d).value )  
+            output_list.append( field_actor_friendscount(d).value )  
+            output_list.append( field_actor_listedcount(d).value )  
+            output_list.append( field_actor_statusesCount(d).value )  
+             
+        # structure
+        if self.options_struct:
+            output_list.append( field_activity_type(d).value )  
+            val = field_object(d).value
+            if isinstance(val, dict):
+                obj_id = field_id( val ).value 
+                output_list.append( obj_id ) 
+            else:
+                output_list.append( val ) 
+        #
+        #
+        #print "output_list=".format(output_list)
+        #
+        # done building output list 
+        return output_list 
+
