@@ -15,7 +15,9 @@ import re
 import os
 import argparse
 from acscsv import *
-# use fastest option available
+# needed only for the pretty-printing
+import json as json_printer
+# use fastest option available for parsing
 try:
     import ujson as json
 except ImportError:
@@ -209,13 +211,16 @@ if "__main__" == __name__:
             )
     #
     first_geo = True 
-    #
     for line_number, record in processing_obj.file_reader(options.file_name): 
         if options.pretty:
-            print json.dumps(record, indent=3, ensure_ascii=False)
+            print json_printer.dumps(record, indent=3, ensure_ascii=False)
             continue 
         try:
             if options.explain:
+                # TODO: fix -x option for new extractors
+                print >>sys.stderr, "\n****\n\nexplain functionality currently unavailable\n\n****\n"
+                sys.exit()
+                ########################################
                 record = reflect_json.reflect_json(record)
                 sys.stdout.write("%s\n"%processing_obj.procRecord(record))
             elif options.geojson:
@@ -254,7 +259,7 @@ if "__main__" == __name__:
                 [ hash_f.write(x + "\n") for x in hash_list ] 
             else:
                 sys.stdout.write("%s\n"%processing_obj.procRecord(record, emptyField="None"))
-        # catch I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
+        # handle I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
         except IOError:
             try:
                 sys.stdout.close()
