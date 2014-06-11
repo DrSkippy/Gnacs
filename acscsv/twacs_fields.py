@@ -80,6 +80,11 @@ class field_objecttype(acscsv._field):
     path = ["objectType"]
     
 
+class field_object(acscsv._field):
+    """Take a dict, assign to self.value the value in the top-level object key.""" 
+    path = ["object"]
+
+
 class field_postedtime(acscsv._field):
     """
     Take a dict, assign to self.value the value in the top-level postedTime key. Timestamp is 
