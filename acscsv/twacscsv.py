@@ -153,7 +153,7 @@ class TwacsCSV(acscsv.AcsCSV):
                 output_list.append( val )  
             output_list.append( field_location_geo_type(d).value )
             output_list.append( field_location_displayname(d).value )  
-            output_list.append( field_location_country_code(d).value )  
+            output_list.append( field_location_twitter_country_code(d).value )  
             # user  
             output_list.append( field_actor_utcoffset(d).value )  
             output_list.append( field_actor_location_displayname(d).value )  
@@ -184,16 +184,7 @@ class TwacsCSV(acscsv.AcsCSV):
         # structure
         if self.options_struct:
             output_list.append( field_activity_type(d).value )  
-            val = field_object(d).value
-            if isinstance(val, dict):
-                obj_id = field_id( val ).value 
-                output_list.append( obj_id ) 
-            else:
-                output_list.append( val ) 
-        #
-        #
-        #print "output_list=".format(output_list)
-        #
+
         # done building output list 
         return output_list 
 
