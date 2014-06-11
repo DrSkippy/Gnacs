@@ -30,9 +30,10 @@ class _field(object):
     but also use child classes to override when necessary. Subclasses also need to define the 
     key-path (path) to the desired location by overwriting the path attr.
     """
+
     # set some default values; these can be overwritten in custom classes 
-    #default_t_fmt = "%Y-%m-%d %H:%M:%S"
-    default_t_fmt = "%Y-%m-%dT%H:%M:%S"
+    # twitter format
+    default_t_fmt = "%Y-%m-%dT%H:%M:%S.000Z" 
     default_value = INTERNAL_EMPTY_FIELD
     #default_value = "\\N"           # escaped \N ==> MySQL NULL
     value = None                    # str representation of the field, often = str( self.value_list ) 
