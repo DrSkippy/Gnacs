@@ -116,7 +116,7 @@ if "__main__" == __name__:
         sys.stdout.write('{"type": "FeatureCollection", "features": [')
     #
     if options.pub.lower().startswith("word") or options.pub.lower().startswith("wp"):
-        processing_obj = wpacscsv.WPacsCSV(delim
+        processing_obj = wordpress_acs.WPacsCSV(delim
 			, options.keypath
 			, options.user
 			, options.rules
@@ -124,7 +124,7 @@ if "__main__" == __name__:
 			, options.struct
             )
     elif options.pub.lower().startswith("disq"):
-        processing_obj = diacscsv.DiacsCSV(delim
+        processing_obj = disqus_acs.DiacsCSV(delim
 			, options.keypath
 			, options.user
 			, options.rules
@@ -133,7 +133,7 @@ if "__main__" == __name__:
 			, options.status
             )
     elif options.pub.lower().startswith("tumb"): 
-        processing_obj = tblracscsv.TblracsCSV(delim
+        processing_obj = tumblr_acs.TblracsCSV(delim
 			, options.keypath
 			, options.user
 			, options.rules
@@ -141,7 +141,7 @@ if "__main__" == __name__:
 			, options.struct
             )
     elif options.pub.lower().startswith("four") or options.pub.lower().startswith("fsq"):
-        processing_obj = fsqacscsv.FsqacsCSV(delim
+        processing_obj = foursquare_acs.FsqacsCSV(delim
 			, options.keypath
 			, options.geo
 			, options.user
@@ -150,7 +150,7 @@ if "__main__" == __name__:
 			, options.struct
             )
     elif options.pub.lower().startswith("get") or options.pub.lower().startswith("gg"):
-        processing_obj = ggacscsv.GgacsCSV(delim
+        processing_obj = getglue_acs.GgacsCSV(delim
 			, options.keypath
 			, options.user
 			, options.rules
@@ -165,20 +165,20 @@ if "__main__" == __name__:
 			, options.influence
             )
     elif options.pub.lower().startswith("st"):
-        processing_obj = stacscsv.StacsCSV(delim
+        processing_obj = stocktwits_acs.StacsCSV(delim
 			, options.user
 			, options.struct
 			, options.influence
             )
     elif options.pub.lower().startswith("news") or options.pub.lower().startswith("ng"):
-        processing_obj = ngacscsv.NGacsCSV(delim
+        processing_obj = newsgator_acs.NGacsCSV(delim
 			, options.keypath
 			, options.urls
 			, options.user
             )
-    # different twacs module!
+    # TODO: take this out of master branch 
     elif options.db:
-        processing_obj = twacsDB.Twacs(delim
+        processing_obj = twitter_acs_DB.Twacs(delim
 			, options.keypath
 			, options.geo
 			, options.user
@@ -199,7 +199,7 @@ if "__main__" == __name__:
         udyn_f = codecs.open( data_dir + '/table_users_dynamic.csv', 'wb', 'utf8') 
         hash_f = codecs.open( data_dir + '/table_hashtags.csv', 'wb', 'utf8') 
     else:
-        processing_obj = twacscsv.TwacsCSV(delim
+        processing_obj = twitter_acs.TwacsCSV(delim
 			, options.keypath
 			, options.geo
 			, options.user
