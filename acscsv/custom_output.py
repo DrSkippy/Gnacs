@@ -23,7 +23,7 @@ class TestCSV( twitter_acs.TwacsCSV ):
     
     def get_output_list(self, d):
         """
-        This method overwrites the output method in the parent class. Append values from 
+        Use this method to overwrite the output method in the parent class. Append values from 
         desired payload fields to the output list, which is returned at the end of this method. 
         
         Take a JSON Activity Streams payload as a Python dictionary. 
