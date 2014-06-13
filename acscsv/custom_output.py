@@ -11,7 +11,16 @@ import acscsv
 from twitter_acs_fields import *
 import twitter_acs
 
-# change the parent class if needed
+
+#
+# define any custom field extractor classes here. inherit from acscsv.* as needed 
+#
+
+
+
+#
+# define your main subclass here (eg inherit from twitter_acs.TwacsCSV)
+#
 class TestCSV( twitter_acs.TwacsCSV ):
     """
     Test class for experimenting with new output combinations. This class should inherit
