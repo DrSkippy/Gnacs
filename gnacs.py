@@ -87,12 +87,9 @@ def gnacs_args():
     parser.add_argument("-k","--keypath", dest="keypath"
             , default=None
 			, help="returns a value from a path of the form 'key:value'")
-    parser.add_argument("-D","--database", action="store_true", dest="db"
-            , default=False
-			, help="directs stdout to file objects for uploading to mysql db tables")
     return parser
 
-if "__main__" == __name__:
+if __name__ == "__main__":
     """Use gnacs delimited-field parsing libraries as a command line tool to parse a series of JSON
     formatted actvities from file, compressed file or standard input (stdin)."""
     
@@ -110,9 +107,7 @@ if "__main__" == __name__:
         delim = "," # csv delimiter
     elif options.geojson:
         options.geo = True 
-        # NOTE: When using geojson, we have an in-memory structure
-        # example record is geo_d = {"type": "FeatureCollection", "features": []}
-        # so we do this in two parts. See below for completion of structure.
+        # note: geojson option creates an in-memory structure
         sys.stdout.write('{"type": "FeatureCollection", "features": [')
     #
     if options.pub.lower().startswith("word") or options.pub.lower().startswith("wp"):
@@ -176,28 +171,6 @@ if "__main__" == __name__:
 			, options.urls
 			, options.user
             )
-    # TODO: take this out of master branch 
-    elif options.db:
-        processing_obj = twitter_acs_DB.Twacs(delim
-			, options.keypath
-			, options.geo
-			, options.user
-			, options.rules
-			, options.urls
-			, options.lang
-			, options.influence
-			, options.struct
-			, options.db
-            )
-        # create a new data directory (change as needed)
-        data_dir = os.environ['HOME'] + "/gnacs_db"
-        if not os.path.exists(data_dir):
-            os.mkdir(data_dir)
-        # open file objects for writing below 
-        acs_f = codecs.open( data_dir + '/table_activities.csv', 'wb', 'utf8') 
-        ustatic_f = codecs.open( data_dir + '/table_users_static.csv', 'wb', 'utf8') 
-        udyn_f = codecs.open( data_dir + '/table_users_dynamic.csv', 'wb', 'utf8') 
-        hash_f = codecs.open( data_dir + '/table_hashtags.csv', 'wb', 'utf8') 
     else:
         processing_obj = twitter_acs.TwacsCSV(delim
 			, options.keypath
@@ -217,10 +190,10 @@ if "__main__" == __name__:
             continue 
         try:
             if options.explain:
-                # TODO: fix -x option for new extractors
+                #### TODO: fix -x option for new extractors ####
                 print >>sys.stderr, "\n****\n\nexplain functionality currently unavailable\n\n****\n"
                 sys.exit()
-                ########################################
+                ################################################
                 record = reflect_json.reflect_json(record)
                 sys.stdout.write("%s\n"%processing_obj.procRecord(record))
             elif options.geojson:
@@ -231,32 +204,6 @@ if "__main__" == __name__:
                         sys.stdout.write(",")
                     sys.stdout.write(json.dumps(geo_rec))
                     first_geo = False
-            # start of database table output
-            # record is parsed and returned as a single list, split and trimmed of delimiters
-            elif options.db:
-                #
-                # TODO: swap procRecord call for get_source_list(), split accordingly, clean 
-                #           up next 30 loc
-                compRE = re.compile(r"GNIPREMOVE") 
-                tmp_combined_rec = processing_obj.procRecord(record, emptyField="\\N")
-                if compRE.search(tmp_combined_rec): 
-                    sys.stderr.write("Skipping compliance activity: ({}) {}\n"
-                            .format(line_number, tmp_combined_rec) ) 
-                    continue
-                # otherwise, write to appropriate file objects (from above)
-                flag = "GNIPSPLIT"      # also hardcoded in twacsDB.py
-                acs_str, ustatic_str, udyn_str, hash_str = tmp_combined_rec.split(flag) 
-                # clean up any leading/trailing pipes 
-                acs_str = acs_str.strip("|")
-                ustatic_str = ustatic_str.strip("|")
-                udyn_str = udyn_str.strip("|")
-                hash_str = hash_str.strip("|")                    # id|tag1|id|tag2|...
-                hash_list = re.findall("[^|]+\|[^|]+", hash_str)  # [ 'id|tag1', 'id|tag2', ... ] 
-                #
-                acs_f.write(acs_str + "\n")
-                ustatic_f.write(ustatic_str + "\n")
-                udyn_f.write(udyn_str + "\n")
-                [ hash_f.write(x + "\n") for x in hash_list ] 
             else:
                 sys.stdout.write("%s\n"%processing_obj.procRecord(record, emptyField="None"))
         # handle I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
@@ -277,3 +224,4 @@ if "__main__" == __name__:
     # close the geojson data structure
     if options.geojson:
         sys.stdout.write(']}\n')            
+
