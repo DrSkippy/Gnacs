@@ -19,7 +19,7 @@ import twitter_acs
 
 
 #
-# define your main subclass here (eg inherit from twitter_acs.TwacsCSV)
+# edit the subclass here, as needed (eg inherit from twitter_acs.TwacsCSV)
 #
 class TestCSV( twitter_acs.TwacsCSV ):
     """
