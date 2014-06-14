@@ -96,16 +96,18 @@ class field_postedtime(acscsv._field):
     """
     path = ["postedTime"]
 
-    def __init__(self, json_record):
-        super(
-            field_postedtime 
-            , self).__init__(json_record)
-        # self.value is a datetime string 
-        input_fmt = "%Y-%m-%dT%H:%M:%S.000Z"
-        self.value = datetime.strptime( 
-                        self.value, input_fmt 
-                        ).strftime( 
-                            self.default_t_fmt ) 
+    # keep this around for possible regex+uniform output extension
+#    def __init__(self, json_record):
+#        super(
+#            field_postedtime 
+#            , self).__init__(json_record)
+#        # self.value is a datetime string 
+#        input_fmt = "%Y-%m-%dT%H:%M:%S.000Z"
+#        # add a regex match on the input to have consistent output across all input streams? 
+#        self.value = datetime.strptime( 
+#                        self.value, input_fmt 
+#                        ).strftime( 
+#                            self.default_t_fmt ) 
 
 
 class field_body(acscsv._field):
