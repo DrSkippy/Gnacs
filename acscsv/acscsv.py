@@ -211,7 +211,8 @@ class AcsCSV(object):
             # handle the various types of lists we might see
             if isinstance(r, list):
                 res += "'" + self.buildListString(r) + "',"
-            elif isinstance(r, str):
+            #elif isinstance(r, str):
+            elif isinstance(r, str) or isinstance(r, unicode):
                 res += "'" + r + "',"
             else:
                 res += "'" + str(r) + "',"
@@ -254,7 +255,7 @@ class AcsCSV(object):
 
     def asGeoJSON(self, x):
         """Get results as GeoJSON representation."""
-        recordList = self.procRecordToList(x)
+        record_list = self.procRecordToList(x)
         if self.__class__.__name__ == "TwacsCSV" and self.options_geo:
             if self.geoCoordsList is None:
                 return
@@ -263,7 +264,16 @@ class AcsCSV(object):
             lon_lat = self.geo_coords_list
         else:
             return {"Error":"This publisher doesn't have geo"}
-        return {"type": "Feature", "geometry": { "type": "Point", "coordinates": lon_lat }, "properties": {"id": recordList[0]} }
+        return { 
+                "type": "Feature"
+                , "geometry": { 
+                                "type": "Point"
+                                , "coordinates": lon_lat 
+                              }
+                , "properties": {
+                                "id": record_list[0]
+                                } 
+                }
     
     def keyPath(self,d):
         """Get a generic key path specified at run time."""
