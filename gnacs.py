@@ -45,7 +45,7 @@ def gnacs_args():
 			, help="Include geo fields")
     parser.add_argument("-i", "--influence", action="store_true", dest="influence"
             , default=False
-			, help="Show user's influence metrics")
+			, help="Show user's influence metrics (Twitter only)")
     parser.add_argument("-c","--csv", action="store_true", dest="csv"
             , default=False
 			, help="Comma-delimited output (, default is | without quotes)")
@@ -191,7 +191,7 @@ if __name__ == "__main__":
         try:
             if options.explain:
                 #### TODO: fix -x option for new extractors ####
-                print >>sys.stderr, "\n****\n\nexplain functionality currently unavailable\n\n****\n"
+                print >>sys.stderr, "\n****\n\n'explain' functionality currently unavailable\n\n****\n"
                 sys.exit()
                 ################################################
                 record = reflect_json.reflect_json(record)
@@ -205,7 +205,8 @@ if __name__ == "__main__":
                     sys.stdout.write(json.dumps(geo_rec))
                     first_geo = False
             else:
-                sys.stdout.write("%s\n"%processing_obj.procRecord(record, emptyField="None"))
+                #sys.stdout.write("%s\n"%processing_obj.procRecord(record, emptyField="None"))
+                sys.stdout.write(u"{}\n".format(processing_obj.procRecord(record, emptyField="None")))
         # handle I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
         except IOError:
             try:
@@ -217,9 +218,11 @@ if __name__ == "__main__":
             except IOError:
                 pass
             break
-        except UnicodeEncodeError, e:
-            sys.stderr.write("UnicodeEncodeError: error={} ({})\n".format(e, line_number))
-            # use this if you want to see the full troublesome records  
+        # add a fix for this at the source!
+#        except UnicodeEncodeError, e:
+#            sys.stderr.write("UnicodeEncodeError: error={} ({})\n".format(e, line_number))
+            
+            ## use this if you want to see the full troublesome records  
             #sys.stderr.write("Bad unicode encoding: error={} ({}), record={}\n".format(e, line_number, record))
     # close the geojson data structure
     if options.geojson:
