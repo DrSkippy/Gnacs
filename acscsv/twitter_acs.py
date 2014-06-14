@@ -138,8 +138,11 @@ class TwacsCSV(acscsv.AcsCSV):
         if self.options_geo:
             # geo-tag 
             val = field_geo_coordinates(d).value
+            # keep self.geoCoordsList for backward compatibility
+            self.geoCoordsList = None
             if isinstance(val, list):
                 output_list.append( str(val) ) 
+                self.geoCoordsList = val 
             else:
                 output_list.append( val ) 
             output_list.append( field_geo_type(d).value )
