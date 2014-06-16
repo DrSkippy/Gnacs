@@ -8,7 +8,7 @@ import json
 import acscsv
 
 # for custom twitter output, import both the fields module and the code module
-from twitter_acs_Fields import *
+from twitter_acs_fields import *
 import twitter_acs
 
 
