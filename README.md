@@ -1,6 +1,4 @@
-# ``gnacs``
-
-## The Gnip Normalized ACtivitieS parser
+## _G_nip _N_ormalized _AC_tivitie_S_ parser
 
 ``gnacs`` parses JSON activity streams from Gnip's [data APIs](http://gnip.com/products/) and output delimited, ordered fields (csv-like). Command-line options allow for some customization of the output, and a framework for more involved extensions is outlined below. It also includes a thin handler for terms of service compliance. 
 
@@ -24,7 +22,7 @@ If you don't have a `C` complier:
 
 ### Usage
 
-``gnacs`` is commonly used in one of two manners: either as a command-line utility (works with ``stdin`` and ``stdout``), or as imported modules within other Python code. The supported sources are currently: 
+``gnacs`` is commonly used in one of two manners: either as a command-line utility (works with ``stdin`` and ``stdout``), or as imported modules within other Python code. Supported data sources: 
 
 - Twitter
 - Tumblr
@@ -74,7 +72,7 @@ For exact payload values returned by the various options, you can dig into the c
 
 A handful of sample data files are found in ``data/`` for experimentation. Some examples of usage: 
 
-"Prettifying" JSON
+**"Prettify" JSON**
 
     $ ./gnacs.py -p data/tumblr.sample.json 
     {
@@ -99,7 +97,7 @@ A handful of sample data files are found in ``data/`` for experimentation. Some 
       ], 
     ...
 
-Including the user, language, and structure options, while specifying that the input data is from Disqus: 
+**Include the user, language, and structure options, while specifying that the input data is from Disqus** 
 
 
     $ cat data/disqus_sample.json | ./gnacs.py -ultz disqus
@@ -109,7 +107,9 @@ Including the user, language, and structure options, while specifying that the i
     tag:gnip.disqus.com:2012:comment/hjkqvk/update/2013-03-17T17:55:59/73137b5b41df0a1e51183774150849b5a0c90d81b095378ac72309a43b26994f|2013-03-17T21:55:59+00:00|@Lô el Magnifico oui zen cool !|es|aasak|43t8by|http://www.eurosport.fr/formule-1/grand-prix-d-australie/2013/photos-les-girlfriends-des-pilotes-de-f1_sto3671086/story.shtml|hjk4l0|960y6|9s241
     ...
 
-The geojson option (``-j``) will output a [geojson-compliant](http://geojson.org/geojson-spec.html) data structure. This is particularly convenient for posting to a [gist](https://gist.github.com/jrmontag/9980ee3f79154ec81bff) or anywhere on [Github](data/twitter_sample.geojson), where it is magically rendered into the corresponding map. 
+**GeoJSON output**
+
+The ``-j`` option will process activities with geo-coordinates (all Foursquare activities, and geo-tagged Twitter activities) and output a [GeoJSON-compliant](http://geojson.org/geojson-spec.html) data structure. This is particularly convenient for posting to a [gist](https://gist.github.com/jrmontag/9980ee3f79154ec81bff) or anywhere on [GitHub](data/twitter_sample.geojson), where it is magically rendered into the corresponding map. 
 
     $ ./gnacs.py -jz fsq data/foursquare_sample.json 
     {type: "FeatureCollection", features: [{geometry: {type: "Point",coordinates: [-101.0379045,47.29088246]}
@@ -118,33 +118,32 @@ The geojson option (``-j``) will output a [geojson-compliant](http://geojson.org
 
 ### Customized output
 
-One of the goals of ``gnacs`` is to make programmatic extraction of specific payload fields as easy as possible. Below is a workflow for extending the existing framework to create custom output without modifying the core code. The brief overview is as follows (longer instructions, below): on a new branch of ``master``, edit the ``custom_output.py`` module with the appropriate output fields, and then send it data via ``stdin``. 
+*Note:* this section is currently only applicable to Activity Streams data from Twitter.
 
-The more rigorous explanation will also parallel exploration of a built-in example, via the GitHub view of the repo. 
+One of the goals of ``gnacs`` is to make easy the programmatic creation of delimited output of user-specified fields from the Activity Streams payloads. Below is a workflow for extending the existing framework to create custom output without modifying the core code. Briefly, you'll make a new branch, and edit a new module that takes data from ``stdin`` and sends it to ``stdout``. A more lengthy description follows (along with pointers to an example branch in _[ sidenotes ]_ ). 
 
-To start working on your custom output, begin in the ``master`` branch, and create a new branch, appropriately named for your amazing new output format. The new branch will begin identical to ``master``. _\[ To see an example of what this looks like, view the ``demo-geo`` branch [on Github](https://github.com/DrSkippy/Gnacs/tree/demo-geo). \]_ 
+To start working on your custom output, pull the most recent changes to ``master`` and make a new branch, appropriately named for your amazing new output format _[ see the ``demo-geo`` branch ]_. 
 
     git checkout master         # if you're not already in it
+    git pull upstream master    # assumes you've set it to DrSkippy 
     git branch new-output       # make it descriptive 
 
-From within the ``acscsv`` directory, copy the ``custom_output.py`` module to something that suggests your new use-case, and open it up to edit.  _\[ Note the dated ``...geo-output.py`` module in the ``demo-geo`` branch. \]_ 
+From within the ``acscsv`` directory, copy the ``custom_output.py`` module to something that suggests your new use-case, and open it up to edit _[ see the dated ``...geo-output.py`` module in the ``demo-geo`` branch. ]_. 
 
     cp custom_output.py 2014-06_new-output.py    # again, descriptive is good 
 
-There is one place where you need to add code to your new module, and two places where you *may* way to add some code. The place you need to add code is the ``get_output_list()`` method. This is where you define the fields and order of the delimited output. To customize the fields, simply append (consecutively) all of the fields that you want in the output. The fields are identified by classes defined in the ``twitter_acs_fields.py`` module. The class names are ``Field_`` followed by the set of keys used to obtain the final value. For many uses, this method may be the only thing you need to edit. 
+There is one place where you **need** to add code to your new module, and two places where you _may_ want to add some code. The place you need to add code is the ``get_output_list()`` method. This is where you define the fields and order of the delimited output. To customize the fields, simply append (consecutively) all of the fields that you want in the output. The fields are identified by classes defined in the [twitter_acs_fields.py](acscsv/twitter_acs_fields.py) module. The class names are ``Field_`` followed by the set of keys used to obtain the final value. For many uses, this method may be the only thing you need to edit. 
 
-One of other two places where you may like to add some code are above the ``TestCSV`` class, where you can define custom field classes _\[ see, for example the customized module in the ``mysql`` branch) \]_. This is a useful place to e.g. further edit the ``self.value`` of a ``Field_*`` extractor. The other place is at the bottom, in the ``for`` loop that writes the data to ``stdout``. If you want to do further manipulation of your output data (which is likely a string, created from ``output_list``), you can do that here. _\[ see the bottom of the customized module in the ``mysql`` branch \]_.  
+One of other two places where you may like to add code is above the ``TestCSV`` class where you can define custom field classes. This is a useful place to e.g. further edit the ``self.value`` of a ``Field_*`` extractor. The other place is at the very bottom (``__name__ == __main__`` section), in the ``for`` loop that writes the data to ``stdout``. If you want to do further manipulation of your output data (which is likely a string created from ``output_list``), you can do that here. _[ See the top and bottom of the customized module in the ``mysql`` branch for examples of all of these changes ]_  
 
-To test your new module, run the Twitter sample data through your new module (make it executable if it's not already). For example, using the ``custom_output.py`` template in ``master``:
+To test your new module, send the Twitter sample JSON data through your new module (make it executable if it's not already). For example, using the ``custom_output.py`` template in ``master``:
 
     $ cat ~/Gnacs/data/twitter_sample.json | ./custom_output.py 
     TR|351835317671690241|uykugibisiyok|None
     US|351835317604593666|CoBerg_|[47.29088246, -101.0379045]
     JP|351835317747191808|yamasyoyamasyo|[35.70675048, 139.84273005]
 
-*Notes*:
-- For now, this is only possible with Twitter Activity Streams data, but we hope to expand this to other sources in the future.
-- Keeping your custom output in a separate module means that you can (optionally) copy that file somewhere for safe keeping if you need to. Otherwise, you can simply delete your branch when you're through. 
+Keeping your custom output in a separate module means that you can (optionally) copy that file somewhere for safe keeping if you need to. Otherwise, you can simply delete your branch when you're through. 
  
 
 ### Contribution 
@@ -154,7 +153,10 @@ If you would like to contribute code to the core ``gnacs`` code, feel free to ed
 
 --------------------------
 
-(coming soon: test framework & doc generation)
+coming soon: 
+
+- test framework & instructions 
+- doc generation & instructions
 
      sudo pip install sphinx autodoc ghp-import sphinx-argparse
 
