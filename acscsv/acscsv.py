@@ -92,19 +92,19 @@ class _Field(object):
         return res
 
 
-class _Limited_Field(_Field):
+class _LimitedField(_Field):
     #TODO: is there a better way that this class and the fix_length() method in _Field class
     #       could be combined?
     """  
     Takes JSON record (in python dict form) and optionally a maximum length (limit, 
     with default length=5). Uses parent class _Field() to assign the appropriate value 
     to self.value. When self.value is a list of dictionaries, 
-    inheriting from _Limited_Field() class allows for the extraction and combination of 
+    inheriting from _LimitedField() class allows for the extraction and combination of 
     an arbitrary number of fields within self.value into self.value_list.
 
     Ex: if your class would lead to having 
     self.value = [ {'a': 1, 'b': 2, 'c': 3}, {'a': 4, 'b': 5, 'c': 6} ], and what you'd like 
-    is a list that looks like [ 1, 2, 4, 5 ], inheriting from _Limited_Field() allows you 
+    is a list that looks like [ 1, 2, 4, 5 ], inheriting from _LimitedField() allows you 
     to overwrite the fields list ( fields=["a", "b"] ) to obtain this result. 
     Finally, self.value is set to a string representation of the final self.value_list.
     """
@@ -115,7 +115,7 @@ class _Limited_Field(_Field):
 
     def __init__(self, json_record, limit=1):
         super(
-            _Limited_Field 
+            _LimitedField 
             , self).__init__(json_record)
         # self.value is possibly a list of dicts for each activity media object 
         if self.fields:
@@ -131,7 +131,7 @@ class _Limited_Field(_Field):
 
 
 # TODO:
-# - consolidate _Limited_Field() & fix_length() if possible 
+# - consolidate _LimitedField() & fix_length() if possible 
 # - replace 2-level dict traversal (eg profileLocation base class) with acscsv.walk_path() or 
 #       similar helper method 
 
