@@ -4,7 +4,7 @@ __license__="Simplified BSD"
 
 import sys
 import acscsv
-from twitter_acs_Fields import *
+from twitter_acs_fields import *
 
 class TwacsCSV(acscsv.AcsCSV):
     """Subset of Twitter fields with specified delimiter.  Please see help for options"""
