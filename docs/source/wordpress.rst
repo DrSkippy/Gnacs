@@ -1,6 +1,6 @@
-Automattic Wordpress Model
-==========================
+Automattic (Wordpress) Model
+============================
 
-    .. automodule:: acscsv.wpacscsv
+    .. automodule:: acscsv.wordpress_acs
         :members:
 

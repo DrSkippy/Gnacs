@@ -1,6 +1,6 @@
 Tumblr Model
 ============
 
-    .. automodule:: acscsv.tblracscsv
+    .. automodule:: acscsv.tumblr_acs
         :members:
 

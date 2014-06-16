@@ -6,6 +6,8 @@
 Welcome to gnacs's documentation!
 =================================
 
+This is a work in progress. Stay tuned.
+
 Publisher Modules
 *****************
 

@@ -1,6 +1,6 @@
 Foursquare Model
 ================
 
-    .. automodule:: acscsv.fsqacscsv
+    .. automodule:: acscsv.foursquare_acs
         :members:
 
