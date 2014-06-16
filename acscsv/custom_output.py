@@ -21,7 +21,7 @@ import twitter_acs
 #
 # edit the subclass here, as needed (eg inherit from twitter_acs.TwacsCSV)
 #
-class TestCSV( twitter_acs.TwacsCSV ):
+class CustomCSV( twitter_acs.TwacsCSV ):
     """
     Test class for experimenting with new output combinations. This class should inherit
     from the appropriate module.class in the core library. Compliance and invalid records 
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     # Get the appropriate object by mocking the constructor in the main gnacs.py code. most 
     #   common command-line options (flags) don't matter since we're explicitly defining the 
     #   fields to be printed in the method above 
-    processing_obj = TestCSV("|", None, *[True]*7) 
+    processing_obj = CustomCSV("|", None, *[True]*7) 
 
     line_number = 0 
     for r in sys.stdin: 
