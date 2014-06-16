@@ -7,7 +7,7 @@ __all__ = [
         , 'stocktwits_acs'
         , 'stocktwits_native'
         , 'twitter_acs'
-        , 'twitter_acs_fields'
+        , 'twitter_acs_Fields'
         , 'tumblr_acs'
         , 'wordpress_acs'
         ]

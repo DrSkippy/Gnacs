@@ -8,7 +8,7 @@ import json
 import acscsv
 
 # for custom twitter output, import both the fields module and the code module
-from twitter_acs_fields import *
+from twitter_acs_Fields import *
 import twitter_acs
 
 
@@ -40,16 +40,16 @@ class TestCSV( twitter_acs.TwacsCSV ):
         output_list = [] 
 
         # twitter country code
-        output_list.append( field_location_twitter_country_code(d).value )
+        output_list.append( Field_location_twitter_country_code(d).value )
 
         # activity id 
-        output_list.append( field_id(d).value )
+        output_list.append( Field_id(d).value )
 
         # username 
-        output_list.append( field_actor_preferredusername(d).value )
+        output_list.append( Field_actor_preferredusername(d).value )
 
         # geo-tag coords (returns a list, cast to str)
-        output_list.append( str(field_geo_coordinates(d).value) )
+        output_list.append( str(Field_geo_coordinates(d).value) )
 
 
         # done building output list 

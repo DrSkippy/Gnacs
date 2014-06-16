@@ -4,7 +4,7 @@ __license__="Simplified BSD"
 
 import sys
 import acscsv
-from twitter_acs_fields import *
+from twitter_acs_Fields import *
 
 class TwacsCSV(acscsv.AcsCSV):
     """Subset of Twitter fields with specified delimiter.  Please see help for options"""
@@ -39,7 +39,7 @@ class TwacsCSV(acscsv.AcsCSV):
         """
         record = []
         try:
-            verb = field_verb(d).value
+            verb = Field_verb(d).value
             # see: http://support.gnip.com/apis/consuming_streaming_data.html#Consuming 
             system_msgs = ["error", "warning", "info"]
             if verb in system_msgs: 
@@ -79,15 +79,15 @@ class TwacsCSV(acscsv.AcsCSV):
         """
         Take a JSON Activity Streams payload as a Python dictionary. Specify the particular 
         output fields (and their order) by constructing and returning a list of the 
-        desired extractor values. Default values for missing fields are set in the _field class 
+        desired extractor values. Default values for missing fields are set in the _Field class 
         and can be overridden.  
         """
         output_list = [] 
 
         # base output = id | timestamp | body
-        output_list.append( field_id(d).value )
-        output_list.append( field_postedtime(d).value )
-        output_list.append( field_body(d).value )
+        output_list.append( Field_id(d).value )
+        output_list.append( Field_postedtime(d).value )
+        output_list.append( Field_body(d).value )
 
         # urls 
         if self.options_urls:
@@ -96,13 +96,13 @@ class TwacsCSV(acscsv.AcsCSV):
             # https://github.com/DrSkippy/Gnacs/blob/16dd146fb05d02d7c1e3f282254e6718fd13303f/acscsv/twacscsv.py#L97 
             #
             # gnip 
-            val = field_gnip_urls(d).value
+            val = Field_gnip_urls(d).value
             if isinstance(val, list): 
                 output_list.append( self.buildListString( [ x["expanded_url"] for x in val ] ) )  
             else: 
                 output_list.append( val )  
             # twitter
-            val = field_twitter_entities_urls(d).value  
+            val = Field_twitter_entities_urls(d).value  
             if isinstance(val, list):
                 url_list = self.buildListString( [ x["url"] for x in val ] ) 
                 exp_url_list = self.buildListString( [ x["expanded_url"] for x in val ] ) 
@@ -116,19 +116,19 @@ class TwacsCSV(acscsv.AcsCSV):
         if self.options_lang:
             # actor
             #   - this field has *very* infrequently contained unicode chars. drop them.
-            output_list.append( field_actor_language(d).value.encode('ascii', 'ignore') ) 
+            output_list.append( Field_actor_language(d).value.encode('ascii', 'ignore') ) 
             # classifications
-            output_list.append( field_gnip_language_value(d).value ) 
-            output_list.append( field_twitter_lang(d).value ) 
+            output_list.append( Field_gnip_language_value(d).value ) 
+            output_list.append( Field_twitter_lang(d).value ) 
     
         # rules
         if self.options_rules:
-            val = field_gnip_rules(d).value 
+            val = Field_gnip_rules(d).value 
             if isinstance(val, list):
                 # output: '[" value (tag)", ... ]'
                 output_list.append( 
                     self.buildListString( 
-                        [ "{} ({})".format( x["value"], x["tag"] ) for x in field_gnip_rules(d).value ]
+                        [ "{} ({})".format( x["value"], x["tag"] ) for x in Field_gnip_rules(d).value ]
                     )
                 ) 
             else: 
@@ -137,7 +137,7 @@ class TwacsCSV(acscsv.AcsCSV):
         # geo-related fields
         if self.options_geo:
             # geo-tag 
-            val = field_geo_coordinates(d).value
+            val = Field_geo_coordinates(d).value
             # keep self.geoCoordsList for backward compatibility
             self.geoCoordsList = None
             if isinstance(val, list):
@@ -145,45 +145,45 @@ class TwacsCSV(acscsv.AcsCSV):
                 self.geoCoordsList = val 
             else:
                 output_list.append( val ) 
-            output_list.append( field_geo_type(d).value )
-            val = field_location_geo_coordinates(d).value 
+            output_list.append( Field_geo_type(d).value )
+            val = Field_location_geo_coordinates(d).value 
             if isinstance(val, list): 
                 output_list.append( str(val) )  
             else:
                 output_list.append( val )  
-            output_list.append( field_location_geo_type(d).value )
-            output_list.append( field_location_displayname(d).value )  
-            output_list.append( field_location_twitter_country_code(d).value )  
+            output_list.append( Field_location_geo_type(d).value )
+            output_list.append( Field_location_displayname(d).value )  
+            output_list.append( Field_location_twitter_country_code(d).value )  
             # user  
-            output_list.append( field_actor_utcoffset(d).value )  
-            output_list.append( field_actor_location_displayname(d).value )  
+            output_list.append( Field_actor_utcoffset(d).value )  
+            output_list.append( Field_actor_location_displayname(d).value )  
             # profileLocations
-            output_list.append( field_gnip_profilelocations_displayname(d).value )  
-            output_list.append( field_gnip_profilelocations_objecttype(d).value )  
-            output_list.append( field_gnip_profilelocations_address_country(d).value )  
-            output_list.append( field_gnip_profilelocations_address_region(d).value )  
-            output_list.append( field_gnip_profilelocations_address_countrycode(d).value )  
-            output_list.append( field_gnip_profilelocations_address_locality(d).value )  
-            output_list.append( field_gnip_profilelocations_geo_type(d).value )  
-            output_list.append( field_gnip_profilelocations_geo_coordinates(d).value )  
+            output_list.append( Field_gnip_profilelocations_displayname(d).value )  
+            output_list.append( Field_gnip_profilelocations_objecttype(d).value )  
+            output_list.append( Field_gnip_profilelocations_address_country(d).value )  
+            output_list.append( Field_gnip_profilelocations_address_region(d).value )  
+            output_list.append( Field_gnip_profilelocations_address_countrycode(d).value )  
+            output_list.append( Field_gnip_profilelocations_address_locality(d).value )  
+            output_list.append( Field_gnip_profilelocations_geo_type(d).value )  
+            output_list.append( Field_gnip_profilelocations_geo_coordinates(d).value )  
 
         # user
         if self.options_user:
-            output_list.append( field_actor_displayname(d).value )  
-            output_list.append( field_actor_preferredusername(d).value )  
-            output_list.append( field_actor_id(d).value )  
+            output_list.append( Field_actor_displayname(d).value )  
+            output_list.append( Field_actor_preferredusername(d).value )  
+            output_list.append( Field_actor_id(d).value )  
             
         # user connections, klout
         if self.options_influence:
-            output_list.append( field_gnip_klout_score(d).value )  
-            output_list.append( field_actor_followerscount(d).value )  
-            output_list.append( field_actor_friendscount(d).value )  
-            output_list.append( field_actor_listedcount(d).value )  
-            output_list.append( field_actor_statusesCount(d).value )  
+            output_list.append( Field_gnip_klout_score(d).value )  
+            output_list.append( Field_actor_followerscount(d).value )  
+            output_list.append( Field_actor_friendscount(d).value )  
+            output_list.append( Field_actor_listedcount(d).value )  
+            output_list.append( Field_actor_statusesCount(d).value )  
              
         # structure
         if self.options_struct:
-            output_list.append( field_activity_type(d).value )  
+            output_list.append( Field_activity_type(d).value )  
 
         # done building output list 
         return output_list 

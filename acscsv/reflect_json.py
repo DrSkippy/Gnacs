@@ -21,10 +21,10 @@ def walk_label(x, label=None):
     if type(x) == type({}):
         for field in x:
             if label is None:
-                new_field = field
+                new_Field = field
             else:
-                new_field = "%s:%s"%(label, field)
-            x[field] = walk_label(x[field], label=new_field)
+                new_Field = "%s:%s"%(label, field)
+            x[field] = walk_label(x[field], label=new_Field)
     elif type(x) == type([]):
         if len(x) > 0:
             a = x[0]

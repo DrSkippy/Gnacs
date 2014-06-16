@@ -23,7 +23,7 @@ gnipRemove = "GNIPREMOVE"
 gnipDateTime = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.000Z")
 INTERNAL_EMPTY_FIELD = "GNIPEMPTYFIELD"
 
-class _field(object):
+class _Field(object):
     """
     Base class for extracting the desired value at the end of a series of keys in a JSON Activity 
     Streams payload. Set the application-wide default value (for e.g. missing values) here, 
@@ -92,19 +92,19 @@ class _field(object):
         return res
 
 
-class _limited_field(_field):
-    #TODO: is there a better way that this class and the fix_length() method in _field class
+class _limited_Field(_Field):
+    #TODO: is there a better way that this class and the fix_length() method in _Field class
     #       could be combined?
     """  
     Takes JSON record (in python dict form) and optionally a maximum length (limit, 
-    with default length=5). Uses parent class _field() to assign the appropriate value 
+    with default length=5). Uses parent class _Field() to assign the appropriate value 
     to self.value. When self.value is a list of dictionaries, 
-    inheriting from _limited_field() class allows for the extraction and combination of 
+    inheriting from _limited_Field() class allows for the extraction and combination of 
     an arbitrary number of fields within self.value into self.value_list.
 
     Ex: if your class would lead to having 
     self.value = [ {'a': 1, 'b': 2, 'c': 3}, {'a': 4, 'b': 5, 'c': 6} ], and what you'd like 
-    is a list that looks like [ 1, 2, 4, 5 ], inheriting from _limited_field() allows you 
+    is a list that looks like [ 1, 2, 4, 5 ], inheriting from _limited_Field() allows you 
     to overwrite the fields list ( fields=["a", "b"] ) to obtain this result. 
     Finally, self.value is set to a string representation of the final self.value_list.
     """
@@ -115,7 +115,7 @@ class _limited_field(_field):
 
     def __init__(self, json_record, limit=1):
         super(
-            _limited_field 
+            _limited_Field 
             , self).__init__(json_record)
         # self.value is possibly a list of dicts for each activity media object 
         if self.fields:
@@ -131,7 +131,7 @@ class _limited_field(_field):
 
 
 # TODO:
-# - consolidate _limited_field() & fix_length() if possible 
+# - consolidate _limited_Field() & fix_length() if possible 
 # - replace 2-level dict traversal (eg profileLocation base class) with acscsv.walk_path() or 
 #       similar helper method 
 
