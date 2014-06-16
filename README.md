@@ -1,4 +1,4 @@
-## _G_nip _N_ormalized _AC_tivitie_S_ parser
+## Gnip Normalized Activities Parser
 
 ``gnacs`` parses JSON activity streams from Gnip's [data APIs](http://gnip.com/products/) and output delimited, ordered fields (csv-like). Command-line options allow for some customization of the output, and a framework for more involved extensions is outlined below. It also includes a thin handler for terms of service compliance. 
 
