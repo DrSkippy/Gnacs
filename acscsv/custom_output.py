@@ -67,5 +67,5 @@ if __name__ == "__main__":
 
     for line_number, record in processing_obj.file_reader(): 
         # note: this doesn't handle broken pipe errors  
-        sys.stdout.write("%s\n"%processing_obj.procRecord(record, emptyField="None"))
+        sys.stdout.write( u"{}\n".format( processing_obj.procRecord(record, emptyField="None") ))
 
