@@ -126,9 +126,9 @@ One of the goals of ``gnacs`` is to make easy the programmatic creation of delim
 
 To start working on your custom output, pull the most recent changes to ``master`` - likely from [DrSkippy's remote](https://github.com/DrSkippy/Gnacs) - and make a new branch for yourself. 
 
-    $ git checkout master         # if you're not already on it
-    $ git pull upstream master    # assumes you've set it to DrSkippy 
-    $ git branch my-new-branch    # or something more descriptive 
+    $ git checkout master           # if you're not already on it
+    $ git pull upstream master      # assumes you've set it to DrSkippy 
+    $ git branch my-new-branch      # or something more descriptive 
 
 This new branch will likely contain all of your custom output, in the form of new modules. On your new branch, go into the ``acscsv`` directory, and copy the ``custom_output.py`` module to something that relates to your new output use-case, and open it up to edit.
 
@@ -150,9 +150,9 @@ The one exception to the file reading is that the custom module does not current
 Keep your branch and all of it's custom, one-off modules around as long as you need, or delete it whenever you like. By keeping an eye on the ``master`` branch, you can benefit from core code changes by simply cherrypicking the modules as needed. For example, if a new, extremely valuable functionality is added to the core ``acscsv.py`` module, you can do something like the following to get your fork up to speed...  
 
     $ git checkout master               
-    $ git pull upstream remote          # get upstream change from DrSkippy again
+    $ git pull upstream remote                  # get upstream change from DrSkippy again
     $ git checkout my-new-branch 
-    $ git checkout master acscsv/acscsv.py  # checkout from the branch on your own fork 
+    $ git checkout master acscsv/acscsv.py      # checkout from the branch on your own fork 
     # ... commit & push everything back to GitHub
  
 The number of steps involved in that last step will depend on how your ``.gitconfig`` is set up.
