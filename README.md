@@ -11,13 +11,15 @@ The most recent version of the auto-generated documentation for the code availab
 
 If you have a `C` complier installed (e.g. gcc, or Xcode on OS X):
 
-    sudo pip install gnacs 
-    sudo pip install gnacs --upgrade   # if you've installed before
+    $ sudo pip install gnacs 
+    $ sudo pip install gnacs --upgrade   # if you've installed before
 
 If you don't have a `C` complier:
 
-     sudo pip install gnacs --no-deps 
-     sudo pip install gnacs --no-deps --upgrade   # if you've installed before
+     $ sudo pip install gnacs --no-deps 
+     $ sudo pip install gnacs --no-deps --upgrade   # if you've installed before
+
+(Or the ``sudo``-less equivalent, if you're using a ``virtualenv``).
 
 
 ### Usage
@@ -124,13 +126,13 @@ One of the goals of ``gnacs`` is to make easy the programmatic creation of delim
 
 To start working on your custom output, pull the most recent changes to ``master`` - likely from [DrSkippy's remote](https://github.com/DrSkippy/Gnacs) - and make a new branch for yourself. 
 
-    git checkout master         # if you're not already on it
-    git pull upstream master    # assumes you've set it to DrSkippy 
-    git branch my-new-branch    # or something more descriptive 
+    $ git checkout master         # if you're not already on it
+    $ git pull upstream master    # assumes you've set it to DrSkippy 
+    $ git branch my-new-branch    # or something more descriptive 
 
 This new branch will likely contain all of your custom output, in the form of new modules. On your new branch, go into the ``acscsv`` directory, and copy the ``custom_output.py`` module to something that relates to your new output use-case, and open it up to edit.
 
-    cp custom_output.py 2014-06_new-output.py    # again, descriptive is good 
+    $ cp custom_output.py 2014-06_new-output.py    # again, descriptive is good 
 
 This module imports all the necessary machinery for using the core ``gnacs`` code, but exposes the method that specifies the output. Your new custom output module has a few lines of example code which you can delete or edit. The ordering of fields in this list determines the order in the delimited output. The fields (and their values) are identified by the classes defined in the [twitter_acs_fields.py](acscsv/twitter_acs_fields.py) module. The class names are ``Field_`` followed by the set of keys used to obtain the final value. For many uses, this method may be the only thing you need to edit.
 
@@ -145,14 +147,16 @@ Your new modules uses almost exactly the same file input methods as the core ``g
 
 The one exception to the file reading is that the custom module does not currently play nice with closed shell pipes (e.g. ``cat bigfile | ./my-new-output.py | head`` will crash with a closed pipe error). This will be resolved at a later date. 
 
-Keep your branch and all of it's custom, one-off modules around as long as you need, or delete it whenever you like. By keeping an eye on the ``master`` branch, you can benefit from core code changes by simply cherrypicking the modules as needed. For example, if a new, extremely valuable functionality is added to the core ``acscsv.py`` module, you can simply...
+Keep your branch and all of it's custom, one-off modules around as long as you need, or delete it whenever you like. By keeping an eye on the ``master`` branch, you can benefit from core code changes by simply cherrypicking the modules as needed. For example, if a new, extremely valuable functionality is added to the core ``acscsv.py`` module, you can do something like the following to get your fork up to speed...  
 
-    git checkout master
-    git pull upstream remote        # DrSkippy again
-    git checkout my-new-branch 
-    git checkout master acscsv/acscsv.py 
-    # then push everything back to GitHub
+    $ git checkout master               
+    $ git pull upstream remote          # get upstream change from DrSkippy again
+    $ git checkout my-new-branch 
+    $ git checkout master acscsv/acscsv.py  # checkout from the branch on your own fork 
+    # ... commit & push everything back to GitHub
  
+The number of steps involved in that last step will depend on how your ``.gitconfig`` is set up.
+
 
 ### Contribution 
 
@@ -166,5 +170,5 @@ coming soon:
 - test framework & instructions 
 - doc generation & instructions
 
-     sudo pip install sphinx autodoc ghp-import sphinx-argparse
+``sudo pip install sphinx autodoc ghp-import sphinx-argparse``
 
