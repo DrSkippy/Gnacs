@@ -13,14 +13,11 @@ import twitter_acs
 
 
 #
-# define any custom field extractor classes here. inherit from acscsv.* as needed 
+# define any custom field extractor classes here. 
 #
 
 
 
-#
-# edit the subclass here, as needed (eg inherit from twitter_acs.TwacsCSV)
-#
 class CustomCSV( twitter_acs.TwacsCSV ):
     """
     Test class for experimenting with new output combinations. This class should inherit
@@ -68,20 +65,7 @@ if __name__ == "__main__":
     #   fields to be printed in the method above 
     processing_obj = CustomCSV("|", None, *[True]*7) 
 
-    line_number = 0 
-    for r in sys.stdin: 
-        line_number += 1
-        try:
-            recs = [json.loads(r.strip())]
-        except ValueError:
-            try:
-                # maybe a missing line feed?
-                recs = [json.loads(x) for x in r.strip().replace("}{", "}GNIP_SPLIT{").split("GNIP_SPLIT")]
-            except ValueError:
-                sys.stderr.write("Invalid JSON record (%d) %s, skipping\n"%(line_number, r.strip()))
-                continue
-        for record in recs:
-            if len(record) == 0:
-                continue
-            sys.stdout.write("%s\n"%processing_obj.procRecord(record, emptyField="None"))
+    for line_number, record in processing_obj.file_reader(): 
+        # note: this doesn't handle broken pipe errors  
+        sys.stdout.write("%s\n"%processing_obj.procRecord(record, emptyField="None"))
 
