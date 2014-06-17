@@ -205,10 +205,11 @@ if __name__ == "__main__":
                     sys.stdout.write(json.dumps(geo_rec))
                     first_geo = False
             else:
-                #sys.stdout.write("%s\n"%processing_obj.procRecord(record, emptyField="None"))
+                # ensure formatter is working on a unicode object 
                 sys.stdout.write(u"{}\n".format(processing_obj.procRecord(record, emptyField="None")))
         # handle I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
-        except IOError:
+        # TODO: handle this via contextmanager (within AcsCSV)? 
+        except IOError, e:
             try:
                 sys.stdout.close()
             except IOError:
@@ -218,12 +219,6 @@ if __name__ == "__main__":
             except IOError:
                 pass
             break
-        # add a fix for this at the source!
-#        except UnicodeEncodeError, e:
-#            sys.stderr.write("UnicodeEncodeError: error={} ({})\n".format(e, line_number))
-            
-            ## use this if you want to see the full troublesome records  
-            #sys.stderr.write("Bad unicode encoding: error={} ({}), record={}\n".format(e, line_number, record))
     # close the geojson data structure
     if options.geojson:
         sys.stdout.write(']}\n')            
