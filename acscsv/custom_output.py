@@ -31,16 +31,18 @@ class CustomCSV( twitter_acs.TwacsCSV ):
         """
         Use this method to overwrite the output method in the parent class. Append values from 
         desired payload fields to the output list, which is returned at the end of this method. 
+        Non-str values (ints, lists, etc), must be cast as str or will return 'None'. 
         
-        Take a JSON Activity Streams payload as a Python dictionary. 
+        Take a JSON Activity Streams payload as a Python dictionary. Extract the fields 
+        appended to output_list and then return output_list. 
         """
         output_list = [] 
 
         # twitter country code
         output_list.append( Field_location_twitter_country_code(d).value )
 
-        # activity id 
-        output_list.append( Field_id(d).value )
+        # matching rules -- note the str cast; value is a list 
+        output_list.append( str(Field_gnip_rules(d).value) )
 
         # username 
         output_list.append( Field_actor_preferredusername(d).value )
