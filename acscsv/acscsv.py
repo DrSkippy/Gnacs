@@ -150,7 +150,7 @@ class Hook_StringIO():
         Note that x and y are ignored - they're only included to match the signature of 
         FileInput's openhook argument.
         """
-        return self.stringio
+        return self.stringio 
 
 
 class AcsCSV(object):
@@ -167,9 +167,15 @@ class AcsCSV(object):
         line_number = 0
         if isinstance(options_filename, StringIO):
             hook = Hook_StringIO(options_filename) 
+            print >>sys.stderr, "****** found StringIO hook" 
         else:
             hook = fileinput.hook_compressed
+        #print >>sys.stderr, "****** fileinput={}".format(fileinput.FileInput(options_filename, openhook=hook))
+        #print >>sys.stderr, "****** options_filename={}".format(options_filename.getvalue())
+        #print >>sys.stderr, "****** options_filename.next()={}".format(options_filename.next())
+        print >>sys.stderr, "***** list: ", list(fileinput.FileInput(options_filename, openhook=hook))
         for r in fileinput.FileInput(options_filename, openhook=hook):  
+            print >>sys.stderr, "****** hook={} \n****** r={}".format(hook, r)
             line_number += 1
             try:
                 recs = [json.loads(r.strip())]
@@ -294,5 +300,3 @@ class AcsCSV(object):
                 return "PATH_EMPTY"
         return str(x)
 
-if __name__ == "__main__":
-    unittest.main()
