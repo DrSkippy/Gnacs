@@ -132,50 +132,37 @@ class _LimitedField(_Field):
 
 # TODO:
 # - consolidate _LimitedField() & fix_length() if possible 
-# - replace 2-level dict traversal (eg profileLocation base class) with acscsv.walk_path() or 
-#       similar helper method 
 
-class Hook_StringIO():
-    """
-    Reverse-engineer the openhook constructor to accept StringIO. Pass the StringIO object 
-    through so FileInput will read a string. Think of it as a stupid version of open() that 
-    returns the thing it's passed.
-    """
-
-    def __init__(self, stringio):
-        self.stringio = stringio
-
-    def __call__(self, x, y):
-        """
-        Note that x and y are ignored - they're only included to match the signature of 
-        FileInput's openhook argument.
-        """
-        return self.stringio 
-
-
+    
 class AcsCSV(object):
     """Base class for all delimited list objects. Basic delimited list utility functions"""
+
     def __init__(self, delim, options_keypath):
         self.delim = delim
         if delim == "":
             print >>sys.stderr, "Warning - Output has Null delimiter"
         self.options_keypath = options_keypath
 
+    def string_hook(self, record_string, mode_dummy):
+        """
+        Returns a file-like StringIO object built from the activity record in record_string.
+        This is ultimately passed down to the FileInput.readline() method. The mode_dummy 
+        parameter is only included so the signature matches other hooks. 
+        """
+        return StringIO( record_string ) 
 
-    def file_reader(self, options_filename=None):
-        """Read arbitrary input file(s), yield individual record lines."""
+    def file_reader(self, options_filename=None, json_string=None):
+        """
+        Read arbitrary input file(s) or standard Python str. When passing file_reader() a 
+        JSON string, assign it to the json_string arg. Yields a tuple of (line number, record).
+        """
         line_number = 0
-        if isinstance(options_filename, StringIO):
-            hook = Hook_StringIO(options_filename) 
-            print >>sys.stderr, "****** found StringIO hook" 
+        if json_string is not None: 
+            hook = self.string_hook 
+            options_filename = json_string 
         else:
             hook = fileinput.hook_compressed
-        #print >>sys.stderr, "****** fileinput={}".format(fileinput.FileInput(options_filename, openhook=hook))
-        #print >>sys.stderr, "****** options_filename={}".format(options_filename.getvalue())
-        #print >>sys.stderr, "****** options_filename.next()={}".format(options_filename.next())
-        print >>sys.stderr, "***** list: ", list(fileinput.FileInput(options_filename, openhook=hook))
         for r in fileinput.FileInput(options_filename, openhook=hook):  
-            print >>sys.stderr, "****** hook={} \n****** r={}".format(hook, r)
             line_number += 1
             try:
                 recs = [json.loads(r.strip())]
