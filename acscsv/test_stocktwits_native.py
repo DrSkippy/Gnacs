@@ -9,7 +9,7 @@ from StringIO import StringIO
 from stocktwits_native import *
 
 
-# valid native stocktwits record (from sample data dir)
+# valid native stocktwits record (from sample data dir), used in a bunch of tests
 NICE_STRING = """{"id":12802603,"body":"&quot;Hard knocks have a place and value, but hard thinking goes farther in less time.&quot; - Henry Ford","created_at":"2013-04-01T00:32:06Z","user":{"id":76647,"username":"TradingPlays","name":"Paul Elliott","avatar_url":"http://avatars.stocktwits.net/production/76647/thumb-1348961241.png","avatar_url_ssl":"https://s3.amazonaws.com/st-avatars/production/76647/thumb-1348961241.png","identity":"User","classification":[],"join_date":"2011-05-07","followers":273,"following":52,"ideas":3002,"following_stocks":0,"location":"USA","bio":"Proprietary stock trader, specializing in active intraday trading strategies.","website_url":"http://www.tradingplays.com","trading_strategy":{"assets_frequently_traded":["Equities"],"approach":"Momentum","holding_period":"Day Trader","experience":"Professional"}},"source":{"id":1,"title":"StockTwits","url":"http://stocktwits.com"},"entities":{"sentiment":null}}"""
 
 
