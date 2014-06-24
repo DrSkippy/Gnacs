@@ -21,7 +21,9 @@ class TestStocktwitsNative(unittest.TestCase):
         Stocktwits-native constructor takes five args - create one example of each for 
         use in all tests (loop over the self.objs list).
         """ 
+
         self.delim = '|'
+
         # use a dict to make it easier to refer to the particular cases
         self.objs = { 
                     "base": StocktwitsNative(self.delim, None, False, False, False)
@@ -31,19 +33,6 @@ class TestStocktwitsNative(unittest.TestCase):
                     , "all": StocktwitsNative(self.delim, None, True, True, True) 
                     , "keypath": StocktwitsNative(self.delim, "source:title", False, False, False) 
                     }
-
-#        self.objs = [ 
-#                    # base object
-#                    StocktwitsNative(self.delim, None, False, False, False)
-#                    # individual options 
-#                    , StocktwitsNative(self.delim, None, True, False, False)
-#                    , StocktwitsNative(self.delim, None, False, True, False)
-#                    , StocktwitsNative(self.delim, None, False, False, True) 
-#                    # all options
-#                    , StocktwitsNative(self.delim, None, True, True, True) 
-#                    # arbitrary keypath 
-#                    , StocktwitsNative(self.delim, "source:title", False, False, False) 
-#                    ]
 
         ## set some vars once, update when needed
         self.base_length = 3
@@ -63,7 +52,7 @@ class TestStocktwitsNative(unittest.TestCase):
         pass
 
 
-    def test_sampleData(self):
+    def test_sample_data(self):
         """
         Check that we can use each test object's procRecord method on each record in the 
         stocktwits_native_sample.json example file without raising an Exception.
@@ -233,20 +222,19 @@ class TestStocktwitsNative(unittest.TestCase):
 
         o = self.objs["struct"]
 
-        # these should have data 
+        # this should have data 
         for i, record in o.file_reader( json_string=GOOD_STRUCT_STRING ):
             record_string = o.procRecord(record)
             [ self.assertNotEqual( "None", x ) 
                 for x in record_string.split(self.delim)[-self.struct_length:] 
             ] 
         
-        # these should not have data (should have "None" instead) 
+        # this should not have data (should have "None" instead) 
         for i, record in o.file_reader( json_string=BAD_STRUCT_STRING ):
             record_string = o.procRecord(record)
             [ self.assertEqual( "None", x ) 
                 for x in record_string.split(self.delim)[-self.struct_length:] 
             ] 
-
 
 
     def test_user_fields(self):
@@ -256,37 +244,27 @@ class TestStocktwitsNative(unittest.TestCase):
         """ 
 
         # this activity (chosen from data/) has the user fields in it  
-        GOOD_USER_STRING = """{"id":12802606,"body":"@Pieman @nnsts just curious.  How much did you lose on such yelling of &#39;out for good?&#39;   Did you set a stop loss?","created_at":"2013-04-01T00:33:39Z","user":{"id":216592,"username":"nnsts","name":"nntrader","avatar_url":"http://avatars.stocktwits.net/production/216592/thumb-1361592350.png","avatar_url_ssl":"https://s3.amazonaws.com/st-avatars/production/216592/thumb-1361592350.png","identity":"User","classification":[],"join_date":"2013-02-22","followers":9,"following":4,"ideas":843,"following_stocks":2,"location":"","bio":null,"website_url":"http://www.example.com","trading_strategy":{"assets_frequently_traded":["Equities","Options","Futures","Bonds"],"approach":"Technical","holding_period":"Swing Trader","experience":"Novice"}},"source":{"id":1,"title":"StockTwits","url":"http://stocktwits.com"},"conversation":{"parent_message_id":12802589,"in_reply_to_message_id":12802589,"parent":false,"replies":3},"entities":{"sentiment":null}}"""
+        tmp_url = "http://www.example.com"
+        # note: must do the string substition with %s because .format() will look for keys by {}
+        GOOD_USER_STRING = """{"id":12802606,"body":"@Pieman @nnsts just curious.  How much did you lose on such yelling of &#39;out for good?&#39;   Did you set a stop loss?","created_at":"2013-04-01T00:33:39Z","user":{"id":216592,"username":"nnsts","name":"nntrader","avatar_url":"http://avatars.stocktwits.net/production/216592/thumb-1361592350.png","avatar_url_ssl":"https://s3.amazonaws.com/st-avatars/production/216592/thumb-1361592350.png","identity":"User","classification":[],"join_date":"2013-02-22","followers":9,"following":4,"ideas":843,"following_stocks":2,"location":"","bio":null,"website_url":"%s","trading_strategy":{"assets_frequently_traded":["Equities","Options","Futures","Bonds"],"approach":"Technical","holding_period":"Swing Trader","experience":"Novice"}},"source":{"id":1,"title":"StockTwits","url":"http://stocktwits.com"},"conversation":{"parent_message_id":12802589,"in_reply_to_message_id":12802589,"parent":false,"replies":3},"entities":{"sentiment":null}}"""%(tmp_url)
 
-        # the 'username' and 'name' fields should always exist, so break the 'website_url' field & check for "None"
-        BAD_USER_STRING = """{"id":12802606,"body":"@Pieman @nnsts just curious.  How much did you lose on such yelling of &#39;out for good?&#39;   Did you set a stop loss?","created_at":"2013-04-01T00:33:39Z","user":{"id":216592,"username":"nnsts","name":"nntrader","avatar_url":"http://avatars.stocktwits.net/production/216592/thumb-1361592350.png","avatar_url_ssl":"https://s3.amazonaws.com/st-avatars/production/216592/thumb-1361592350.png","identity":"User","classification":[],"join_date":"2013-02-22","followers":9,"following":4,"ideas":843,"following_stocks":2,"location":"","bio":null,"GNIP_website_url":null,"trading_strategy":{"assets_frequently_traded":["Equities","Options","Futures","Bonds"],"approach":"Technical","holding_period":"Swing Trader","experience":"Novice"}},"source":{"id":1,"title":"StockTwits","url":"http://stocktwits.com"},"GNIP_conversation":{"parent_message_id":12802589,"in_reply_to_message_id":12802589,"parent":false,"replies":3},"entities":{"sentiment":null}}
-"""
+        # looks like these fields should always exist, but the 'website_url' could be null. force that & check for "None"
+        BAD_USER_STRING = """{"id":12802606,"body":"@Pieman @nnsts just curious.  How much did you lose on such yelling of &#39;out for good?&#39;   Did you set a stop loss?","created_at":"2013-04-01T00:33:39Z","user":{"id":216592,"username":"nnsts","name":"nntrader","avatar_url":"http://avatars.stocktwits.net/production/216592/thumb-1361592350.png","avatar_url_ssl":"https://s3.amazonaws.com/st-avatars/production/216592/thumb-1361592350.png","identity":"User","classification":[],"join_date":"2013-02-22","followers":9,"following":4,"ideas":843,"following_stocks":2,"location":"","bio":null,"website_url":null,"trading_strategy":{"assets_frequently_traded":["Equities","Options","Futures","Bonds"],"approach":"Technical","holding_period":"Swing Trader","experience":"Novice"}},"source":{"id":1,"title":"StockTwits","url":"http://stocktwits.com"},"conversation":{"parent_message_id":12802589,"in_reply_to_message_id":12802589,"parent":false,"replies":3},"entities":{"sentiment":null}}"""
 
         o = self.objs["user"]
 
-        # these should have data 
+        # this should have data 
         for i, record in o.file_reader( json_string=GOOD_USER_STRING ):
             record_string = o.procRecord(record)
-            [ self.assertNotEqual( "None", x ) 
-                for x in record_string.split(self.delim)[-self.user_length:] 
-            ] 
+            self.assertNotEqual( "None", record_string.split(self.delim)[-1] )
+            self.assertEqual( tmp_url , record_string.split(self.delim)[-1] )
         
-        # these should not have data (should have "None" instead) 
+        # this should not have data (should have "None" instead) 
         for i, record in o.file_reader( json_string=BAD_USER_STRING ):
             record_string = o.procRecord(record)
-            [ self.assertEqual( "None", x ) 
-                for x in record_string.split(self.delim)[-self.user_length:] 
-            ] 
+            # payload (json) null ==> Python None ==> check in module
+            self.assertEqual( "None", record_string.split(self.delim)[-1] )
 
-
-
-
-
-
-#
-# check for all currently-extracted fields
-#
-        
-
+   
 if __name__ == "__main__":
     unittest.main()

@@ -93,8 +93,6 @@ class _Field(object):
 
 
 class _LimitedField(_Field):
-    #TODO: is there a better way that this class and the fix_length() method in _Field class
-    #       could be combined?
     """  
     Takes JSON record (in python dict form) and optionally a maximum length (limit, 
     with default length=5). Uses parent class _Field() to assign the appropriate value 
@@ -108,6 +106,9 @@ class _LimitedField(_Field):
     to overwrite the fields list ( fields=["a", "b"] ) to obtain this result. 
     Finally, self.value is set to a string representation of the final self.value_list.
     """
+    #
+    #TODO: move this to the mysql test module? I think it was only used there. 
+    #
     fields = None 
     
     #TODO: set limit=None by default and just return as many as there are, otherwise (by specifying 
