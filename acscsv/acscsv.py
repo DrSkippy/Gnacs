@@ -44,7 +44,7 @@ class _Field(object):
         self.value = self.walk_path(json_record)
 
     def __repr__(self):
-        return self.value
+        return unicode(self.value)
 
     def walk_path(self, json_record):
         res = json_record
@@ -176,6 +176,8 @@ class AcsCSV(object):
             for record in recs:
                 if len(record) == 0:
                     continue
+                # hack: let the old source modules still have a self.cnt for error msgs
+                self.cnt = line_number
                 yield line_number, record
 
 

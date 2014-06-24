@@ -9,7 +9,7 @@ from StringIO import StringIO
 from stocktwits_native import *
 
 
-# valid native stocktwits record
+# valid native stocktwits record (from sample data dir)
 NICE_STRING = """{"id":12802603,"body":"&quot;Hard knocks have a place and value, but hard thinking goes farther in less time.&quot; - Henry Ford","created_at":"2013-04-01T00:32:06Z","user":{"id":76647,"username":"TradingPlays","name":"Paul Elliott","avatar_url":"http://avatars.stocktwits.net/production/76647/thumb-1348961241.png","avatar_url_ssl":"https://s3.amazonaws.com/st-avatars/production/76647/thumb-1348961241.png","identity":"User","classification":[],"join_date":"2011-05-07","followers":273,"following":52,"ideas":3002,"following_stocks":0,"location":"USA","bio":"Proprietary stock trader, specializing in active intraday trading strategies.","website_url":"http://www.tradingplays.com","trading_strategy":{"assets_frequently_traded":["Equities"],"approach":"Momentum","holding_period":"Day Trader","experience":"Professional"}},"source":{"id":1,"title":"StockTwits","url":"http://stocktwits.com"},"entities":{"sentiment":null}}"""
 
 
@@ -22,18 +22,29 @@ class TestStocktwitsNative(unittest.TestCase):
         use in all tests (loop over the self.objs list).
         """ 
         self.delim = '|'
-        self.objs = [ 
-                    # base object
-                    StocktwitsNative(self.delim, None, False, False, False)
-                    # individual options 
-                    , StocktwitsNative(self.delim, None, True, False, False)
-                    , StocktwitsNative(self.delim, None, False, True, False)
-                    , StocktwitsNative(self.delim, None, False, False, True) 
-                    # all options
-                    , StocktwitsNative(self.delim, None, True, True, True) 
-                    # arbitrary keypath 
-                    , StocktwitsNative(self.delim, "source:title", False, False, False) 
-                    ]
+        # use a dict to make it easier to refer to the particular cases
+        self.objs = { 
+                    "base": StocktwitsNative(self.delim, None, False, False, False)
+                    , "user": StocktwitsNative(self.delim, None, True, False, False) 
+                    , "struct": StocktwitsNative(self.delim, None, False, True, False) 
+                    , "influence": StocktwitsNative(self.delim, None, False, False, True) 
+                    , "all": StocktwitsNative(self.delim, None, True, True, True) 
+                    , "keypath": StocktwitsNative(self.delim, "source:title", False, False, False) 
+                    }
+
+#        self.objs = [ 
+#                    # base object
+#                    StocktwitsNative(self.delim, None, False, False, False)
+#                    # individual options 
+#                    , StocktwitsNative(self.delim, None, True, False, False)
+#                    , StocktwitsNative(self.delim, None, False, True, False)
+#                    , StocktwitsNative(self.delim, None, False, False, True) 
+#                    # all options
+#                    , StocktwitsNative(self.delim, None, True, True, True) 
+#                    # arbitrary keypath 
+#                    , StocktwitsNative(self.delim, "source:title", False, False, False) 
+#                    ]
+
         ## set some vars once, update when needed
         self.base_length = 3
         # count of extra fields added by each of these options
@@ -58,16 +69,17 @@ class TestStocktwitsNative(unittest.TestCase):
         stocktwits_native_sample.json example file without raising an Exception.
         """
         # get a temporary object
-        tmp = self.objs[0]
+        tmp = self.objs["base"]
 
         # grab the correct data file 
         # TODO: replace hard-coded path to file -- requires running test from acscsv/ dir
         datafile = "../data/{}_sample.json".format(tmp.__module__)  
 
         # loop over all test stocktwits processing objects
-        for o in self.objs:
+        for o in self.objs.values():
             # loop over records in test file 
             for i, record in o.file_reader(datafile):
+                # if there's a problem parsing, this method will raise an Exception
                 record_string = o.procRecord(record)
 
 
@@ -81,98 +93,95 @@ class TestStocktwitsNative(unittest.TestCase):
         features are added to the module.)
         """
         # grab the base instance 
-        o = self.objs[0]
+        o = self.objs["base"]
         
-        # precaution against failure of o.file_reader to iterate
-        loop = False
+        # ensure our file_reader has worked correctly 
+        g = o.file_reader( json_string=NICE_STRING )
+        self.assertIsInstance( g.next(), tuple ) 
 
         # use sample record in this module 
         for i, record in o.file_reader( json_string=NICE_STRING ):
-            loop = True
             # procRecord returns a delimited string
             record_string = o.procRecord(record)
             self.assertEqual( len( record_string.split( self.delim ) )
                                 , self.base_length 
                             )  
-        self.assertTrue( loop )
 
 
-    def test_user(self):
+    def test_user_length(self):
         """
         Check the number of fields being output. (Update the expected results when new 
         features are added to the module.)
         """
         # grab the right instance 
-        o = self.objs[1]
+        o = self.objs["user"]
         
-        # precaution against failure of o.file_reader to iterate
-        loop = False
+        # ensure our file_reader has worked correctly 
+        g = o.file_reader( json_string=NICE_STRING )
+        self.assertIsInstance( g.next(), tuple ) 
 
         # use sample record above 
         for i, record in o.file_reader( json_string=NICE_STRING ):
-            loop = True
             record_string = o.procRecord(record)
             # should have 3 extra fields now 
             self.assertEqual( len( record_string.split( self.delim ) )
                                 , self.base_length + self.user_length 
                             ) 
-        self.assertTrue( loop )
 
 
-    def test_struct(self):
+    def test_struct_length(self):
         """
         Check the number of fields being output. (Update the expected results when new 
         features are added to the module.)
         """
         # grab the right instance 
-        o = self.objs[2]
+        o = self.objs["struct"]
         
-        # precaution against failure of o.file_reader to iterate
-        loop = False
+        # ensure our file_reader has worked correctly 
+        g = o.file_reader( json_string=NICE_STRING )
+        self.assertIsInstance( g.next(), tuple ) 
 
         # use sample record above 
         for i, record in o.file_reader( json_string=NICE_STRING ):
-            loop = True
             record_string = o.procRecord(record)
             # should have 3 extra fields now 
             self.assertEqual( len( record_string.split( self.delim ) )
                                 , self.base_length + self.struct_length 
                             )  
-        self.assertTrue( loop )
 
 
-    def test_influence(self):
+    def test_influence_length(self):
         """
         Check the number of fields being output. (Update the expected results when new 
         features are added to the module.)
         """
         # grab the right instance 
-        o = self.objs[3]
+        o = self.objs["influence"]
         
-        # precaution against failure of o.file_reader to iterate
-        loop = False
+        # ensure our file_reader has worked correctly 
+        g = o.file_reader( json_string=NICE_STRING )
+        self.assertIsInstance( g.next(), tuple ) 
 
         # use sample record above 
         for i, record in o.file_reader( json_string=NICE_STRING ):
-            loop = True
             record_string = o.procRecord(record)
             # should have 3 extra fields now 
             self.assertEqual( len( record_string.split( self.delim ) )
                                 , self.base_length + self.influence_length 
                             )  
-        self.assertTrue( loop )
 
     
-    def test_all(self):
+    def test_all_length(self):
         """
         Check the number of fields being output. (Update the expected results when new 
         features are added to the module.)
         """
         # grab the right instance 
-        o = self.objs[4]
+        o = self.objs["all"]
         
-        # precaution against failure of o.file_reader to iterate
-        loop = False
+        # ensure our file_reader has worked correctly 
+        g = o.file_reader( json_string=NICE_STRING )
+        self.assertIsInstance( g.next(), tuple ) 
 
         # use sample record above 
         for i, record in o.file_reader( json_string=NICE_STRING ):
@@ -182,7 +191,6 @@ class TestStocktwitsNative(unittest.TestCase):
             self.assertEqual( len( record_string.split( self.delim ) )
                                 , self.all_length 
                             )  
-        self.assertTrue( loop )
 
 
     def test_keypath(self):
@@ -191,29 +199,93 @@ class TestStocktwitsNative(unittest.TestCase):
         features are added to the module.)
         """
         # grab the right instance 
-        o = self.objs[5]
+        o = self.objs["keypath"]
         
-        # precaution against failure of o.file_reader to iterate
-        loop = False
+        # ensure our file_reader has worked correctly 
+        g = o.file_reader( json_string=NICE_STRING )
+        self.assertIsInstance( g.next(), tuple ) 
 
         # use sample record above 
         for i, record in o.file_reader( json_string=NICE_STRING ):
-            loop = True
             record_string = o.procRecord(record)
             # should have 1 extra field now 
             self.assertEqual( len( record_string.split( self.delim ) )
                                 , self.base_length + self.keypath_length 
                             )  
-        self.assertTrue( loop )
 
    
-    def test_extractors(self):
-        """
-        There aren't extractors for the stocktwits_native module, so all we can really do is
-        test that the number of fields being extracted is correct (previous tests). 
-        """
-        pass
+    #
+    # test that all of the fields we need to extract from the records actually work
+    #
 
+    def test_struct_fields(self):
+        """
+        Test for the presence of non-"None" values in a good record when using the 'struct' 
+        option, and "None"s in an intentionally-damaged record.
+        """ 
+
+        # this activity (chosen from data/) has all the struct fields in it  
+        GOOD_STRUCT_STRING = """{"id":12802606,"body":"@Pieman @nnsts just curious.  How much did you lose on such yelling of &#39;out for good?&#39;   Did you set a stop loss?","created_at":"2013-04-01T00:33:39Z","user":{"id":216592,"username":"nnsts","name":"nntrader","avatar_url":"http://avatars.stocktwits.net/production/216592/thumb-1361592350.png","avatar_url_ssl":"https://s3.amazonaws.com/st-avatars/production/216592/thumb-1361592350.png","identity":"User","classification":[],"join_date":"2013-02-22","followers":9,"following":4,"ideas":843,"following_stocks":2,"location":"","bio":null,"website_url":null,"trading_strategy":{"assets_frequently_traded":["Equities","Options","Futures","Bonds"],"approach":"Technical","holding_period":"Swing Trader","experience":"Novice"}},"source":{"id":1,"title":"StockTwits","url":"http://stocktwits.com"},"conversation":{"parent_message_id":12802589,"in_reply_to_message_id":12802589,"parent":false,"replies":3},"entities":{"sentiment":null}}"""
+
+        # break the "conversation" key in this activity, so that options_struct fields should all be "None" 
+        BAD_STRUCT_STRING = """{"id":12802606,"body":"@Pieman @nnsts just curious.  How much did you lose on such yelling of &#39;out for good?&#39;   Did you set a stop loss?","created_at":"2013-04-01T00:33:39Z","user":{"id":216592,"username":"nnsts","name":"nntrader","avatar_url":"http://avatars.stocktwits.net/production/216592/thumb-1361592350.png","avatar_url_ssl":"https://s3.amazonaws.com/st-avatars/production/216592/thumb-1361592350.png","identity":"User","classification":[],"join_date":"2013-02-22","followers":9,"following":4,"ideas":843,"following_stocks":2,"location":"","bio":null,"website_url":null,"trading_strategy":{"assets_frequently_traded":["Equities","Options","Futures","Bonds"],"approach":"Technical","holding_period":"Swing Trader","experience":"Novice"}},"source":{"id":1,"title":"StockTwits","url":"http://stocktwits.com"},"GNIP_conversation":{"parent_message_id":12802589,"in_reply_to_message_id":12802589,"parent":false,"replies":3},"entities":{"sentiment":null}}
+"""
+
+        o = self.objs["struct"]
+
+        # these should have data 
+        for i, record in o.file_reader( json_string=GOOD_STRUCT_STRING ):
+            record_string = o.procRecord(record)
+            [ self.assertNotEqual( "None", x ) 
+                for x in record_string.split(self.delim)[-self.struct_length:] 
+            ] 
+        
+        # these should not have data (should have "None" instead) 
+        for i, record in o.file_reader( json_string=BAD_STRUCT_STRING ):
+            record_string = o.procRecord(record)
+            [ self.assertEqual( "None", x ) 
+                for x in record_string.split(self.delim)[-self.struct_length:] 
+            ] 
+
+
+
+    def test_user_fields(self):
+        """
+        Test for the presence of non-"None" values in a good record when using the 'struct' 
+        option, and "None"s in an intentionally-damaged record.
+        """ 
+
+        # this activity (chosen from data/) has the user fields in it  
+        GOOD_USER_STRING = """{"id":12802606,"body":"@Pieman @nnsts just curious.  How much did you lose on such yelling of &#39;out for good?&#39;   Did you set a stop loss?","created_at":"2013-04-01T00:33:39Z","user":{"id":216592,"username":"nnsts","name":"nntrader","avatar_url":"http://avatars.stocktwits.net/production/216592/thumb-1361592350.png","avatar_url_ssl":"https://s3.amazonaws.com/st-avatars/production/216592/thumb-1361592350.png","identity":"User","classification":[],"join_date":"2013-02-22","followers":9,"following":4,"ideas":843,"following_stocks":2,"location":"","bio":null,"website_url":"http://www.example.com","trading_strategy":{"assets_frequently_traded":["Equities","Options","Futures","Bonds"],"approach":"Technical","holding_period":"Swing Trader","experience":"Novice"}},"source":{"id":1,"title":"StockTwits","url":"http://stocktwits.com"},"conversation":{"parent_message_id":12802589,"in_reply_to_message_id":12802589,"parent":false,"replies":3},"entities":{"sentiment":null}}"""
+
+        # the 'username' and 'name' fields should always exist, so break the 'website_url' field & check for "None"
+        BAD_USER_STRING = """{"id":12802606,"body":"@Pieman @nnsts just curious.  How much did you lose on such yelling of &#39;out for good?&#39;   Did you set a stop loss?","created_at":"2013-04-01T00:33:39Z","user":{"id":216592,"username":"nnsts","name":"nntrader","avatar_url":"http://avatars.stocktwits.net/production/216592/thumb-1361592350.png","avatar_url_ssl":"https://s3.amazonaws.com/st-avatars/production/216592/thumb-1361592350.png","identity":"User","classification":[],"join_date":"2013-02-22","followers":9,"following":4,"ideas":843,"following_stocks":2,"location":"","bio":null,"GNIP_website_url":null,"trading_strategy":{"assets_frequently_traded":["Equities","Options","Futures","Bonds"],"approach":"Technical","holding_period":"Swing Trader","experience":"Novice"}},"source":{"id":1,"title":"StockTwits","url":"http://stocktwits.com"},"GNIP_conversation":{"parent_message_id":12802589,"in_reply_to_message_id":12802589,"parent":false,"replies":3},"entities":{"sentiment":null}}
+"""
+
+        o = self.objs["user"]
+
+        # these should have data 
+        for i, record in o.file_reader( json_string=GOOD_USER_STRING ):
+            record_string = o.procRecord(record)
+            [ self.assertNotEqual( "None", x ) 
+                for x in record_string.split(self.delim)[-self.user_length:] 
+            ] 
+        
+        # these should not have data (should have "None" instead) 
+        for i, record in o.file_reader( json_string=BAD_USER_STRING ):
+            record_string = o.procRecord(record)
+            [ self.assertEqual( "None", x ) 
+                for x in record_string.split(self.delim)[-self.user_length:] 
+            ] 
+
+
+
+
+
+
+#
+# check for all currently-extracted fields
+#
         
 
 if __name__ == "__main__":
