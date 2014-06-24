@@ -71,7 +71,6 @@ class TestStocktwitsNative(unittest.TestCase):
                 # if there's a problem parsing, this method will raise an Exception
                 record_string = o.procRecord(record)
 
-
     #
     # test the output (length) for each kind of StocktwitsNative object 
     #
@@ -182,7 +181,7 @@ class TestStocktwitsNative(unittest.TestCase):
                             )  
 
 
-    def test_keypath(self):
+    def test_keypath_length(self):
         """
         Check the number of fields being output. (Update the expected results when new 
         features are added to the module.)
@@ -202,7 +201,6 @@ class TestStocktwitsNative(unittest.TestCase):
                                 , self.base_length + self.keypath_length 
                             )  
 
-   
     #
     # test that all of the fields we need to extract from the records actually work
     #
