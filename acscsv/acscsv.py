@@ -23,7 +23,20 @@ gnipRemove = "GNIPREMOVE"
 gnipDateTime = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.000Z")
 INTERNAL_EMPTY_FIELD = "GNIPEMPTYFIELD"
 
-class _Field(object):
+class Singleton(object):
+    """
+    Singleton class is the base class for every field.  Each object is reused to process the
+    stream of data before an object is deleted.  This keeps memory management from thrashing
+    for long input streams.
+    """
+    _instances = {}                                                               
+    def __new__(class_, *args, **kwargs):
+        if class_ not in class_._instances:
+            class_._instances[class_] = super(Singleton, class_).__new__(class_, *args, **kwargs)
+        return class_._instances[class_]
+
+class _Field(Singleton):
+#class _Field(object):
     """
     Base class for extracting the desired value at the end of a series of keys in a JSON Activity 
     Streams payload. Set the application-wide default value (for e.g. missing values) here, 
@@ -35,20 +48,20 @@ class _Field(object):
     # twitter format
     default_t_fmt = "%Y-%m-%dT%H:%M:%S.000Z" 
     default_value = INTERNAL_EMPTY_FIELD
-    #default_value = "\\N"           # escaped \N ==> MySQL NULL
-    value = None                    # str representation of the field, often = str( self.value_list ) 
-    value_list = [ default_value ]  # overwrite when value is most appropriately a list 
     path = []                       # dict key-path to follow for desired value
 
     def __init__(self, json_record):
+        self.value = None                    # str representation of the field, often = str( self.value_list ) 
         self.value = self.walk_path(json_record)
 
     def __repr__(self):
         return unicode(self.value)
 
-    def walk_path(self, json_record):
+    def walk_path(self, json_record, path=None):
         res = json_record
-        for k in self.path:
+        if path is None:
+            path = self.path
+        for k in path:
             if k not in res or ( type(res[k]) is list and len(res[k]) == 0 ):
                 # parenthetical clause for values with empty lists e.g. twitter_entities
                 return self.default_value
@@ -106,15 +119,11 @@ class _LimitedField(_Field):
     to overwrite the fields list ( fields=["a", "b"] ) to obtain this result. 
     Finally, self.value is set to a string representation of the final self.value_list.
     """
-    #
-    #TODO: move this to the mysql test module? I think it was only used there. 
-    #
-    fields = None 
-    
     #TODO: set limit=None by default and just return as many as there are, otherwise (by specifying 
     #    limit), return a maximum of limit.
 
     def __init__(self, json_record, limit=1):
+        self.fields = None
         super(
             _LimitedField 
             , self).__init__(json_record)

@@ -250,8 +250,8 @@ class Field_gnip_profilelocations_displayname(_Field_gnip_profilelocations_base)
             Field_gnip_profilelocations_displayname 
             , self).__init__(json_record)
         if self.value != self.default_value:
-            self.path = ["displayName"] 
-            self.value = self.walk_path( self.value ) 
+            #self.path = ["displayName"] 
+            self.value = self.walk_path( self.value, path = ["displayName"] ) 
 
 
 class Field_gnip_profilelocations_objecttype(_Field_gnip_profilelocations_base):
@@ -262,8 +262,8 @@ class Field_gnip_profilelocations_objecttype(_Field_gnip_profilelocations_base):
             Field_gnip_profilelocations_objecttype
             , self).__init__(json_record)
         if self.value != self.default_value:
-            self.path = ["objectType"] 
-            self.value = self.walk_path( self.value ) 
+            #self.path = ["objectType"] 
+            self.value = self.walk_path( self.value, path = ["objectType"] ) 
 
 
 class Field_gnip_profilelocations_geo_type(_Field_gnip_profilelocations_base):
@@ -274,8 +274,8 @@ class Field_gnip_profilelocations_geo_type(_Field_gnip_profilelocations_base):
             Field_gnip_profilelocations_geo_type
             , self).__init__(json_record)
         if self.value != self.default_value:
-            self.path = ["geo", "type"] 
-            self.value = self.walk_path( self.value ) 
+            #self.path = ["geo", "type"] 
+            self.value = self.walk_path( self.value, path = ["geo", "type"] ) 
 
 
 class Field_gnip_profilelocations_geo_coordinates(_Field_gnip_profilelocations_base):
@@ -286,8 +286,8 @@ class Field_gnip_profilelocations_geo_coordinates(_Field_gnip_profilelocations_b
             Field_gnip_profilelocations_geo_coordinates
             , self).__init__(json_record)
         if self.value != self.default_value:
-            self.path = ["geo", "coordinates"] 
-            self.value = self.walk_path( self.value ) 
+            #self.path = ["geo", "coordinates"] 
+            self.value = self.walk_path( self.value, path = ["geo", "coordinates"] ) 
 
 
 class Field_gnip_profilelocations_address_country(_Field_gnip_profilelocations_base):
@@ -298,8 +298,8 @@ class Field_gnip_profilelocations_address_country(_Field_gnip_profilelocations_b
             Field_gnip_profilelocations_address_country
             , self).__init__(json_record)
         if self.value != self.default_value:
-            self.path = ["address", "country"] 
-            self.value = self.walk_path( self.value ) 
+            #self.path = ["address", "country"] 
+            self.value = self.walk_path( self.value, path = ["address", "country"] ) 
 
 
 class Field_gnip_profilelocations_address_countrycode(_Field_gnip_profilelocations_base):
@@ -310,8 +310,8 @@ class Field_gnip_profilelocations_address_countrycode(_Field_gnip_profilelocatio
             Field_gnip_profilelocations_address_countrycode
             , self).__init__(json_record)
         if self.value != self.default_value:
-            self.path = ["address", "countryCode"] 
-            self.value = self.walk_path( self.value ) 
+            #self.path = ["address", "countryCode"] 
+            self.value = self.walk_path( self.value, path = ["address", "countryCode"] ) 
 
 
 class Field_gnip_profilelocations_address_locality(_Field_gnip_profilelocations_base):
@@ -322,8 +322,8 @@ class Field_gnip_profilelocations_address_locality(_Field_gnip_profilelocations_
             Field_gnip_profilelocations_address_locality
             , self).__init__(json_record)
         if self.value != self.default_value:
-            self.path = ["address", "locality"] 
-            self.value = self.walk_path( self.value ) 
+            #self.path = ["address", "locality"] 
+            self.value = self.walk_path( self.value, path = ["address", "locality"] ) 
 
 
 class Field_gnip_profilelocations_address_region(_Field_gnip_profilelocations_base):
@@ -334,8 +334,8 @@ class Field_gnip_profilelocations_address_region(_Field_gnip_profilelocations_ba
             Field_gnip_profilelocations_address_region
             , self).__init__(json_record)
         if self.value != self.default_value:
-            self.path = ["address", "region"] 
-            self.value = self.walk_path( self.value ) 
+            #self.path = ["address", "region"] 
+            self.value = self.walk_path( self.value, path = ["address", "region"] ) 
 
 
 class Field_gnip_profilelocations_address_subregion(_Field_gnip_profilelocations_base):
@@ -346,8 +346,8 @@ class Field_gnip_profilelocations_address_subregion(_Field_gnip_profilelocations
             Field_gnip_profilelocations_address_subregion
             , self).__init__(json_record)
         if self.value != self.default_value:
-            self.path = ["address", "subRegion"] 
-            self.value = self.walk_path( self.value ) 
+            #self.path = ["address", "subRegion"] 
+            self.value = self.walk_path( self.value, path = ["address", "subRegion"] ) 
 
 
 
