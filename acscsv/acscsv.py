@@ -62,6 +62,8 @@ class _Field(Singleton):
         if path is None:
             path = self.path
         for k in path:
+            if res is None:
+                break
             if k not in res or ( type(res[k]) is list and len(res[k]) == 0 ):
                 # parenthetical clause for values with empty lists e.g. twitter_entities
                 return self.default_value

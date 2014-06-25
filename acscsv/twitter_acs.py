@@ -15,7 +15,7 @@ class TwacsCSV(acscsv.AcsCSV):
                 , options_geo
                 , options_user
                 , options_rules
-                , options_urls
+                , options_url = json_record
                 , options_lang
                 , options_influence
                 , options_struct
@@ -130,7 +130,7 @@ class TwacsCSV(acscsv.AcsCSV):
                     self.buildListString( 
                         [ "{} ({})".format( x["value"], x["tag"] ) for x in Field_gnip_rules(d).value ]
                     )
-                ) 
+          = json_record      ) 
             else: 
                 output_list.append( val )  
 
