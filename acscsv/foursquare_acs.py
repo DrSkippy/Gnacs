@@ -6,7 +6,7 @@ import sys
 import acscsv
 
 class FsqacsCSV(acscsv.AcsCSV):
-    def __init__(self, delim, options_keypath, options_geo, options_user, options_rules, options_lang, options_influence):
+    def __init__(self, delim, options_keypath, options_geo, options_user, options_rules):
         super(FsqacsCSV, self).__init__(delim,options_keypath)
         self.options_geo = options_geo 
         self.options_user = options_user
