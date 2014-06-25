@@ -243,7 +243,7 @@ class TestStocktwitsNative(unittest.TestCase):
 
     def test_user_fields(self):
         """
-        Test for the presence of non-"None" values in a good record when using the 'struct' 
+        Test for the presence of non-"None" values in a good record when using the 'user' 
         option, and "None"s in an intentionally-damaged record.
         """ 
 
