@@ -71,6 +71,17 @@ class TestStocktwitsNative(unittest.TestCase):
                 # if there's a problem parsing, this method will raise an Exception
                 record_string = o.procRecord(record)
 
+
+    def test_reader(self):
+        """Test that our file_reader method is working as expected."""
+        # grab the base instance 
+        o = self.objs["base"]
+        
+        # without eg a for loop, we use the generator's next() method 
+        g = o.file_reader( json_string=NICE_STRING )
+        self.assertIsInstance( g.next(), tuple ) 
+
+   
     #
     # test the output (length) for each kind of StocktwitsNative object 
     #
@@ -82,10 +93,6 @@ class TestStocktwitsNative(unittest.TestCase):
         """
         # grab the base instance 
         o = self.objs["base"]
-        
-        # ensure our file_reader has worked correctly 
-        g = o.file_reader( json_string=NICE_STRING )
-        self.assertIsInstance( g.next(), tuple ) 
 
         # use sample record in this module 
         for i, record in o.file_reader( json_string=NICE_STRING ):
