@@ -141,8 +141,6 @@ if __name__ == "__main__":
 			, options.geo
 			, options.user
 			, options.rules
-			, options.lang
-			, options.struct
             )
     elif options.pub.lower().startswith("get") or options.pub.lower().startswith("gg"):
         processing_obj = getglue_acs.GgacsCSV(delim
