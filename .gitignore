@@ -27,3 +27,7 @@ pip-log.txt
 .mr.developer.cfg
 
 MANIFEST
+
+# mysql branch-specific
+gnacs_db
+

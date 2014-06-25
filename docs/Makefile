@@ -8,6 +8,9 @@ PAPER         =
 BUILDDIR      = build
 HTMLDIR       = $(BUILDDIR)/html
 
+# localhost port for viewing local docs
+SERVEPORT=8111
+
 # User-friendly check for sphinx-build
 ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
 $(error The '$(SPHINXBUILD)' command was not found. Make sure you have Sphinx installed, then set the SPHINXBUILD environment variable to point to the full path of the '$(SPHINXBUILD)' executable. Alternatively you can add the directory with the executable to your PATH. If you don't have Sphinx installed, grab it from http://sphinx-doc.org/)
@@ -46,6 +49,7 @@ help:
 	@echo "  pseudoxml  to make pseudoxml-XML files for display purposes"
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
+	@echo "  docs       regenerate current docs and push to gh-pages branch on GitHub"
 
 clean:
 	rm -rf $(BUILDDIR)/*
@@ -184,5 +188,8 @@ pseudoxml:
 docs: clean html
 	ghp-import $(HTMLDIR) -p 
 
+review: clean html
+	cd ${HTMLDIR}; \
+	python -m SimpleHTTPServer ${SERVEPORT}
 
 

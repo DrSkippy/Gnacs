@@ -15,8 +15,9 @@ import re
 import os
 import argparse
 from acscsv import *
-# ujson is 20% faster
-import json as json_formatter
+# needed only for the pretty-printing
+import json as json_printer
+# use fastest option available for parsing
 try:
     import ujson as json
 except ImportError:
@@ -44,7 +45,7 @@ def gnacs_args():
 			, help="Include geo fields")
     parser.add_argument("-i", "--influence", action="store_true", dest="influence"
             , default=False
-			, help="Show user's influence metrics")
+			, help="Show user's influence metrics (Twitter only)")
     parser.add_argument("-c","--csv", action="store_true", dest="csv"
             , default=False
 			, help="Comma-delimited output (, default is | without quotes)")
@@ -86,12 +87,9 @@ def gnacs_args():
     parser.add_argument("-k","--keypath", dest="keypath"
             , default=None
 			, help="returns a value from a path of the form 'key:value'")
-    parser.add_argument("-D","--database", action="store_true", dest="db"
-            , default=False
-			, help="directs stdout to file objects for uploading to mysql db tables")
     return parser
 
-if "__main__" == __name__:
+if __name__ == "__main__":
     """Use gnacs delimited-field parsing libraries as a command line tool to parse a series of JSON
     formatted actvities from file, compressed file or standard input (stdin)."""
     
@@ -109,82 +107,72 @@ if "__main__" == __name__:
         delim = "," # csv delimiter
     elif options.geojson:
         options.geo = True 
-        # NOTE: When using geojson, we have an in-memory structure
-        # example record is geo_d = {"type": "FeatureCollection", "features": []}
-        # so we do this in two parts. See below for completion of structure.
+        # note: geojson option creates an in-memory structure
         sys.stdout.write('{"type": "FeatureCollection", "features": [')
     #
     if options.pub.lower().startswith("word") or options.pub.lower().startswith("wp"):
-        processing_obj = wpacscsv.WPacsCSV(delim
+        processing_obj = wordpress_acs.WPacsCSV(delim
 			, options.keypath
 			, options.user
 			, options.rules
 			, options.lang
-			, options.struct)
+			, options.struct
+            )
     elif options.pub.lower().startswith("disq"):
-        processing_obj = diacscsv.DiacsCSV(delim
+        processing_obj = disqus_acs.DiacsCSV(delim
 			, options.keypath
 			, options.user
 			, options.rules
 			, options.lang
 			, options.struct
-			, options.status)
+			, options.status
+            )
     elif options.pub.lower().startswith("tumb"): 
-        processing_obj = tblracscsv.TblracsCSV(delim
+        processing_obj = tumblr_acs.TblracsCSV(delim
 			, options.keypath
 			, options.user
 			, options.rules
 			, options.lang
-			, options.struct)
+			, options.struct
+            )
     elif options.pub.lower().startswith("four") or options.pub.lower().startswith("fsq"):
-        processing_obj = fsqacscsv.FsqacsCSV(delim
+        processing_obj = foursquare_acs.FsqacsCSV(delim
 			, options.keypath
 			, options.geo
 			, options.user
 			, options.rules
 			, options.lang
-			, options.struct)
+			, options.struct
+            )
     elif options.pub.lower().startswith("get") or options.pub.lower().startswith("gg"):
-        processing_obj = ggacscsv.GgacsCSV(delim
+        processing_obj = getglue_acs.GgacsCSV(delim
 			, options.keypath
 			, options.user
 			, options.rules
 			, options.urls
-			, options.origin)
+			, options.origin
+            )
     elif options.pub.lower().startswith("st") and options.pub.lower().endswith("native"):
-        processing_obj = stntvcsv.StntvCSV(delim
+        processing_obj = stocktwits_native.StocktwitsNative(delim
 			, options.keypath
 			, options.user
 			, options.struct
-			, options.influence)
+			, options.influence
+            )
     elif options.pub.lower().startswith("st"):
-        processing_obj = stacscsv.StacsCSV(delim
+        processing_obj = stocktwits_acs.StacsCSV(delim
 			, options.user
 			, options.struct
-			, options.influence)
+			, options.influence
+            )
     elif options.pub.lower().startswith("news") or options.pub.lower().startswith("ng"):
-        processing_obj = ngacscsv.NGacsCSV(delim
+        processing_obj = newsgator_acs.NGacsCSV(delim
 			, options.keypath
 			, options.urls
-			, options.user)
-    else:
-        processing_obj = twacscsv.TwacsCSV(delim
-			, options.keypath
-			, options.geo
 			, options.user
-			, options.rules
-			, options.urls
-			, options.lang
-			, options.influence
-			, options.struct)
-    if options.db:
-        # replace twacs object with the new code. note that twacsDB has the necessary method 
-        #   in place to create classic gnacs output ( csv() ), with only small differences.
-        #   these include possibly different default values (NULL or \N instead of "None"),
-        #   and replacement of some single-item lists with the contents of the list. i 
-        #   imaging that we can consolidate the twacscsv.TwacsCSV and twacsDB.Twacs objects
-        #   in the future for easier management of the code. (JM)
-        processing_obj = twacsDB.Twacs(delim
+            )
+    else:
+        processing_obj = twitter_acs.TwacsCSV(delim
 			, options.keypath
 			, options.geo
 			, options.user
@@ -193,93 +181,45 @@ if "__main__" == __name__:
 			, options.lang
 			, options.influence
 			, options.struct
-			, options.db)
-        # create a new data directory (change as needed)
-        data_dir = os.environ['HOME'] + "/gnacs_db"
-        if not os.path.exists(data_dir):
-            os.mkdir(data_dir)
-        #
-        # this section is dependent on the particular output choice / table schema! 
-        #
-        # open file objects for writing below 
-        acs_f = codecs.open( data_dir + '/table_activities.csv', 'wb', 'utf8') 
-        ustatic_f = codecs.open( data_dir + '/table_users_static.csv', 'wb', 'utf8') 
-        udyn_f = codecs.open( data_dir + '/table_users_dynamic.csv', 'wb', 'utf8') 
-        hash_f = codecs.open( data_dir + '/table_hashtags.csv', 'wb', 'utf8') 
+            )
     #
-    cnt = 0
     first_geo = True 
-    #
-    for r in fileinput.FileInput(options.file_name,openhook=fileinput.hook_compressed):
-        cnt += 1
-        try:
-            recs = [json.loads(r.strip())]
-        except ValueError:
-            try:
-                # maybe a missing line feed?
-                recs = [json.loads(x) for x in r.strip().replace("}{", "}GNIP_SPLIT{").split("GNIP_SPLIT")]
-            except ValueError:
-                sys.stderr.write("Invalid JSON record (%d) %s, skipping\n"%(cnt, r.strip()))
-                continue
+    for line_number, record in processing_obj.file_reader(options.file_name): 
         if options.pretty:
-            for record in recs:
-                print json_formatter.dumps(record, indent=3, ensure_ascii=False)
+            print json_printer.dumps(record, indent=3, ensure_ascii=False)
             continue 
-        for record in recs:
-            if len(record) == 0:
-                # ignore blank lines
-                continue
+        try:
+            if options.explain:
+                #### TODO: fix -x option for new extractors ####
+                print >>sys.stderr, "\n****\n\n'explain' functionality currently unavailable\n\n****\n"
+                sys.exit()
+                ################################################
+                record = reflect_json.reflect_json(record)
+                sys.stdout.write("%s\n"%processing_obj.procRecord(record))
+            elif options.geojson:
+                # geo-tag coords
+                geo_rec = processing_obj.asGeoJSON(record)
+                if geo_rec is not None:
+                    if not first_geo: 
+                        sys.stdout.write(",")
+                    sys.stdout.write(json.dumps(geo_rec))
+                    first_geo = False
+            else:
+                # ensure formatter is working on a unicode object 
+                sys.stdout.write(u"{}\n".format(processing_obj.procRecord(record, emptyField="None")))
+        # handle I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
+        # TODO: handle this via contextmanager (within AcsCSV)? 
+        except IOError, e:
             try:
-                if options.explain:
-                    record = reflect_json.reflect_json(record)
-                    sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record))
-                elif options.geojson:
-                    # geo-tag coords
-                    geo_rec = processing_obj.asGeoJSON(cnt, record)
-                    if geo_rec is not None:
-                        if not first_geo: 
-                            sys.stdout.write(",")
-                        sys.stdout.write(json.dumps(geo_rec))
-                        first_geo = False
-                elif options.db:
-                    compRE = re.compile(r"GNIPREMOVE") 
-                    tmp_combined_rec = processing_obj.procRecord(cnt, record, emptyField="\\N")
-                    if compRE.search(tmp_combined_rec): 
-                        sys.stderr.write("Skipping compliance activity: ({}) {}\n"
-                                .format(cnt, tmp_combined_rec) ) 
-                        continue
-                    # otherwise, write to appropriate file objects (from above)
-                    flag = "GNIPSPLIT"      # also hardcoded in twacsDB.py
-                    acs_str, ustatic_str, udyn_str, hash_str = tmp_combined_rec.split(flag) 
-                    # clean up any leading/trailing pipes 
-                    acs_str = acs_str.strip("|")
-                    ustatic_str = ustatic_str.strip("|")
-                    udyn_str = udyn_str.strip("|")
-                    hash_str = hash_str.strip("|")                    # id|tag1|id|tag2|...
-                    hash_list = re.findall("[^|]+\|[^|]+", hash_str)  # [ 'id|tag1', 'id|tag2', ... ] 
-                    #
-                    acs_f.write(acs_str + "\n")
-                    ustatic_f.write(ustatic_str + "\n")
-                    udyn_f.write(udyn_str + "\n")
-                    [ hash_f.write(x + "\n") for x in hash_list ] 
-                else:
-                    sys.stdout.write("%s\n"%processing_obj.procRecord(cnt, record, emptyField="None"))
-            # catch I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
+                sys.stdout.close()
             except IOError:
-                try:
-                    sys.stdout.close()
-                except IOError:
-                    pass
-                try:
-                    sys.stderr.close()
-                except IOError:
-                    pass
-                break
-            except UnicodeEncodeError, e:
-                sys.stderr.write("UnicodeEncodeError: error={} ({})\n".format(e, cnt))
-                # use this if you want to see the full troublesome records  
-                #sys.stderr.write("Bad unicode encoding: error={} ({}), record={}\n".format(e, cnt, record))
-
+                pass
+            try:
+                sys.stderr.close()
+            except IOError:
+                pass
+            break
+    # close the geojson data structure
     if options.geojson:
-        # sys.stdout.write(json.dumps(geo_d) + "\n")
         sys.stdout.write(']}\n')            
+

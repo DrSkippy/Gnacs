@@ -2,25 +2,38 @@
 # -*- coding: UTF-8 -*-
 __author__="Scott Hendrickson"
 __license__="Simplified BSD"
+
 import sys
 import datetime
-import json
-import unittest
+import fileinput
+from StringIO import StringIO
+# use fastest option available
+try:
+    import ujson as json
+except ImportError:
+    try:
+        import json
+    except ImportError:
+        import simplejson as json
+
+
 
 gnipError = "GNIPERROR"
 gnipRemove = "GNIPREMOVE"
 gnipDateTime = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.000Z")
 INTERNAL_EMPTY_FIELD = "GNIPEMPTYFIELD"
 
-class _field(object):
+class _Field(object):
     """
     Base class for extracting the desired value at the end of a series of keys in a JSON Activity 
     Streams payload. Set the application-wide default value (for e.g. missing values) here, 
     but also use child classes to override when necessary. Subclasses also need to define the 
     key-path (path) to the desired location by overwriting the path attr.
     """
+
     # set some default values; these can be overwritten in custom classes 
-    default_t_fmt = "%Y-%m-%d %H:%M:%S"
+    # twitter format
+    default_t_fmt = "%Y-%m-%dT%H:%M:%S.000Z" 
     default_value = INTERNAL_EMPTY_FIELD
     #default_value = "\\N"           # escaped \N ==> MySQL NULL
     value = None                    # str representation of the field, often = str( self.value_list ) 
@@ -31,19 +44,19 @@ class _field(object):
         self.value = self.walk_path(json_record)
 
     def __repr__(self):
-        return self.value
+        return unicode(self.value)
 
     def walk_path(self, json_record):
         res = json_record
         for k in self.path:
-            if k not in res:
+            if k not in res or ( type(res[k]) is list and len(res[k]) == 0 ):
+                # parenthetical clause for values with empty lists e.g. twitter_entities
                 return self.default_value
             res = res[k]
         # handle the special case where the walk_path found null (JSON) which converts to 
         # a Python None. Only use "None" (str version) if it's assigned to self.default_value 
         res = res if res is not None else self.default_value
         return res
-
 
     def fix_length(self, iterable, limit=None):
         """
@@ -79,22 +92,23 @@ class _field(object):
         return res
 
 
-class _limited_field(_field):
-    #TODO: is there a better way that this class and the fix_length() method in _field class
-    #       could be combined?
+class _LimitedField(_Field):
     """  
     Takes JSON record (in python dict form) and optionally a maximum length (limit, 
-    with default length=5). Uses parent class _field() to assign the appropriate value 
+    with default length=5). Uses parent class _Field() to assign the appropriate value 
     to self.value. When self.value is a list of dictionaries, 
-    inheriting from _limited_field() class allows for the extraction and combination of 
+    inheriting from _LimitedField() class allows for the extraction and combination of 
     an arbitrary number of fields within self.value into self.value_list.
 
     Ex: if your class would lead to having 
     self.value = [ {'a': 1, 'b': 2, 'c': 3}, {'a': 4, 'b': 5, 'c': 6} ], and what you'd like 
-    is a list that looks like [ 1, 2, 4, 5 ], inheriting from _limited_field() allows you 
+    is a list that looks like [ 1, 2, 4, 5 ], inheriting from _LimitedField() allows you 
     to overwrite the fields list ( fields=["a", "b"] ) to obtain this result. 
     Finally, self.value is set to a string representation of the final self.value_list.
     """
+    #
+    #TODO: move this to the mysql test module? I think it was only used there. 
+    #
     fields = None 
     
     #TODO: set limit=None by default and just return as many as there are, otherwise (by specifying 
@@ -102,7 +116,7 @@ class _limited_field(_field):
 
     def __init__(self, json_record, limit=1):
         super(
-            _limited_field 
+            _LimitedField 
             , self).__init__(json_record)
         # self.value is possibly a list of dicts for each activity media object 
         if self.fields:
@@ -118,38 +132,55 @@ class _limited_field(_field):
 
 
 # TODO:
-# - consolidate _limited_field() & fix_length() if possible 
-# - replace 2-level dict traversal (eg profileLocation base class) with acscsv.walk_path() or 
-#       similar helper method 
+# - consolidate _LimitedField() & fix_length() if possible 
 
-
-class TestAcsCSV(unittest.TestCase):
-    """Unit tests ofr common CSV utility functions"""
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def testCleanField(self):
-        a = AcsCSV("|", False)
-        self.assertEquals(a.cleanField("laksjflasjdfl;a"), "laksjflasjdfl;a")
-        self.assertEquals(a.cleanField("\r\n \n\r \r\r \n\n"), "")
-        self.assertEquals(a.cleanField("\r\na \n\r \r\r a\n\n"), "a       a")
-        self.assertEquals(a.cleanField("asdf|asdf,,adsf|asdf"), "asdf asdf,,adsf asdf")
-        b = AcsCSV(",", False)
-        self.assertEquals(b.cleanField("asdf|asdf,,adsf|asdf"), "asdf|asdf  adsf|asdf")
-        self.assertEquals(b.cleanField(245), "245")
-        self.assertEquals(b.cleanField(a), "None")
-
+    
 class AcsCSV(object):
     """Base class for all delimited list objects. Basic delimited list utility functions"""
+
     def __init__(self, delim, options_keypath):
         self.delim = delim
         if delim == "":
             print >>sys.stderr, "Warning - Output has Null delimiter"
-        self.cnt = None
         self.options_keypath = options_keypath
+
+    def string_hook(self, record_string, mode_dummy):
+        """
+        Returns a file-like StringIO object built from the activity record in record_string.
+        This is ultimately passed down to the FileInput.readline() method. The mode_dummy 
+        parameter is only included so the signature matches other hooks. 
+        """
+        return StringIO( record_string ) 
+
+    def file_reader(self, options_filename=None, json_string=None):
+        """
+        Read arbitrary input file(s) or standard Python str. When passing file_reader() a 
+        JSON string, assign it to the json_string arg. Yields a tuple of (line number, record).
+        """
+        line_number = 0
+        if json_string is not None: 
+            hook = self.string_hook 
+            options_filename = json_string 
+        else:
+            hook = fileinput.hook_compressed
+        for r in fileinput.FileInput(options_filename, openhook=hook):  
+            line_number += 1
+            try:
+                recs = [json.loads(r.strip())]
+            except ValueError:
+                try:
+                    # maybe a missing line feed?
+                    recs = [json.loads(x) for x in r.strip().replace("}{", "}GNIP_SPLIT{").split("GNIP_SPLIT")]
+                except ValueError:
+                    sys.stderr.write("Invalid JSON record (%d) %s, skipping\n"%(line_number, r.strip()))
+                    continue
+            for record in recs:
+                if len(record) == 0:
+                    continue
+                # hack: let the old source modules still have a self.cnt for error msgs
+                self.cnt = line_number
+                yield line_number, record
+
 
     def cleanField(self,f):
         """Clean fields of new lines and delmiter."""
@@ -169,11 +200,18 @@ class AcsCSV(object):
                 )
 
     def buildListString(self,l):
-        """Genereic list builder returns a string represenation of list"""
+        """Generic list builder returns a string representation of list"""
         # unicode output of list (without u's)
         res = '['
         for r in l:
-            res += "'" + r + "',"
+            # handle the various types of lists we might see
+            if isinstance(r, list):
+                res += "'" + self.buildListString(r) + "',"
+            #elif isinstance(r, str):
+            elif isinstance(r, str) or isinstance(r, unicode):
+                res += "'" + r + "',"
+            else:
+                res += "'" + str(r) + "',"
         if res.endswith(','):
             res = res[:-1]
         res += ']'
@@ -196,20 +234,24 @@ class AcsCSV(object):
                 l[i] = emptyField
         return self.delim.join(l)
 
-    def procRecord(self, cnt, x, emptyField="None"):
+    def get_source_list(self, x):
         """Wrapper for the core activity parsing function."""
-        self.cnt = cnt
         source_list = self.procRecordToList(x)
         if self.options_keypath:
             source_list.append(self.keyPath(x))
         # ensure no pipes, newlines, etc
         #TODO: remove calls to cleanField() in submodules
         source_list = [ self.cleanField(x) for x in source_list ]
-        return self.asString(source_list, emptyField)
+        return source_list
 
-    def asGeoJSON(self, cnt, x):
+
+    def procRecord(self, x, emptyField="None"):
+        return self.asString(self.get_source_list(x), emptyField)
+
+
+    def asGeoJSON(self, x):
         """Get results as GeoJSON representation."""
-        recordList = self.procRecordToList(x)
+        record_list = self.procRecordToList(x)
         if self.__class__.__name__ == "TwacsCSV" and self.options_geo:
             if self.geoCoordsList is None:
                 return
@@ -218,7 +260,16 @@ class AcsCSV(object):
             lon_lat = self.geo_coords_list
         else:
             return {"Error":"This publisher doesn't have geo"}
-        return {"type": "Feature", "geometry": { "type": "Point", "coordinates": lon_lat }, "properties": {"id": recordList[0]} }
+        return { 
+                "type": "Feature"
+                , "geometry": { 
+                                "type": "Point"
+                                , "coordinates": lon_lat 
+                              }
+                , "properties": {
+                                "id": record_list[0]
+                                } 
+                }
     
     def keyPath(self,d):
         """Get a generic key path specified at run time."""
@@ -239,5 +290,3 @@ class AcsCSV(object):
                 return "PATH_EMPTY"
         return str(x)
 
-if __name__ == "__main__":
-    unittest.main()

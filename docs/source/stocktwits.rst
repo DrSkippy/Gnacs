@@ -1,8 +1,8 @@
 StockTwits Model
 ================
 
-    .. automodule:: acscsv.stacscsv
+    .. automodule:: acscsv.stocktwits_acs
         :members:
 
-    .. automodule:: acscsv.stntvcsv
+    .. automodule:: acscsv.stocktwits_native
         :members:

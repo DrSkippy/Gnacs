@@ -1,8 +1,6 @@
 Twitter Model
 =============
 
-    .. automodule:: acscsv.twacscsv
+    .. automodule:: acscsv.twitter_acs
         :members:
 
-    .. automodule:: acscsv.twacsDB
-        :members:

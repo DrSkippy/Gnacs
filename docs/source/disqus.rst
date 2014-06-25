@@ -1,6 +1,6 @@
 Disqus Model
 ============
 
-    .. automodule:: acscsv.diacscsv
+    .. automodule:: acscsv.disqus_acs
         :members:
 
