@@ -207,6 +207,77 @@ class TestFoursquareACS(unittest.TestCase):
                                 , self.base_length + self.keypath_length 
                             )  
 
+    def test_category_field(self):
+        """
+        Test for the presence of non-"None" values in a good record,
+        and "None"s in an intentionally-damaged record.
+        """ 
+        
+        # 
+        GOOD_CAT_STRING = """{"id":"tag:gnip.foursquare.com:2013:checkin/51a0afd68bfdb8df55921c1d","postedTime":"2013-05-25T12:34:29+00:00","verb":"checkin","actor":{"objectType":"person","gender":"female"},"object":{"id":"tag:gnip.foursquare.com:2013:venue/4d1778691356a093cc22dc82","displayName":"Leman Kültür","objectType":"place","geo":{"type":"Point","coordinates":[32.688869786457,39.87231478030219]},"address":{"locality":"Ankara","region":"Türkiye","postalCode":"06800","country":"Turkey"},"foursquareCategories":[{"id":"tag:gnip.foursquare.com:2013:category/4bf58dd8d48988d155941735","displayName":"Gastropub"},{"id":"tag:gnip.foursquare.com:2013:category/4bf58dd8d48988d16d941735","displayName":"Café"},{"id":"tag:gnip.foursquare.com:2013:category/4bf58dd8d48988d16e941735","displayName":"Fast Food Restaurant"}]},"provider":{"link":"https://foursquare.com","displayName":"Foursquare","objectType":"service"},"foursquareCheckinUtcOffset":10800}"""
+
+        # fourSquareCategories could be an empty list
+        BAD_CAT_STRING = """{"id":"tag:gnip.foursquare.com:2013:checkin/51a0afd68bfdb8df55921c1d","postedTime":"2013-05-25T12:34:29+00:00","verb":"checkin","actor":{"objectType":"person","gender":"female"},"object":{"id":"tag:gnip.foursquare.com:2013:venue/4d1778691356a093cc22dc82","displayName":"Leman Kültür","objectType":"place","geo":{"type":"Point","coordinates":[32.688869786457,39.87231478030219]},"address":{"locality":"Ankara","region":"Türkiye","postalCode":"06800","country":"Turkey"},"foursquareCategories":[]},"provider":{"link":"https://foursquare.com","displayName":"Foursquare","objectType":"service"},"foursquareCheckinUtcOffset":10800}"""
+
+        o = self.objs["base"]
+
+        # this should have data 
+        for i, record in o.file_reader( json_string=GOOD_CAT_STRING ):
+            record_string = o.procRecord(record)
+            self.assertNotEqual( "None", record_string.split(self.delim)[4] )
+            self.assertNotEqual( "['None']", record_string.split(self.delim)[4] )
+        
+        # this should not have data (should have "None" instead) 
+        for i, record in o.file_reader( json_string=BAD_CAT_STRING ):
+            record_string = o.procRecord(record)
+            self.assertEqual( "['None']", record_string.split(self.delim)[4] )
+
+    def test_geo_fields(self):
+        """
+        Test for the presence of non-"None" values in a good record,
+        and "None"s in an intentionally-damaged record.
+        """ 
+
+        GOOD_GEO_STRING = """{"id":"tag:gnip.foursquare.com:2013:checkin/51a0afd68bfdb8df55921c1d","postedTime":"2013-05-25T12:34:29+00:00","verb":"checkin","actor":{"objectType":"person","gender":"female"},"object":{"id":"tag:gnip.foursquare.com:2013:venue/4d1778691356a093cc22dc82","displayName":"Leman Kültür","objectType":"place","geo":{"type":"Point","coordinates":[32.688869786457,39.87231478030219]},"address":{"locality":"Ankara","region":"Türkiye","postalCode":"06800","country":"Turkey"},"foursquareCategories":[{"id":"tag:gnip.foursquare.com:2013:category/4bf58dd8d48988d155941735","displayName":"Gastropub"},{"id":"tag:gnip.foursquare.com:2013:category/4bf58dd8d48988d16d941735","displayName":"Café"},{"id":"tag:gnip.foursquare.com:2013:category/4bf58dd8d48988d16e941735","displayName":"Fast Food Restaurant"}]},"provider":{"link":"https://foursquare.com","displayName":"Foursquare","objectType":"service"},"foursquareCheckinUtcOffset":10800}"""
+
+        BAD_LOCALITY_STRING = """{"id":"tag:gnip.foursquare.com:2013:checkin/51a0afd68bfdb8df55921c1d","postedTime":"2013-05-25T12:34:29+00:00","verb":"checkin","actor":{"objectType":"person","gender":"female"},"object":{"id":"tag:gnip.foursquare.com:2013:venue/4d1778691356a093cc22dc82","displayName":"Leman Kültür","objectType":"place","geo":{"type":"Point","coordinates":[32.688869786457,39.87231478030219]},"address":{"region":"Türkiye","postalCode":"06800","country":"Turkey"},"foursquareCategories":[]},"provider":{"link":"https://foursquare.com","displayName":"Foursquare","objectType":"service"},"foursquareCheckinUtcOffset":10800}"""
+
+# missing postal code
+        BAD_POSTALCODE_STRING = """{"id":"tag:gnip.foursquare.com:2013:checkin/51a0afd68bfdb8df55921c1d","postedTime":"2013-05-25T12:34:29+00:00","verb":"checkin","actor":{"objectType":"person","gender":"female"},"object":{"id":"tag:gnip.foursquare.com:2013:venue/4d1778691356a093cc22dc82","displayName":"Leman Kültür","objectType":"place","geo":{"type":"Point","coordinates":[32.688869786457,39.87231478030219]},"address":{"locality":"Ankara","region":"Türkiye","country":"Turkey"},"foursquareCategories":[]},"provider":{"link":"https://foursquare.com","displayName":"Foursquare","objectType":"service"},"foursquareCheckinUtcOffset":10800}"""
+
+# missing country key
+        BAD_COUNTRY_STRING = """{"id":"tag:gnip.foursquare.com:2013:checkin/51a0afd68bfdb8df55921c1d","postedTime":"2013-05-25T12:34:29+00:00","verb":"checkin","actor":{"objectType":"person","gender":"female"},"object":{"id":"tag:gnip.foursquare.com:2013:venue/4d1778691356a093cc22dc82","displayName":"Leman Kültür","objectType":"place","geo":{"type":"Point","coordinates":[32.688869786457,39.87231478030219]},"address":{"locality":"Ankara","region":"Türkiye","postalCode":"06800"},"foursquareCategories":[]},"provider":{"link":"https://foursquare.com","displayName":"Foursquare","objectType":"service"},"foursquareCheckinUtcOffset":10800}"""
+
+# region key missing
+        BAD_REGION_STRING = """{"id":"tag:gnip.foursquare.com:2013:checkin/51a0afd68bfdb8df55921c1d","postedTime":"2013-05-25T12:34:29+00:00","verb":"checkin","actor":{"objectType":"person","gender":"female"},"object":{"id":"tag:gnip.foursquare.com:2013:venue/4d1778691356a093cc22dc82","displayName":"Leman Kültür","objectType":"place","geo":{"type":"Point","coordinates":[32.688869786457,39.87231478030219]},"address":{"locality":"Ankara","postalCode":"06800","country":"Turkey"},"foursquareCategories":[]},"provider":{"link":"https://foursquare.com","displayName":"Foursquare","objectType":"service"},"foursquareCheckinUtcOffset":10800}"""
+
+        o = self.objs["geo"]
+
+        # this should have data 
+        for i, record in o.file_reader( json_string=GOOD_GEO_STRING ):
+            record_string = o.procRecord(record)
+            self.assertNotEqual( "None", record_string.split(self.delim)[6] )
+        
+        # this should not have data (should have "None" instead) 
+        for i, record in o.file_reader( json_string=BAD_LOCALITY_STRING ):
+            record_string = o.procRecord(record)
+            self.assertEqual( "None", record_string.split(self.delim)[6] )
+
+        # this should not have data (should have "None" instead) 
+        for i, record in o.file_reader( json_string=BAD_POSTALCODE_STRING ):
+            record_string = o.procRecord(record)
+            self.assertEqual( "None", record_string.split(self.delim)[9] )
+        
+        # this should not have data (should have "None" instead) 
+        for i, record in o.file_reader( json_string=BAD_REGION_STRING ):
+            record_string = o.procRecord(record)
+            self.assertEqual( "None", record_string.split(self.delim)[7] )
+        
+        # this should not have data (should have "None" instead) 
+        for i, record in o.file_reader( json_string=BAD_COUNTRY_STRING ):
+            record_string = o.procRecord(record)
+            self.assertEqual( "None", record_string.split(self.delim)[8] )
+
 
  
 if __name__ == "__main__":
