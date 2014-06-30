@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#/!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 __author__="Scott Hendrickson"
 __license__="Simplified BSD"
@@ -76,7 +76,10 @@ class WPacsCSV(acscsv.AcsCSV):
                 # link to post
                 record.append(obj["link"].encode('ascii', 'replace'))
             if self.options_user:
-                tmp = self.splitId(actor["id"])
+                tmp = "None"
+                if (actor is not None) & ("id" in actor):
+                    if actor['id'] is not None:
+                        tmp = self.splitId(actor["id"])
                 record.append(tmp)
             #
             return record

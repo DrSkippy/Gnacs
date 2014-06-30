@@ -170,9 +170,11 @@ class AcsCSV(object):
             except ValueError:
                 try:
                     # maybe a missing line feed?
-                    recs = [json.loads(x) for x in r.strip().replace("}{", "}GNIP_SPLIT{").split("GNIP_SPLIT")]
+                    recs = [json.loads(x) for x in r.strip().replace("}{", "}GNIP_SPLIT{")
+                        .split("GNIP_SPLIT")]
                 except ValueError:
-                    sys.stderr.write("Invalid JSON record (%d) %s, skipping\n"%(line_number, r.strip()))
+                    sys.stderr.write("Invalid JSON record (%d) %s, skipping\n"
+                        %(line_number, r.strip()))
                     continue
             for record in recs:
                 if len(record) == 0:
@@ -273,8 +275,13 @@ class AcsCSV(object):
     
     def keyPath(self,d):
         """Get a generic key path specified at run time."""
-        key_list = self.options_keypath.split(":")
-        key_stack = self.options_keypath.split(":")
+        #key_list = self.options_keypath.split(":")
+        delim = ":"
+        #print >> sys.stderr, "self.__class__ " + str(self.__class__)
+        if self.__class__.__name__ == "NGacsCSV":
+            delim = ","
+        key_stack = self.options_keypath.split(delim)
+        #print >> sys.stderr, "key_stack " + str(key_stack)
         x = d
         while len(key_stack) > 0:
             try:
@@ -288,5 +295,5 @@ class AcsCSV(object):
             except (IndexError, TypeError, KeyError) as e:
                 sys.stderr.write("Keypath error at %s\n"%k)
                 return "PATH_EMPTY"
-        return str(x)
+        return unicode(x)
 
