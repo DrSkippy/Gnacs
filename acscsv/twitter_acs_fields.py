@@ -30,28 +30,29 @@ class Field_activity_type(acscsv._Field):
             Field_activity_type
             , self).__init__(json_record)
         # self.value is None
-        verb = Field_verb(json_record).value 
-        rec_id = Field_id(json_record).value  
-        inReplyTo = "None"
-        obj_objtype = "None"
-        if "inReplyTo" in json_record:
-            # get the url
-            inReplyTo = json_record["inReplyTo"]["link"]
-            # get the original id from the url
-            rec_id = inReplyTo.split("/")[-1]
-        if "object" in json_record:
-            obj = json_record["object"]
-            if "objectType" in obj:
-                obj_objtype = obj["objectType"]
-        # now we can determine self.value
-        if verb == "share" and obj_objtype == "activity":
-            self.value = "Retweet"
-        elif inReplyTo == "None":
-            self.value = "Tweet"
-        else:
-            self.value = "Reply"
-        # tack on the upstream activity id (or this id, for Tweets)  
-        self.value += " ({})".format(rec_id)
+        if json_record is not None:
+            verb = Field_verb(json_record).value 
+            rec_id = Field_id(json_record).value  
+            inReplyTo = "None"
+            obj_objtype = "None"
+            if "inReplyTo" in json_record:
+                # get the url
+                inReplyTo = json_record["inReplyTo"]["link"]
+                # get the original id from the url
+                rec_id = inReplyTo.split("/")[-1]
+            if "object" in json_record:
+                obj = json_record["object"]
+                if "objectType" in obj:
+                    obj_objtype = obj["objectType"]
+            # now we can determine self.value
+            if verb == "share" and obj_objtype == "activity":
+                self.value = "Retweet"
+            elif inReplyTo == "None":
+                self.value = "Tweet"
+            else:
+                self.value = "Reply"
+            # tack on the upstream activity id (or this id, for Tweets)  
+            self.value += " ({})".format(rec_id)
 
 
 
@@ -76,8 +77,9 @@ class Field_id(acscsv._Field):
             Field_id
             , self).__init__(json_record)
         # self.value is a str beginning w/ tag:search.twitter..... remove all but the actual id 
-        self.value = self.value.split(":")[2]
-
+        tmp = self.value.split(":")
+        if len(tmp) >= 2:
+            self.value = tmp[2]
 
 class Field_objecttype(acscsv._Field):
     """Take a dict, assign to self.value the value in the top-level objectType key.""" 
@@ -386,8 +388,11 @@ class Field_actor_postedtime(acscsv._Field):
             , self).__init__(json_record)
         # self.value is a string (of a timestamp) 
         input_fmt = "%Y-%m-%dT%H:%M:%S.000Z"
-        # default_t_fmt defined in _Field constructor
-        self.value = datetime.strptime(self.value, input_fmt).strftime(self.default_t_fmt) 
+        try:
+            # default_t_fmt defined in _Field constructor
+            self.value = datetime.strptime(self.value, input_fmt).strftime(self.default_t_fmt) 
+        except ValueError:
+            self.value = "INVALID_DATE_FORMAT"
 
 
 class Field_actor_displayname(acscsv._Field):

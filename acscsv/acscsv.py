@@ -4,6 +4,7 @@ __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 
 import sys
+import inspect
 import datetime
 import fileinput
 from StringIO import StringIO
@@ -15,8 +16,6 @@ except ImportError:
         import json
     except ImportError:
         import simplejson as json
-
-
 
 gnipError = "GNIPERROR"
 gnipRemove = "GNIPREMOVE"
@@ -35,8 +34,8 @@ class Singleton(object):
             class_._instances[class_] = super(Singleton, class_).__new__(class_, *args, **kwargs)
         return class_._instances[class_]
 
-class _Field(Singleton):
-#class _Field(object):
+#class _Field(Singleton):
+class _Field(object):
     """
     Base class for extracting the desired value at the end of a series of keys in a JSON Activity 
     Streams payload. Set the application-wide default value (for e.g. missing values) here, 
@@ -52,7 +51,10 @@ class _Field(Singleton):
 
     def __init__(self, json_record):
         self.value = None                    # str representation of the field, often = str( self.value_list ) 
-        self.value = self.walk_path(json_record)
+        if json_record is not None:
+            self.value = self.walk_path(json_record)
+        else:
+            self.value = self.default_value
 
     def __repr__(self):
         return unicode(self.value)
@@ -71,6 +73,18 @@ class _Field(Singleton):
         # handle the special case where the walk_path found null (JSON) which converts to 
         # a Python None. Only use "None" (str version) if it's assigned to self.default_value 
         res = res if res is not None else self.default_value
+        return res
+    
+    def walk_path_slower(self, json_record, path=None):
+        if path is None:
+            path = self.path
+        try:
+            execstr = "res=json_record" + '["{}"]'*len(path)
+            exec(execstr.format(*path))
+        except (KeyError, TypeError):
+            res = None
+        if res is None:
+            res = self.default_value
         return res
 
     def fix_length(self, iterable, limit=None):
@@ -153,8 +167,9 @@ class AcsCSV(object):
         self.delim = delim
         if delim == "":
             print >>sys.stderr, "Warning - Output has Null delimiter"
+        self.rmchars = "\n\r {}".format(self.delim)
         self.options_keypath = options_keypath
-
+        
     def string_hook(self, record_string, mode_dummy):
         """
         Returns a file-like StringIO object built from the activity record in record_string.
@@ -195,20 +210,22 @@ class AcsCSV(object):
 
     def cleanField(self,f):
         """Clean fields of new lines and delmiter."""
+        res = INTERNAL_EMPTY_FIELD
         try:
-            # odd edge case that f is a number
-            # then can't call string functions
-            float(f)
-            f = str(f)
-        except ValueError:
-            pass
-        except TypeError:
-            f = "None"
-        return f.strip(
+            res = f.strip(
                 ).replace("\n"," "
                 ).replace("\r"," "
                 ).replace(self.delim, " "
                 )
+        except AttributeError:
+            try:
+                # odd edge case that f is a number
+                # then can't call string functions
+                float(f)
+                res = str(f)
+            except TypeError:
+                pass
+        return res
 
     def buildListString(self,l):
         """Generic list builder returns a string representation of list"""

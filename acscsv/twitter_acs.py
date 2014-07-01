@@ -4,6 +4,7 @@ __license__="Simplified BSD"
 
 import sys
 import acscsv
+import inspect
 from twitter_acs_fields import *
 
 class TwacsCSV(acscsv.AcsCSV):
@@ -15,7 +16,7 @@ class TwacsCSV(acscsv.AcsCSV):
                 , options_geo
                 , options_user
                 , options_rules
-                , options_url = json_record
+                , options_urls
                 , options_lang
                 , options_influence
                 , options_struct
@@ -28,7 +29,10 @@ class TwacsCSV(acscsv.AcsCSV):
         self.options_lang = options_lang
         self.options_influence = options_influence
         self.options_struct = options_struct
-        
+        # pre-create all of teh objects needed for parsing
+        for name, obj in inspect.getmembers(sys.modules[__name__]):
+            if name.startswith("Field_"):
+                setattr(self, name.lower()+"_", obj(None))
 
     def procRecordToList(self, d):
         """
@@ -129,8 +133,8 @@ class TwacsCSV(acscsv.AcsCSV):
                 output_list.append( 
                     self.buildListString( 
                         [ "{} ({})".format( x["value"], x["tag"] ) for x in Field_gnip_rules(d).value ]
-                    )
-          = json_record      ) 
+                        )
+                    ) 
             else: 
                 output_list.append( val )  
 
