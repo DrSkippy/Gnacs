@@ -4,6 +4,7 @@ __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 
 import sys
+import inspect
 import datetime
 import fileinput
 from StringIO import StringIO
@@ -16,13 +17,24 @@ except ImportError:
     except ImportError:
         import simplejson as json
 
-
-
 gnipError = "GNIPERROR"
 gnipRemove = "GNIPREMOVE"
 gnipDateTime = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.000Z")
 INTERNAL_EMPTY_FIELD = "GNIPEMPTYFIELD"
 
+class Singleton(object):
+    """
+    Singleton class is the base class for every field.  Each object is reused to process the
+    stream of data before an object is deleted.  This keeps memory management from thrashing
+    for long input streams.
+    """
+    _instances = {}                                                               
+    def __new__(class_, *args, **kwargs):
+        if class_ not in class_._instances:
+            class_._instances[class_] = super(Singleton, class_).__new__(class_, *args, **kwargs)
+        return class_._instances[class_]
+
+#class _Field(Singleton):
 class _Field(object):
     """
     Base class for extracting the desired value at the end of a series of keys in a JSON Activity 
@@ -35,20 +47,25 @@ class _Field(object):
     # twitter format
     default_t_fmt = "%Y-%m-%dT%H:%M:%S.000Z" 
     default_value = INTERNAL_EMPTY_FIELD
-    #default_value = "\\N"           # escaped \N ==> MySQL NULL
-    value = None                    # str representation of the field, often = str( self.value_list ) 
-    value_list = [ default_value ]  # overwrite when value is most appropriately a list 
     path = []                       # dict key-path to follow for desired value
 
     def __init__(self, json_record):
-        self.value = self.walk_path(json_record)
+        self.value = None                    # str representation of the field, often = str( self.value_list ) 
+        if json_record is not None:
+            self.value = self.walk_path(json_record)
+        else:
+            self.value = self.default_value
 
     def __repr__(self):
         return unicode(self.value)
 
-    def walk_path(self, json_record):
+    def walk_path(self, json_record, path=None):
         res = json_record
-        for k in self.path:
+        if path is None:
+            path = self.path
+        for k in path:
+            if res is None:
+                break
             if k not in res or ( type(res[k]) is list and len(res[k]) == 0 ):
                 # parenthetical clause for values with empty lists e.g. twitter_entities
                 return self.default_value
@@ -56,6 +73,18 @@ class _Field(object):
         # handle the special case where the walk_path found null (JSON) which converts to 
         # a Python None. Only use "None" (str version) if it's assigned to self.default_value 
         res = res if res is not None else self.default_value
+        return res
+    
+    def walk_path_slower(self, json_record, path=None):
+        if path is None:
+            path = self.path
+        try:
+            execstr = "res=json_record" + '["{}"]'*len(path)
+            exec(execstr.format(*path))
+        except (KeyError, TypeError):
+            res = None
+        if res is None:
+            res = self.default_value
         return res
 
     def fix_length(self, iterable, limit=None):
@@ -106,15 +135,11 @@ class _LimitedField(_Field):
     to overwrite the fields list ( fields=["a", "b"] ) to obtain this result. 
     Finally, self.value is set to a string representation of the final self.value_list.
     """
-    #
-    #TODO: move this to the mysql test module? I think it was only used there. 
-    #
-    fields = None 
-    
     #TODO: set limit=None by default and just return as many as there are, otherwise (by specifying 
     #    limit), return a maximum of limit.
 
     def __init__(self, json_record, limit=1):
+        self.fields = None
         super(
             _LimitedField 
             , self).__init__(json_record)
@@ -142,8 +167,9 @@ class AcsCSV(object):
         self.delim = delim
         if delim == "":
             print >>sys.stderr, "Warning - Output has Null delimiter"
+        self.rmchars = "\n\r {}".format(self.delim)
         self.options_keypath = options_keypath
-
+        
     def string_hook(self, record_string, mode_dummy):
         """
         Returns a file-like StringIO object built from the activity record in record_string.
@@ -186,20 +212,22 @@ class AcsCSV(object):
 
     def cleanField(self,f):
         """Clean fields of new lines and delmiter."""
+        res = INTERNAL_EMPTY_FIELD
         try:
-            # odd edge case that f is a number
-            # then can't call string functions
-            float(f)
-            f = str(f)
-        except ValueError:
-            pass
-        except TypeError:
-            f = "None"
-        return f.strip(
+            res = f.strip(
                 ).replace("\n"," "
                 ).replace("\r"," "
                 ).replace(self.delim, " "
                 )
+        except AttributeError:
+            try:
+                # odd edge case that f is a number
+                # then can't call string functions
+                float(f)
+                res = str(f)
+            except TypeError:
+                pass
+        return res
 
     def buildListString(self,l):
         """Generic list builder returns a string representation of list"""

@@ -23,7 +23,7 @@ class TestAcsCSV(unittest.TestCase):
         b = AcsCSV(",", False)
         self.assertEquals(b.cleanField("asdf|asdf,,adsf|asdf"), "asdf|asdf  adsf|asdf")
         self.assertEquals(b.cleanField(245), "245")
-        self.assertEquals(b.cleanField(a), "None")
+        self.assertEquals(b.cleanField(a), INTERNAL_EMPTY_FIELD)
 
 
 if __name__ == "__main__":
