@@ -429,7 +429,7 @@ class TestTwitter_acs(unittest.TestCase):
         res.append("""GNIPEMPTYFIELD""")
         ## 289-428
         for x,t in zip(self.objs, res):
-            print t
+            #print t
             self.assertEquals(x[1].value, t)
  
     def test_none_value(self):

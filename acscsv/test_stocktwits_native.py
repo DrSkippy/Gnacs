@@ -63,6 +63,7 @@ class TestStocktwitsNative(unittest.TestCase):
         # grab the correct data file 
         # TODO: replace hard-coded path to file -- requires running test from acscsv/ dir
         datafile = "../data/{}_sample.json".format(tmp.__module__)  
+        datafile = "./data/{}_sample.json".format(tmp.__module__)  
 
         # loop over all test stocktwits processing objects
         for o in self.objs.values():

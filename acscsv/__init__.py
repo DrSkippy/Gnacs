@@ -1,7 +1,6 @@
 __all__ = [
         'disqus_acs'
         , 'foursquare_acs'
-        , 'getglue_acs'
         , 'newsgator_acs'
         , 'reflect_json'
         , 'stocktwits_acs'

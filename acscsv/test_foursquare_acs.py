@@ -62,6 +62,7 @@ class TestFoursquareACS(unittest.TestCase):
         # grab the correct data file 
         # TODO: replace hard-coded path to file -- requires running test from acscsv/ dir
         datafile = "../data/foursquare_sample.json" 
+        datafile = "./data/foursquare_sample.json" 
 
         # loop over all test foursquare processing objects
         for o in self.objs.values():

@@ -6,14 +6,14 @@ __license__="MIT License"
 import sys
 import unittest
 from StringIO import StringIO
-from PUBLISHER import *
+from reflect_json import *
 
 
 # valid activity from source (eg from data/) 
-VALID_ACTIVITY =
+VALID_ACTIVITY ={}
 
 
-class TestPUBLISHER(unittest.TestCase):
+class Testreflect(unittest.TestCase):
     """Unit tests of common CSV utility functions"""
 
     def setUp(self):
