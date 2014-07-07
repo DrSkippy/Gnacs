@@ -285,37 +285,34 @@ class TestTumblrACS(unittest.TestCase):
         # this should return "None" because there is no "summary" key in the "object" field
         for i, record in o.file_reader( json_string=BAD_CONTENT_SUMMARY_STRING ):
             record_string = o.procRecord(record)
-            print(record_string)
+            #print(record_string)
             self.assertEqual( "None", record_string.split(self.delim)[2] )
    
-###
-### Don't do language test until newline bugs are fixed
-###
 #
-#    def test_language_field(self):
-#        """
-#        Test for the presence of non-"None" values in a good record,
-#        and "None"s in an intentionally-damaged record.
-#        """ 
-#
-#        # this record contains an valid language key:value pair 
-#        #GOOD_LANG_STRING = """{"id":"tag:gnip.tumblr.com:2012:post/45837266561/post","verb":"post","target":{"link":"http://m2lm-photography.tumblr.com/","displayName":"m2lm-photography","objectType":"blog"},"postedTime":"2013-03-20T15:09:40+00:00","actor":{"id":"tag:gnip.tumblr.com:2012:blog/99030041"},"object":{"summary":"<p>Blé</p><p><a href=\"http://m2lm-photography.tumblr.com\">http://m2lm-photography.tumblr.com</a></p>","tags":[{"displayName":"M2LM-photography"},{"displayName":"Blé"}],"id":"tag:gnip.tumblr.com:2012:post/45837266561","tumblrReblogKey":"uBR5KD9F","items":[{"summary":"","image":{"height":75,"width":75,"link":"http://24.media.tumblr.com/e3e1d83c86585d9288f443bc2a4f1461/tumblr_mjyss26sZD1s92ligo1_75sq.jpg"},"objectType":"image","fullImage":{"height":853,"width":1280,"link":"http://25.media.tumblr.com/e3e1d83c86585d9288f443bc2a4f1461/tumblr_mjyss26sZD1s92ligo1_1280.jpg"}}],"objectTypes":["image"],"link":"http://m2lm-photography.tumblr.com/post/45837266561/ble-http-m2lm-photography-tumblr-com","totalItems":1,"tumblrType":"photo","postedTime":"2013-03-20T15:09:38+00:00","tumblrFormat":"html","objectType":"photo-album"},"gnip":{"urls":[{"url":"http://m2lm-photography.tumblr.com","expanded_url":"http://m2lm-photography.tumblr.com"}]}}"""
-#
-#        # this record has a bad language key 
-#        #BAD_LANG_STRING = """{"id":"tag:gnip.tumblr.com:2012:post/45837266561/post","verb":"post","target":{"link":"http://m2lm-photography.tumblr.com/","displayName":"m2lm-photography","objectType":"blog"},"postedTime":"2013-03-20T15:09:40+00:00","actor":{"id":"tag:gnip.tumblr.com:2012:blog/99030041"},"object":{"summary":"<p>Blé</p><p><a href=\"http://m2lm-photography.tumblr.com\">http://m2lm-photography.tumblr.com</a></p>","tags":[{"displayName":"M2LM-photography"},{"displayName":"Blé"}],"id":"tag:gnip.tumblr.com:2012:post/45837266561","tumblrReblogKey":"uBR5KD9F","items":[{"summary":"","image":{"height":75,"width":75,"link":"http://24.media.tumblr.com/e3e1d83c86585d9288f443bc2a4f1461/tumblr_mjyss26sZD1s92ligo1_75sq.jpg"},"objectType":"image","fullImage":{"height":853,"width":1280,"link":"http://25.media.tumblr.com/e3e1d83c86585d9288f443bc2a4f1461/tumblr_mjyss26sZD1s92ligo1_1280.jpg"}}],"objectTypes":["image"],"link":"http://m2lm-photography.tumblr.com/post/45837266561/ble-http-m2lm-photography-tumblr-com","totalItems":1,"tumblrType":"photo","postedTime":"2013-03-20T15:09:38+00:00","tumblrFormat":"html","objectType":"photo-album"},"gnip":{"urls":[{"url":"http://m2lm-photography.tumblr.com","expanded_url":"http://m2lm-photography.tumblr.com"}]}}"""
-#
-#        o = self.objs["lang"]
-#
-#        # this should have data (an empty string)
-#        for i, record in o.file_reader( json_string=GOOD_LANG_STRING ):
-#            record_string = o.procRecord(record)
-#            self.assertNotEqual( "None", record_string.split(self.delim)[4] )
-#        
-#        # this should not have data in the 2nd and 3rd struct fields (should have "None" instead) 
-#        for i, record in o.file_reader( json_string=BAD_LANG_STRING ):
-#            record_string = o.procRecord(record)
-#            print(record_string)
-#            self.assertEqual( "None", record_string.split(self.delim)[4] )
+    def test_language_field(self):
+        """
+        Test for the presence of non-"None" values in a good record,
+        and "None"s in an intentionally-damaged record.
+        """ 
+
+        # this record contains an valid language key:value pair 
+        GOOD_LANG_STRING = """{"id":"tag:gnip.tumblr.com:2012:post/45837266561/post","verb":"post","target":{"link":"http://m2lm-photography.tumblr.com/","displayName":"m2lm-photography","objectType":"blog"},"postedTime":"2013-03-20T15:09:40+00:00","actor":{"id":"tag:gnip.tumblr.com:2012:blog/99030041"},"object":{"summary":"<p>Blé</p><p><a href=\\"http://m2lm-photography.tumblr.com\\">http://m2lm-photography.tumblr.com</a></p>","tags":[{"displayName":"M2LM-photography"},{"displayName":"Blé"}],"id":"tag:gnip.tumblr.com:2012:post/45837266561","tumblrReblogKey":"uBR5KD9F","items":[{"summary":"","image":{"height":75,"width":75,"link":"http://24.media.tumblr.com/e3e1d83c86585d9288f443bc2a4f1461/tumblr_mjyss26sZD1s92ligo1_75sq.jpg"},"objectType":"image","fullImage":{"height":853,"width":1280,"link":"http://25.media.tumblr.com/e3e1d83c86585d9288f443bc2a4f1461/tumblr_mjyss26sZD1s92ligo1_1280.jpg"}}],"objectTypes":["image"],"link":"http://m2lm-photography.tumblr.com/post/45837266561/ble-http-m2lm-photography-tumblr-com","totalItems":1,"tumblrType":"photo","postedTime":"2013-03-20T15:09:38+00:00","tumblrFormat":"html","objectType":"photo-album"},"gnip":{"urls":[{"url":"http://m2lm-photography.tumblr.com","expanded_url":"http://m2lm-photography.tumblr.com"}],"language":{"value":"en"}}}"""
+
+        # this record has a bad language key 
+        BAD_LANG_STRING = """{"id":"tag:gnip.tumblr.com:2012:post/45837266561/post","verb":"post","target":{"link":"http://m2lm-photography.tumblr.com/","displayName":"m2lm-photography","objectType":"blog"},"postedTime":"2013-03-20T15:09:40+00:00","actor":{"id":"tag:gnip.tumblr.com:2012:blog/99030041"},"object":{"summary":"<p>Blé</p><p><a href=\\"http://m2lm-photography.tumblr.com\\">http://m2lm-photography.tumblr.com</a></p>","tags":[{"displayName":"M2LM-photography"},{"displayName":"Blé"}],"id":"tag:gnip.tumblr.com:2012:post/45837266561","tumblrReblogKey":"uBR5KD9F","items":[{"summary":"","image":{"height":75,"width":75,"link":"http://24.media.tumblr.com/e3e1d83c86585d9288f443bc2a4f1461/tumblr_mjyss26sZD1s92ligo1_75sq.jpg"},"objectType":"image","fullImage":{"height":853,"width":1280,"link":"http://25.media.tumblr.com/e3e1d83c86585d9288f443bc2a4f1461/tumblr_mjyss26sZD1s92ligo1_1280.jpg"}}],"objectTypes":["image"],"link":"http://m2lm-photography.tumblr.com/post/45837266561/ble-http-m2lm-photography-tumblr-com","totalItems":1,"tumblrType":"photo","postedTime":"2013-03-20T15:09:38+00:00","tumblrFormat":"html","objectType":"photo-album"},"gnip":{"urls":[{"url":"http://m2lm-photography.tumblr.com","expanded_url":"http://m2lm-photography.tumblr.com"}]}}"""
+
+        o = self.objs["lang"]
+
+        # this should have data (an empty string)
+        for i, record in o.file_reader( json_string=GOOD_LANG_STRING ):
+            record_string = o.procRecord(record)
+            self.assertNotEqual( u"None", record_string.split(self.delim)[4] )
+        
+        # this should not have data in the 2nd and 3rd struct fields (should have "None" instead) 
+        for i, record in o.file_reader( json_string=BAD_LANG_STRING ):
+            record_string = o.procRecord(record)
+            #print(record_string)
+            self.assertEqual( u"None", record_string.split(self.delim)[4] )
 
 
     def test_rules_field(self):

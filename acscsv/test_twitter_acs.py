@@ -255,6 +255,42 @@ class TestTwitter_acs(unittest.TestCase):
                 self.objs[name] = obj(valid_activity)
         # we need to preserve order so the tests match the answers
         self.objs = self.objs.items()
+        # get some processing objects
+        # delim
+        #    , options.keypath
+        #    , options.geo
+        #    , options.user
+        #    , options.rules
+        #    , options.urls
+        #    , options.lang
+        #    , options.influence
+        #    , options.struct
+ 
+        args = ["|" 
+                , None
+                , False
+                , False
+                , False
+                , False
+                , False
+                , False
+                , False
+            ]
+        self.record_lengths = [
+                3
+                , 19
+                , 22
+                , 23
+                , 26
+                , 29
+                , 34
+                , 35        
+            ]
+        self.processing_objs = [TwacsCSV(*args)]
+        for i in range(7):
+            args[2+i] = True
+            #print >>sys.stderr, args
+            self.processing_objs.append(TwacsCSV(*args))
 
     def tearDown(self):
         """
@@ -263,7 +299,24 @@ class TestTwitter_acs(unittest.TestCase):
     #
     # helpful to group test methods that are related into sections
     #
-    
+    def test_sample_data(self):
+        """
+        Check that we can use each test object's procRecord method on each record in the 
+        twitter_sample.json example file without raising an Exception.
+        """
+        # grab the correct data file 
+        # TODO: replace hard-coded path to file -- requires running test from acscsv/ dir
+        datafile = "../data/twitter_sample.json"
+        datafile = "./data/twitter_sample.json"
+
+        # loop over all test twitter processing objects
+        for j, o in enumerate(self.processing_objs):
+            # loop over records in test file 
+            for i, record in o.file_reader(datafile):
+                # if there's a problem parsing, this method will raise an Exception
+                record_string = o.procRecord(record)
+                self.assertEquals(len(record_string.split("|")), self.record_lengths[j])
+ 
     def test_valid_objects(self):
         for n,x in self.objs:
             self.assertTrue(isinstance(x,acscsv._Field))
