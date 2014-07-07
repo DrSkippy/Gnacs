@@ -71,14 +71,14 @@ class Field_verb(acscsv._Field):
 class Field_id(acscsv._Field):
     """Take a dict, assign to self.value the value in the top-level id key.""" 
     path = ["id"]
+    label = 'tweet ID'
     
     def __init__(self, json_record):
         super(
             Field_id
             , self).__init__(json_record)
-        # self.value is a str beginning w/ tag:search.twitter..... remove all but the actual id 
         tmp = self.value.split(":")
-        if len(tmp) >= 2:
+        if len(tmp) >= 3:
             self.value = tmp[2]
 
 class Field_objecttype(acscsv._Field):

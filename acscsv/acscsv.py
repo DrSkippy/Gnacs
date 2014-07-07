@@ -51,7 +51,11 @@ class _Field(object):
     default_value = INTERNAL_EMPTY_FIELD
     path = []                       # dict key-path to follow for desired value
 
+    label = 'DummyKeyPathLabel'         # this must match if-statement in constructor
+
     def __init__(self, json_record):
+        if self.label == 'DummyKeyPathLabel':
+            self.label = ':'.join(self.path)
         self.value = None                    # str representation of the field, often = str( self.value_list ) 
         if json_record is not None:
             self.value = self.walk_path(json_record)
@@ -124,6 +128,8 @@ class _Field(object):
 
 
 class _LimitedField(_Field):
+    #TODO: is there a better way that this class and the fix_length() method in _Field class
+    #       could be combined?
     """  
     Takes JSON record (in python dict form) and optionally a maximum length (limit, 
     with default length=5). Uses parent class _Field() to assign the appropriate value 
