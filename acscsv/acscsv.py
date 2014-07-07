@@ -143,11 +143,6 @@ class _LimitedField(_Field):
     to overwrite the fields list ( fields=["a", "b"] ) to obtain this result. 
     Finally, self.value is set to a string representation of the final self.value_list.
     """
-<<<<<<< HEAD
-    fields = None 
-    
-=======
->>>>>>> 457b4aa5f71b04f66d2055bde043e5d6bfbd233b
     #TODO: set limit=None by default and just return as many as there are, otherwise (by specifying 
     #    limit), return a maximum of limit.
 
