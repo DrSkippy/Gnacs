@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>acscsv.stntvcsv &mdash; gnacs 0 documentation</title>
+    <title>acscsv.stocktwits_native &mdash; gnacs 0 documentation</title>
     
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -47,23 +47,24 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <h1>Source code for acscsv.stntvcsv</h1><div class="highlight"><pre>
+  <h1>Source code for acscsv.stocktwits_native</h1><div class="highlight"><pre>
 <span class="c">#!/usr/bin/env python</span>
 <span class="c"># -*- coding: UTF-8 -*-</span>
-<span class="n">__author__</span><span class="o">=</span><span class="s">&quot;Jinsub Hong&quot;</span>
+<span class="n">__author__</span><span class="o">=</span><span class="s">&quot;Jinsub Hong, Josh Montague&quot;</span>
 <span class="n">__license__</span><span class="o">=</span><span class="s">&quot;Simplified BSD&quot;</span>
+
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">acscsv</span>
 
-<div class="viewcode-block" id="StntvCSV"><a class="viewcode-back" href="../../stocktwits.html#acscsv.stntvcsv.StntvCSV">[docs]</a><span class="k">class</span> <span class="nc">StntvCSV</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">AcsCSV</span><span class="p">):</span>
+<div class="viewcode-block" id="StocktwitsNative"><a class="viewcode-back" href="../../stocktwits.html#acscsv.stocktwits_native.StocktwitsNative">[docs]</a><span class="k">class</span> <span class="nc">StocktwitsNative</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">AcsCSV</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Native stocktwits actvities.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delim</span><span class="p">,</span> <span class="n">options_keypath</span><span class="p">,</span><span class="n">options_user</span><span class="p">,</span><span class="n">options_struct</span><span class="p">,</span><span class="n">options_influence</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">StntvCSV</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">delim</span><span class="p">,</span><span class="n">options_keypath</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">StocktwitsNative</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">delim</span><span class="p">,</span><span class="n">options_keypath</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">options_user</span> <span class="o">=</span> <span class="n">options_user</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">options_struct</span> <span class="o">=</span> <span class="n">options_struct</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">options_influence</span> <span class="o">=</span> <span class="n">options_influence</span>
 
-<div class="viewcode-block" id="StntvCSV.procRecordToList"><a class="viewcode-back" href="../../stocktwits.html#acscsv.stntvcsv.StntvCSV.procRecordToList">[docs]</a>    <span class="k">def</span> <span class="nf">procRecordToList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+<div class="viewcode-block" id="StocktwitsNative.procRecordToList"><a class="viewcode-back" href="../../stocktwits.html#acscsv.stocktwits_native.StocktwitsNative.procRecordToList">[docs]</a>    <span class="k">def</span> <span class="nf">procRecordToList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Creates the ordered field list as specified by options.&quot;&quot;&quot;</span>
         <span class="n">record</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">try</span><span class="p">:</span>

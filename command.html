@@ -58,15 +58,14 @@
 <dl class="function">
 <dt id="gnacs.gnacs_args">
 <tt class="descclassname">gnacs.</tt><tt class="descname">gnacs_args</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/gnacs.html#gnacs_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gnacs.gnacs_args" title="Permalink to this definition">¶</a></dt>
-<dd><p>Parse comand line arguemnts for command line utility</p>
+<dd><p>Parse comand line arguemnts for defining input and output of command line utility.</p>
 </dd></dl>
 
 <p>Parse seqeunce of JSON formated activities.</p>
 <pre class="literal-block">
 usage: gnacs.py [-h] [-a] [-g] [-i] [-c] [-l] [-j] [-o] [-p] [-s] [-t] [-r]
-                [-u] [-v] [-x] [-z PUB] [-k KEYPATH] [-D]
+                [-u] [-v] [-x] [-z PUB] [-k KEYPATH]
                 [file_name]
-
 </pre>
 <dl class="docutils">
 <dt>Positional arguments:</dt>
@@ -96,7 +95,7 @@ usage: gnacs.py [-h] [-a] [-g] [-i] [-c] [-l] [-j] [-o] [-p] [-s] [-t] [-r]
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-i=False</span>, <span class="option">--influence=False</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>Show user&#8217;s influence metrics</td></tr>
+<tr><td>&nbsp;</td><td>Show user&#8217;s influence metrics (Twitter only)</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-c=False</span>, <span class="option">--csv=False</span></kbd></td>
 </tr>
@@ -148,10 +147,6 @@ usage: gnacs.py [-h] [-a] [-g] [-i] [-c] [-l] [-j] [-o] [-p] [-s] [-t] [-r]
 <tr><td class="option-group">
 <kbd><span class="option">-k</span>, <span class="option">--keypath</span></kbd></td>
 <td>returns a value from a path of the form &#8216;key:value&#8217;</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-D=False</span>, <span class="option">--database=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>directs stdout to file objects for uploading to mysql db tables</td></tr>
 </tbody>
 </table>
 </dd>

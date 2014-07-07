@@ -62,20 +62,20 @@
 <dd><p>Base class for all delimited list objects. Basic delimited list utility functions</p>
 <dl class="method">
 <dt id="acscsv.acscsv.AcsCSV.asGeoJSON">
-<tt class="descname">asGeoJSON</tt><big>(</big><em>cnt</em>, <em>x</em><big>)</big><a class="reference internal" href="_modules/acscsv/acscsv.html#AcsCSV.asGeoJSON"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.acscsv.AcsCSV.asGeoJSON" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">asGeoJSON</tt><big>(</big><em>x</em><big>)</big><a class="reference internal" href="_modules/acscsv/acscsv.html#AcsCSV.asGeoJSON"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.acscsv.AcsCSV.asGeoJSON" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get results as GeoJSON representation.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="acscsv.acscsv.AcsCSV.asString">
-<tt class="descname">asString</tt><big>(</big><em>l</em>, <em>emptyField='None'</em><big>)</big><a class="reference internal" href="_modules/acscsv/acscsv.html#AcsCSV.asString"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.acscsv.AcsCSV.asString" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">asString</tt><big>(</big><em>l</em>, <em>emptyField</em><big>)</big><a class="reference internal" href="_modules/acscsv/acscsv.html#AcsCSV.asString"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.acscsv.AcsCSV.asString" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a delimited list object as a properly delimited string.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="acscsv.acscsv.AcsCSV.buildListString">
 <tt class="descname">buildListString</tt><big>(</big><em>l</em><big>)</big><a class="reference internal" href="_modules/acscsv/acscsv.html#AcsCSV.buildListString"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.acscsv.AcsCSV.buildListString" title="Permalink to this definition">¶</a></dt>
-<dd><p>Genereic list builder returns a string represenation of list</p>
+<dd><p>Generic list builder returns a string representation of list</p>
 </dd></dl>
 
 <dl class="method">
@@ -85,15 +85,22 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="acscsv.acscsv.AcsCSV.keyPath">
-<tt class="descname">keyPath</tt><big>(</big><em>d</em><big>)</big><a class="reference internal" href="_modules/acscsv/acscsv.html#AcsCSV.keyPath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.acscsv.AcsCSV.keyPath" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get a generic key path specified at run time.</p>
+<dt id="acscsv.acscsv.AcsCSV.file_reader">
+<tt class="descname">file_reader</tt><big>(</big><em>options_filename=None</em>, <em>json_string=None</em><big>)</big><a class="reference internal" href="_modules/acscsv/acscsv.html#AcsCSV.file_reader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.acscsv.AcsCSV.file_reader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read arbitrary input file(s) or standard Python str. When passing file_reader() a 
+JSON string, assign it to the json_string arg. Yields a tuple of (line number, record).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="acscsv.acscsv.AcsCSV.procRecord">
-<tt class="descname">procRecord</tt><big>(</big><em>cnt</em>, <em>x</em>, <em>emptyField='None'</em><big>)</big><a class="reference internal" href="_modules/acscsv/acscsv.html#AcsCSV.procRecord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.acscsv.AcsCSV.procRecord" title="Permalink to this definition">¶</a></dt>
+<dt id="acscsv.acscsv.AcsCSV.get_source_list">
+<tt class="descname">get_source_list</tt><big>(</big><em>x</em><big>)</big><a class="reference internal" href="_modules/acscsv/acscsv.html#AcsCSV.get_source_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.acscsv.AcsCSV.get_source_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper for the core activity parsing function.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="acscsv.acscsv.AcsCSV.keyPath">
+<tt class="descname">keyPath</tt><big>(</big><em>d</em><big>)</big><a class="reference internal" href="_modules/acscsv/acscsv.html#AcsCSV.keyPath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.acscsv.AcsCSV.keyPath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a generic key path specified at run time.</p>
 </dd></dl>
 
 <dl class="method">
@@ -102,12 +109,22 @@
 <dd><p>Generic functions for splitting id parts</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="acscsv.acscsv.AcsCSV.string_hook">
+<tt class="descname">string_hook</tt><big>(</big><em>record_string</em>, <em>mode_dummy</em><big>)</big><a class="reference internal" href="_modules/acscsv/acscsv.html#AcsCSV.string_hook"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.acscsv.AcsCSV.string_hook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a file-like StringIO object built from the activity record in record_string.
+This is ultimately passed down to the FileInput.readline() method. The mode_dummy 
+parameter is only included so the signature matches other hooks.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
-<dt id="acscsv.acscsv.TestAcsCSV">
-<em class="property">class </em><tt class="descclassname">acscsv.acscsv.</tt><tt class="descname">TestAcsCSV</tt><big>(</big><em>methodName='runTest'</em><big>)</big><a class="reference internal" href="_modules/acscsv/acscsv.html#TestAcsCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.acscsv.TestAcsCSV" title="Permalink to this definition">¶</a></dt>
-<dd><p>Unit tests ofr common CSV utility functions</p>
+<dt id="acscsv.acscsv.Singleton">
+<em class="property">class </em><tt class="descclassname">acscsv.acscsv.</tt><tt class="descname">Singleton</tt><a class="reference internal" href="_modules/acscsv/acscsv.html#Singleton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.acscsv.Singleton" title="Permalink to this definition">¶</a></dt>
+<dd><p>Singleton class is the base class for every field.  Each object is reused to process the
+stream of data before an object is deleted.  This keeps memory management from thrashing
+for long input streams.</p>
 </dd></dl>
 
 </div></blockquote>
