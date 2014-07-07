@@ -30,9 +30,9 @@ class TwacsCSV(acscsv.AcsCSV):
         self.options_influence = options_influence
         self.options_struct = options_struct
         # pre-create all of teh objects needed for parsing
-        for name, obj in inspect.getmembers(sys.modules[__name__]):
-            if name.startswith("Field_"):
-                setattr(self, name.lower()+"_", obj(None))
+        #for name, obj in inspect.getmembers(sys.modules[__name__]):
+        #    if name.startswith("Field_"):
+        #        setattr(self, name.lower()+"_", obj(None))
 
     def procRecordToList(self, d):
         """

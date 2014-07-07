@@ -32,12 +32,13 @@ class FsqacsCSV(acscsv.AcsCSV):
                 record.append(msg)
                 return record
             if verb == "delete":
-                record.append(self.cleanField(d["object"]["id"]))
+                #record.append(self.cleanField(d["object"]["id"]))
+                record.append(d["object"]["id"])
                 record.append(acscsv.gnipDateTime)
                 record.append('-'.join([acscsv.gnipRemove, verb]))
                 return record
             elif verb == "scrub_geo":
-                record.append(self.cleanField(d["actor"]["id"]))
+                record.append(d["actor"]["id"])
                 record.append(acscsv.gnipDateTime)
                 record.append('-'.join([acscsv.gnipRemove, verb]))
                 return record
@@ -53,7 +54,8 @@ class FsqacsCSV(acscsv.AcsCSV):
                 sys.stderr.write("Standard Activity Streams fields missing - ")
                 raise
             try:        # should be in all fsq acs
-                fsq_utc_offset = self.cleanField(d["foursquareCheckinUtcOffset"]) 
+                #fsq_utc_offset = self.cleanField(d["foursquareCheckinUtcOffset"]) 
+                fsq_utc_offset = d["foursquareCheckinUtcOffset"] 
                 d_name = obj["displayName"]
                 cat_list = obj["foursquareCategories"]
                 # coords is an obj attribute so it can be used with the geojson methods
@@ -102,7 +104,8 @@ class FsqacsCSV(acscsv.AcsCSV):
                 record.append(postalCode)
             if self.options_user:
                 try:
-                    record.append(self.cleanField(actor["gender"]))
+                    #record.append(self.cleanField(actor["gender"]))
+                    record.append(actor["gender"])
                 except KeyError:
                     sys.stderr.write("Standard pub-specific fields missing - ")
                     raise

@@ -4,10 +4,12 @@ __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 
 import sys
-import inspect
 import datetime
 import fileinput
 from StringIO import StringIO
+# Experimental: Use numba to speed up some fo the basic function
+# that are run many times per record
+# from numba import jit
 # use fastest option available
 try:
     import ujson as json
@@ -209,7 +211,6 @@ class AcsCSV(object):
                 self.cnt = line_number
                 yield line_number, record
 
-
     def cleanField(self,f):
         """Clean fields of new lines and delmiter."""
         res = INTERNAL_EMPTY_FIELD
@@ -229,6 +230,8 @@ class AcsCSV(object):
                 pass
         return res
 
+    #Experimental 
+    #@jit
     def buildListString(self,l):
         """Generic list builder returns a string representation of list"""
         # unicode output of list (without u's)
@@ -247,6 +250,8 @@ class AcsCSV(object):
         res += ']'
         return res
 
+    #Experimental 
+    #@jit
     def splitId(self, x, index=1):
         """Generic functions for splitting id parts"""
         tmp = x.split("/")
@@ -270,9 +275,7 @@ class AcsCSV(object):
         if self.options_keypath:
             source_list.append(self.keyPath(x))
         # ensure no pipes, newlines, etc
-        #TODO: remove calls to cleanField() in submodules
-        source_list = [ self.cleanField(x) for x in source_list ]
-        return source_list
+        return [ self.cleanField(x) for x in source_list ]
 
 
     def procRecord(self, x, emptyField="None"):
