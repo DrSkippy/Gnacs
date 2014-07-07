@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#/!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 __author__="Scott Hendrickson"
 __license__="Simplified BSD"
@@ -37,18 +37,18 @@ class WPacsCSV(acscsv.AcsCSV):
             if verb == "delete":
                 record.append(acscsv.gnipRemove)
                 record.append(verb)
-                record.append(self.cleanField(d["object"]["id"]))
+                record.append(d["object"]["id"])
                 return record
             #
             record.append(d["id"])
             record.append(d["postedTime"])
             obj = d["object"]
             if "content" in obj:
-                record.append(self.cleanField(obj["content"]))
+                record.append(obj["content"])
             else:
                 record.append("None")
             if "summary" in obj:
-                record.append(self.cleanField(obj["summary"]))
+                record.append(obj["summary"])
             else:
                 record.append("None")
             #
@@ -76,7 +76,10 @@ class WPacsCSV(acscsv.AcsCSV):
                 # link to post
                 record.append(obj["link"].encode('ascii', 'replace'))
             if self.options_user:
-                tmp = self.splitId(actor["id"])
+                tmp = "None"
+                if (actor is not None) & ("id" in actor):
+                    if actor['id'] is not None:
+                        tmp = self.splitId(actor["id"])
                 record.append(tmp)
             #
             return record

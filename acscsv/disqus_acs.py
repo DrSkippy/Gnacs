@@ -35,12 +35,14 @@ class DiacsCSV(acscsv.AcsCSV):
             if verb == "delete":
                 record.append(acscsv.gnipRemove)
                 record.append(verb)
-                record.append(self.cleanField(d["object"]["id"]))
+                #record.append(self.cleanField(d["object"]["id"]))
+                record.append(d["object"]["id"])
                 return record
             #
             record.append(d["id"])
             record.append(d["postedTime"])
-            record.append(self.cleanField(d["body"]))
+            #record.append(self.cleanField(d["body"]))
+            record.append(d["body"])
             #
             gnip = d["gnip"]
             actor = d["actor"]

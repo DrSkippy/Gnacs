@@ -34,14 +34,16 @@ class NGacsCSV(acscsv.AcsCSV):
             if verb == "delete":
                 record.append(acscsv.gnipRemove)
                 record.append(verb)
-                record.append(self.cleanField(d["object"]["id"]))
+                #record.append(self.cleanField(d["object"]["id"]))
+                record.append(d["object"]["id"])
                 return record
             #
             record.append(d["id"])
             record.append(d["postedTime"])
             obj = d["object"]
             if "content" in obj:
-                record.append(self.cleanField(obj["content"]))
+                #record.append(self.cleanField(obj["content"]))
+                record.append(obj["content"])
             else:
                 record.append("None")
             #

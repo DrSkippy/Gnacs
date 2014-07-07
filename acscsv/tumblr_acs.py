@@ -49,9 +49,11 @@ class TblracsCSV(acscsv.AcsCSV):
             actor = d["actor"]
             obj = d["object"] 
             if "summary" in obj and obj["summary"] is not None:
-                record.append(self.cleanField(obj["summary"]))
+                #record.append(self.cleanField(obj["summary"]))
+                record.append(obj["summary"])
             elif "content" in obj and obj["content"] is not None:
-                record.append(self.cleanField(obj["content"]))
+                #record.append(self.cleanField(obj["content"]))
+                record.append(obj["content"])
             else:
                 record.append("None")
             record.append(obj["objectType"])
