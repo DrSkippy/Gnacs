@@ -4,7 +4,6 @@ __license__="Simplified BSD"
 
 import sys
 import acscsv
-import inspect
 from twitter_acs_fields import *
 
 class TwacsCSV(acscsv.AcsCSV):

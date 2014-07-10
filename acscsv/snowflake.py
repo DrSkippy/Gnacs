@@ -56,6 +56,7 @@ class Snowflake(object):
             self.worker = int(self.masked_id(SF_WORK_BITS, SF_SEQ_BITS))
             self.data_center = int(self.masked_id(SF_DC_BITS, SF_WORK_BITS + SF_SEQ_BITS))
             self.ts = int(self.masked_id(SF_TIME_BITS, SF_DC_BITS + SF_WORK_BITS + SF_SEQ_BITS))
+            self.sample_set = self.ts % 100
             # time in seconds
             # originally  ((self.id >> 22) + TWEPOCH)/1000.0 
             self.timestamp = (self.ts + TWEPOCH)/1000.
@@ -72,7 +73,7 @@ class Snowflake(object):
             self.trials = [self.ndigits(self.id, 2)
                     , self.ndigits(self.ts, 2)
                     , self.ndigits(self.timestamp, 2)]
-        else:
+        if len(ns) == 0 or self.year < 2010 or self.year > datetime.datetime.now().year + 1:
             # no valid snowflake id found
             self.id = id  # pass through input
             self.sequence = self.worker = self.data_center = self.ts = self.timestamp = None

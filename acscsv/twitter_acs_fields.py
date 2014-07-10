@@ -3,7 +3,8 @@ __author__="Josh Montague"
 __license__="Simplified BSD"
 
 import sys
-import acscsv   
+import acscsv
+from snowflake import *
 from datetime import datetime
 import re
 
@@ -80,6 +81,15 @@ class Field_id(acscsv._Field):
         tmp = self.value.split(":")
         if len(tmp) >= 3:
             self.value = tmp[2]
+
+class Field_snowflake(Field_id):
+    def __init__(self, json_record):
+        super(
+            Field_snowflake
+            , self).__init__(json_record)
+        sf = Snowflake(self.value)
+        self.value = "_".join([str(sf.id), sf.timeString, str(sf.sample_set)])
+
 
 class Field_objecttype(acscsv._Field):
     """Take a dict, assign to self.value the value in the top-level objectType key.""" 
