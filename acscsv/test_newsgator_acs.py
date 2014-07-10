@@ -50,7 +50,6 @@ class TestNewsgatorAcs(unittest.TestCase):
         tmp = self.objs["base"]
 
         # grab the correct data file
-        datafile = "../data/newsgator_sample.json"
         datafile = "./data/newsgator_sample.json"
         
         # loop over all of the test newsgator processing objects

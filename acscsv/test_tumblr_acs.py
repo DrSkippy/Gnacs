@@ -62,8 +62,6 @@ class TestTumblrACS(unittest.TestCase):
         tmp = self.objs["base"]
 
         # grab the correct data file 
-        # TODO: replace hard-coded path to file -- requires running test from acscsv/ dir
-        datafile = "../data/tumblr_sample.json"
         datafile = "./data/tumblr_sample.json"
 
         # loop over all test tumblr processing objects
