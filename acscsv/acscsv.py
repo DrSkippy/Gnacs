@@ -301,13 +301,8 @@ class AcsCSV(object):
             return {"Error":"This publisher doesn't have geo"}
         return { 
                 "type": "Feature"
-                , "geometry": { 
-                                "type": "Point"
-                                , "coordinates": lon_lat 
-                              }
-                , "properties": {
-                                "id": record_list[0]
-                                } 
+                , "geometry": { "type": "Point", "coordinates": lon_lat }
+                , "properties": { "id": record_list[0] } 
                 }
     
     def keyPath(self,d):
@@ -330,7 +325,7 @@ class AcsCSV(object):
                     idx = str(k)
                 x = x[idx]
             except (IndexError, TypeError, KeyError) as e:
-                sys.stderr.write("Keypath error at %s\n"%k)
+                #sys.stderr.write("Keypath error at %s\n"%k)
                 return "PATH_EMPTY"
         return unicode(x)
 

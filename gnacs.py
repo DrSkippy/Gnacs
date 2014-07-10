@@ -159,6 +159,7 @@ if __name__ == "__main__":
             )
     elif options.pub.lower().startswith("st"):
         processing_obj = stocktwits_acs.StacsCSV(delim
+			, options.keypath
 			, options.user
 			, options.struct
 			, options.influence

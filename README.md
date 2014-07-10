@@ -160,14 +160,21 @@ The number of steps involved in that last step will depend on how your ``.gitcon
 
 ### Contribution 
 
-If you would like to contribute code to the core ``gnacs`` code, feel free to edit the ``master`` branch and submit a Pull Request. 
+If you would like to contribute code to the core ``gnacs`` code, feel free to fork the project and add your awesome new features. 
+
+**Testing**
+
+When you add new features (or whenever you're feeling inspired by the test gods), add to the existing test coverage (see the ``test_*`` modules within ``acscsv/`` for some starting points). Ideally, your tests follow the ``unittest`` paradigm and are picked up by the current test framework. To run all the tests, go to the repo base and run:
+
+    $ make tests 
+
+
 
 
 --------------------------
 
 coming soon: 
 
-- test framework & instructions 
 - doc generation & instructions
 
 ``sudo pip install sphinx autodoc ghp-import sphinx-argparse``
