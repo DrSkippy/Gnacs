@@ -51,7 +51,6 @@ class TestWordpress(unittest.TestCase):
         # get a temporary obj
         tmp = self.objs["base"]
         # grab the correct data file
-        datafile = "../data/wp-com_sample.json"
         datafile = "./data/wp-com_sample.json"
 
         # loop over all of the test wordpress processing objects
