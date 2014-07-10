@@ -5,7 +5,9 @@
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
-BUILDDIR      = build
+#BUILDDIR      = build
+DOCSDIR       = docs
+BUILDDIR      = $(DOCSDIR)/build
 HTMLDIR       = $(BUILDDIR)/html
 
 # localhost port for viewing local docs
@@ -19,9 +21,10 @@ endif
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
-ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
+#ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
+ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(DOCSDIR)/source
 # the i18n builder cannot share the environment and doctrees with the others
-I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
+I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(DOCSDIR)/source
 
 .PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
 
@@ -50,6 +53,8 @@ help:
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 	@echo "  docs       regenerate current docs and push to gh-pages branch on GitHub"
+	@echo "  review     regenerate current docs and start a local SimpleHTTPServer for review"
+	@echo "  tests      run all module unittests in the acscsv directory"
 
 clean:
 	rm -rf $(BUILDDIR)/*
@@ -191,5 +196,8 @@ docs: clean html
 review: clean html
 	cd ${HTMLDIR}; \
 	python -m SimpleHTTPServer ${SERVEPORT}
+
+tests:
+	python -m unittest discover
 
 
