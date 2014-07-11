@@ -351,13 +351,8 @@
             <span class="k">return</span> <span class="p">{</span><span class="s">&quot;Error&quot;</span><span class="p">:</span><span class="s">&quot;This publisher doesn&#39;t have geo&quot;</span><span class="p">}</span>
         <span class="k">return</span> <span class="p">{</span> 
                 <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;Feature&quot;</span>
-                <span class="p">,</span> <span class="s">&quot;geometry&quot;</span><span class="p">:</span> <span class="p">{</span> 
-                                <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;Point&quot;</span>
-                                <span class="p">,</span> <span class="s">&quot;coordinates&quot;</span><span class="p">:</span> <span class="n">lon_lat</span> 
-                              <span class="p">}</span>
-                <span class="p">,</span> <span class="s">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
-                                <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="n">record_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                                <span class="p">}</span> 
+                <span class="p">,</span> <span class="s">&quot;geometry&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;Point&quot;</span><span class="p">,</span> <span class="s">&quot;coordinates&quot;</span><span class="p">:</span> <span class="n">lon_lat</span> <span class="p">}</span>
+                <span class="p">,</span> <span class="s">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="n">record_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">}</span> 
                 <span class="p">}</span>
     </div>
 <div class="viewcode-block" id="AcsCSV.keyPath"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV.keyPath">[docs]</a>    <span class="k">def</span> <span class="nf">keyPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">d</span><span class="p">):</span>
@@ -380,7 +375,7 @@
                     <span class="n">idx</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
                 <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
             <span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;Keypath error at </span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">%</span><span class="n">k</span><span class="p">)</span>
+                <span class="c">#sys.stderr.write(&quot;Keypath error at %s\n&quot;%k)</span>
                 <span class="k">return</span> <span class="s">&quot;PATH_EMPTY&quot;</span>
         <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div></div></div>
