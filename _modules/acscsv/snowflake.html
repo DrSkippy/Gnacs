@@ -89,14 +89,18 @@
 
 <div class="viewcode-block" id="Snowflake"><a class="viewcode-back" href="../../twitter.html#acscsv.snowflake.Snowflake">[docs]</a><span class="k">class</span> <span class="nc">Snowflake</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Snowflake id object provides access to multiple forms of of the bit fields</span>
-<span class="sd">    present in a snowflake id. Ids can be of the form::</span>
+<span class="sd">    present in a snowflake id. Ids can be of the form of a string with leading and</span>
+<span class="sd">    trailing characters or symbols. The first 18 consecutive digits will be used</span>
+<span class="sd">    as the id. It is also permitted to provide an int::</span>
 <span class="sd">        tag:search.twitter.com,2005:113733024721539072</span>
 <span class="sd">        113733024721539072</span>
-<span class="sd">        132454352345</span>
 <span class="sd">    where the latter represents a pre-snowflake twitter id. In this case all </span>
 <span class="sd">    fields will be null.</span>
 <span class="sd">    </span>
-<span class="sd">    Avaialble fields::</span>
+<span class="sd">    When the input does not match a valid snowflake id, the input field is available</span>
+<span class="sd">    as the id and all other fields are set to None.</span>
+
+<span class="sd">    Available fields::</span>
 <span class="sd">        id </span>
 <span class="sd">        sequence </span>
 <span class="sd">        worker </span>
@@ -114,6 +118,8 @@
 <span class="sd">        sec </span>
 <span class="sd">        dow </span>
 <span class="sd">        doy </span>
+
+<span class="sd">    .</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
