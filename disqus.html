@@ -56,7 +56,33 @@
   <div class="section" id="disqus-model">
 <h1>Disqus Model<a class="headerlink" href="#disqus-model" title="Permalink to this headline">¶</a></h1>
 <blockquote>
-<div><span class="target" id="module-acscsv.disqus_acs"></span></div></blockquote>
+<div><span class="target" id="module-acscsv.disqus_acs"></span><dl class="class">
+<dt id="acscsv.disqus_acs.DiacsCSV">
+<em class="property">class </em><tt class="descclassname">acscsv.disqus_acs.</tt><tt class="descname">DiacsCSV</tt><big>(</big><em>delim</em>, <em>options_keypath</em>, <em>options_user</em>, <em>options_rules</em>, <em>options_lang</em>, <em>options_struct</em>, <em>options_status</em><big>)</big><a class="reference internal" href="_modules/acscsv/disqus_acs.html#DiacsCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.disqus_acs.DiacsCSV" title="Permalink to this definition">¶</a></dt>
+<dd><p>DiacsCSV determins the parse order and included fields when parsing Disqus Activity Streams
+JSON records to CSV fields.</p>
+<dl class="method">
+<dt id="acscsv.disqus_acs.DiacsCSV.procRecordToList">
+<tt class="descname">procRecordToList</tt><big>(</big><em>d</em><big>)</big><a class="reference internal" href="_modules/acscsv/disqus_acs.html#DiacsCSV.procRecordToList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.disqus_acs.DiacsCSV.procRecordToList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a JSON Activity Streams payload as a Python dictionary. Check 
+activity for system information and compliance handling. If necessary, 
+return the system info or compliance message. Otherwise, if the activity 
+is valid, return list of fields as specified by the input flags.</p>
+<p>Flags:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">delim</span>
+<span class="n">options_keypath</span>
+<span class="n">options_user</span>
+<span class="n">options_rules</span>
+<span class="n">options_lang</span>
+<span class="n">options_struct</span>
+<span class="n">options_status</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
 </div>
 
 

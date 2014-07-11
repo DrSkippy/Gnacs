@@ -60,6 +60,24 @@
 <dt id="acscsv.tumblr_acs.TblracsCSV">
 <em class="property">class </em><tt class="descclassname">acscsv.tumblr_acs.</tt><tt class="descname">TblracsCSV</tt><big>(</big><em>delim</em>, <em>options_keypath</em>, <em>options_user</em>, <em>options_rules</em>, <em>options_lang</em>, <em>options_struct</em><big>)</big><a class="reference internal" href="_modules/acscsv/tumblr_acs.html#TblracsCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.tumblr_acs.TblracsCSV" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tumblr activities</p>
+<dl class="method">
+<dt id="acscsv.tumblr_acs.TblracsCSV.procRecordToList">
+<tt class="descname">procRecordToList</tt><big>(</big><em>d</em><big>)</big><a class="reference internal" href="_modules/acscsv/tumblr_acs.html#TblracsCSV.procRecordToList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.tumblr_acs.TblracsCSV.procRecordToList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a JSON Activity Streams payload as a Python dictionary. Check 
+activity for system information and compliance handling. If necessary, 
+return the system info or compliance message. Otherwise, if the activity 
+is valid, return list of fields as specified by the input flags.</p>
+<p>Flags:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">delim</span>
+<span class="n">options_keypath</span>
+<span class="n">options_user</span>
+<span class="n">options_rules</span>
+<span class="n">options_lang</span>
+<span class="n">options_struct</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </dd></dl>
 
 </div></blockquote>

@@ -22,8 +22,8 @@ Field Objects
     .. autoclass:: acscsv.acscsv._LimitedField
         :members:
 
-Available Field Objects
-+++++++++++++++++++++++
+Available Twitter Activity Streams Field Objects
+++++++++++++++++++++++++++++++++++++++++++++++++
 
     .. automodule:: acscsv.twitter_acs_fields
         :members:
