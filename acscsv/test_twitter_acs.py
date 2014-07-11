@@ -322,7 +322,7 @@ class TestTwitter_acs(unittest.TestCase):
             self.assertTrue(isinstance(x,acscsv._Field))
     
     def test_number_of_fields(self):
-        self.assertEquals(len(self.objs), 69)
+        self.assertEquals(len(self.objs), 70)
 
     def _test_field_values_(self):
         for n,x in self.objs:
@@ -406,6 +406,8 @@ class TestTwitter_acs(unittest.TestCase):
         res.append(22)
         ## path =  ['objectType']
         res.append("""activity""")
+        ## path =  ['id']
+        res.append("""482946548071161857_2014-06-28T18:00:04_73""")
         ## path =  ['link']
         res.append("""http://twitter.com/mokitwou_sigei/statuses/482946548071161857""")
         ## path =  ['gnip', 'profileLocations']
