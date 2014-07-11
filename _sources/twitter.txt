@@ -4,3 +4,8 @@ Twitter Model
     .. automodule:: acscsv.twitter_acs
         :members:
 
+    .. automodule:: acscsv.snowflake
+        :members:
+
+    .. automodule:: acscsv.twitter_acs_fields
+        :members:

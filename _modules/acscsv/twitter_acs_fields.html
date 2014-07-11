@@ -1,0 +1,776 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>acscsv.twitter_acs_fields &mdash; gnacs 0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="gnacs 0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">gnacs 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for acscsv.twitter_acs_fields</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: UTF-8 -*-</span>
+<span class="n">__author__</span><span class="o">=</span><span class="s">&quot;Josh Montague, Scott Hendrickson&quot;</span>
+<span class="n">__license__</span><span class="o">=</span><span class="s">&quot;Simplified BSD&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">acscsv</span>
+<span class="kn">from</span> <span class="nn">snowflake</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+
+<span class="c">########################################</span>
+<span class="c">#   activity type </span>
+<span class="c">########################################</span>
+
+<div class="viewcode-block" id="Field_activity_type"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_activity_type">[docs]</a><span class="k">class</span> <span class="nc">Field_activity_type</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Take a dict, assign to self.value the appropriate value of Tweet, Retweet, or Reply. This </span>
+<span class="sd">    class is being held onto for now, but may not be needed in future.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Activity Type&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">Field_activity_type</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is None</span>
+        <span class="k">if</span> <span class="n">json_record</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">verb</span> <span class="o">=</span> <span class="n">Field_verb</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> 
+            <span class="n">rec_id</span> <span class="o">=</span> <span class="n">Field_id</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>  
+            <span class="n">inReplyTo</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+            <span class="n">obj_objtype</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span>
+            <span class="k">if</span> <span class="s">&quot;inReplyTo&quot;</span> <span class="ow">in</span> <span class="n">json_record</span><span class="p">:</span>
+                <span class="c"># get the url</span>
+                <span class="n">inReplyTo</span> <span class="o">=</span> <span class="n">json_record</span><span class="p">[</span><span class="s">&quot;inReplyTo&quot;</span><span class="p">][</span><span class="s">&quot;link&quot;</span><span class="p">]</span>
+                <span class="c"># get the original id from the url</span>
+                <span class="n">rec_id</span> <span class="o">=</span> <span class="n">inReplyTo</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s">&quot;object&quot;</span> <span class="ow">in</span> <span class="n">json_record</span><span class="p">:</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="n">json_record</span><span class="p">[</span><span class="s">&quot;object&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="s">&quot;objectType&quot;</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">:</span>
+                    <span class="n">obj_objtype</span> <span class="o">=</span> <span class="n">obj</span><span class="p">[</span><span class="s">&quot;objectType&quot;</span><span class="p">]</span>
+            <span class="c"># now we can determine self.value</span>
+            <span class="k">if</span> <span class="n">verb</span> <span class="o">==</span> <span class="s">&quot;share&quot;</span> <span class="ow">and</span> <span class="n">obj_objtype</span> <span class="o">==</span> <span class="s">&quot;activity&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s">&quot;Retweet&quot;</span>
+            <span class="k">elif</span> <span class="n">inReplyTo</span> <span class="o">==</span> <span class="s">&quot;None&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s">&quot;Tweet&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s">&quot;Reply&quot;</span>
+            <span class="c"># tack on the upstream activity id (or this id, for Tweets)  </span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">+=</span> <span class="s">&quot; ({})&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rec_id</span><span class="p">)</span>
+
+
+
+<span class="c">########################################</span>
+<span class="c">#   top-level fields </span>
+<span class="c">########################################</span>
+</div>
+<div class="viewcode-block" id="Field_verb"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_verb">[docs]</a><span class="k">class</span> <span class="nc">Field_verb</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value in the top-level verb key.&quot;&quot;&quot;</span> 
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Verb&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;verb&#39;</span><span class="p">]</span>
+    <span class="c"># overwrite this default value because records missing this field should be called out (badness) </span>
+    <span class="c"># 2014-05-29, leave this out for new usage (JM)</span>
+    <span class="c">#default_value = &quot;Unidentified meta message&quot;</span>
+    
+</div>
+<div class="viewcode-block" id="Field_id"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_id">[docs]</a><span class="k">class</span> <span class="nc">Field_id</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value in the top-level id key.&quot;&quot;&quot;</span> 
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Tweet ID&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">Field_id</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;:&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</div>
+<span class="k">class</span> <span class="nc">Field_snowflake</span><span class="p">(</span><span class="n">Field_id</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">Field_snowflake</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="n">sf</span> <span class="o">=</span> <span class="n">Snowflake</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">sf</span><span class="o">.</span><span class="n">id</span><span class="p">),</span> <span class="n">sf</span><span class="o">.</span><span class="n">timeString</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">sf</span><span class="o">.</span><span class="n">sample_set</span><span class="p">)])</span>
+
+
+<div class="viewcode-block" id="Field_objecttype"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_objecttype">[docs]</a><span class="k">class</span> <span class="nc">Field_objecttype</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value in the top-level objectType key.&quot;&quot;&quot;</span> 
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;objectType&#39;</span> 
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;objectType&#39;</span><span class="p">]</span>
+    
+</div>
+<div class="viewcode-block" id="Field_object"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_object">[docs]</a><span class="k">class</span> <span class="nc">Field_object</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value in the top-level object key.&quot;&quot;&quot;</span> 
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Object&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;object&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_postedtime"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_postedtime">[docs]</a><span class="k">class</span> <span class="nc">Field_postedtime</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Take a dict, assign to self.value the value in the top-level postedTime key. Timestamp is </span>
+<span class="sd">    formatted according to input_fmt, which is set in the constructor.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Posted Time&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;postedTime&#39;</span><span class="p">]</span>
+
+    <span class="c"># keep this around for possible regex+uniform output extension</span>
+<span class="c">#    def __init__(self, json_record):</span>
+<span class="c">#        super(</span>
+<span class="c">#            Field_postedtime </span>
+<span class="c">#            , self).__init__(json_record)</span>
+<span class="c">#        # self.value is a datetime string </span>
+<span class="c">#        input_fmt = &quot;%Y-%m-%dT%H:%M:%S.000Z&quot;</span>
+<span class="c">#        # add a regex match on the input to have consistent output across all input streams? </span>
+<span class="c">#        self.value = datetime.strptime( </span>
+<span class="c">#                        self.value, input_fmt </span>
+<span class="c">#                        ).strftime( </span>
+<span class="c">#                            self.default_t_fmt ) </span>
+
+</div>
+<div class="viewcode-block" id="Field_body"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_body">[docs]</a><span class="k">class</span> <span class="nc">Field_body</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value in top-level body key.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Body&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;body&#39;</span><span class="p">]</span>
+    
+</div>
+<div class="viewcode-block" id="Field_link"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_link">[docs]</a><span class="k">class</span> <span class="nc">Field_link</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value in top-level link key.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Activity URL&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;link&#39;</span><span class="p">]</span>
+    
+</div>
+<div class="viewcode-block" id="Field_twitter_lang"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_twitter_lang">[docs]</a><span class="k">class</span> <span class="nc">Field_twitter_lang</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of top-level twitter_lang key.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Twitter-Inferred Activity Language&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;twitter_lang&#39;</span><span class="p">]</span>
+    
+</div>
+<div class="viewcode-block" id="Field_favoritescount"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_favoritescount">[docs]</a><span class="k">class</span> <span class="nc">Field_favoritescount</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of top-level favoritesCount key.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Favorite Count&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;favoritesCount&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_retweetcount"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_retweetcount">[docs]</a><span class="k">class</span> <span class="nc">Field_retweetcount</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of top-level retweetCount key.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Retweet Count&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;retweetCount&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_twitter_filter_level"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_twitter_filter_level">[docs]</a><span class="k">class</span> <span class="nc">Field_twitter_filter_level</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of top-level twitter_filter_level key.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Twitter Filter Level&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;twitter_filter_level&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_inreplyto_link"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_inreplyto_link">[docs]</a><span class="k">class</span> <span class="nc">Field_inreplyto_link</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Take a dict, assign to self.value the value of inReplyTo.link. </span>
+<span class="sd">    Should only appear in Replies.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;In-Reply-To URL&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;inReplyTo&#39;</span><span class="p">,</span> <span class="s">&#39;link&#39;</span><span class="p">]</span>
+    
+
+
+<span class="c">########################################</span>
+<span class="c">#   &#39;provider&#39; fields </span>
+<span class="c">########################################</span>
+</div>
+<div class="viewcode-block" id="Field_provider_objecttype"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_provider_objecttype">[docs]</a><span class="k">class</span> <span class="nc">Field_provider_objecttype</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of provider.objectType key.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Provider Object Type&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;provider&#39;</span><span class="p">,</span> <span class="s">&#39;objectType&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_provider_displayname"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_provider_displayname">[docs]</a><span class="k">class</span> <span class="nc">Field_provider_displayname</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of provider.displayName key.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Provider Name&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;provider&#39;</span><span class="p">,</span> <span class="s">&#39;displayName&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_provider_link"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_provider_link">[docs]</a><span class="k">class</span> <span class="nc">Field_provider_link</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of provider.link key.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Provider Link&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;provider&#39;</span><span class="p">,</span> <span class="s">&#39;link&#39;</span><span class="p">]</span>
+
+
+
+<span class="c">########################################</span>
+<span class="c">#   &#39;generator&#39; fields </span>
+<span class="c">########################################</span>
+</div>
+<div class="viewcode-block" id="Field_generator_displayname"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_generator_displayname">[docs]</a><span class="k">class</span> <span class="nc">Field_generator_displayname</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of generator.displayName key.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Generator Name&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;generator&#39;</span><span class="p">,</span> <span class="s">&#39;displayName&#39;</span><span class="p">]</span>
+    
+</div>
+<div class="viewcode-block" id="Field_generator_link"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_generator_link">[docs]</a><span class="k">class</span> <span class="nc">Field_generator_link</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of generator.link key.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Generator Link&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;generator&#39;</span><span class="p">,</span> <span class="s">&#39;link&#39;</span><span class="p">]</span>
+
+
+
+<span class="c">########################################</span>
+<span class="c">#   &#39;gnip&#39; fields </span>
+<span class="c">########################################</span>
+</div>
+<div class="viewcode-block" id="Field_gnip_rules"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_gnip_rules">[docs]</a><span class="k">class</span> <span class="nc">Field_gnip_rules</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the list of dicts at gnip.matching_rules&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Matching PT Rules&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;gnip&#39;</span><span class="p">,</span> <span class="s">&#39;matching_rules&#39;</span><span class="p">]</span>
+    
+</div>
+<div class="viewcode-block" id="Field_gnip_urls"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_gnip_urls">[docs]</a><span class="k">class</span> <span class="nc">Field_gnip_urls</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the list of dicts at gnip.urls&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;List of URLs (Gnip)&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;gnip&#39;</span><span class="p">,</span> <span class="s">&#39;urls&#39;</span><span class="p">]</span>
+
+<span class="c"># TODO: extractors that use Field_gnip_urls to get both the shortened &amp; unwound URLs</span>
+    
+</div>
+<div class="viewcode-block" id="Field_gnip_language_value"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_gnip_language_value">[docs]</a><span class="k">class</span> <span class="nc">Field_gnip_language_value</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of gnip.language.value&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Gnip-Inferred Activity Language&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;gnip&#39;</span><span class="p">,</span> <span class="s">&#39;language&#39;</span><span class="p">,</span> <span class="s">&#39;value&#39;</span><span class="p">]</span>
+
+
+<span class="c"># klout</span></div>
+<div class="viewcode-block" id="Field_gnip_klout_score"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_gnip_klout_score">[docs]</a><span class="k">class</span> <span class="nc">Field_gnip_klout_score</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of gnip.klout_score&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User Klout Score&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;gnip&#39;</span><span class="p">,</span> <span class="s">&#39;klout_score&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_gnip_klout_profile_topics"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_gnip_klout_profile_topics">[docs]</a><span class="k">class</span> <span class="nc">Field_gnip_klout_profile_topics</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the list at gnip.klout_profile.topics&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User Klout Topics&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;gnip&#39;</span><span class="p">,</span> <span class="s">&#39;klout_profile&#39;</span><span class="p">,</span> <span class="s">&#39;topics&#39;</span><span class="p">]</span>
+    
+</div>
+<div class="viewcode-block" id="Field_gnip_klout_profile_klout_user_id"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_gnip_klout_profile_klout_user_id">[docs]</a><span class="k">class</span> <span class="nc">Field_gnip_klout_profile_klout_user_id</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of gnip.klout_profile.klout_user_id&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User Klout ID&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;gnip&#39;</span><span class="p">,</span> <span class="s">&#39;klout_profile&#39;</span><span class="p">,</span> <span class="s">&#39;klout_user_id&#39;</span><span class="p">]</span>
+    
+</div>
+<div class="viewcode-block" id="Field_gnip_klout_profile_link"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_gnip_klout_profile_link">[docs]</a><span class="k">class</span> <span class="nc">Field_gnip_klout_profile_link</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of gnip.klout_profile.link&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User Klout Profile Link&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;gnip&#39;</span><span class="p">,</span> <span class="s">&#39;klout_profile&#39;</span><span class="p">,</span> <span class="s">&#39;link&#39;</span><span class="p">]</span>
+
+
+<span class="c"># profileLocations</span></div>
+<span class="k">class</span> <span class="nc">_Field_gnip_profilelocations_base</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Take a dict, assign to self.value the dict at gnip.profileLocations[0]. This class </span>
+<span class="sd">    serves as the base for subfields of profileLocations.</span>
+<span class="sd">    &quot;&quot;&quot;</span> 
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Profile Geo: Data Structure&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;gnip&#39;</span><span class="p">,</span> <span class="s">&#39;profileLocations&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">_Field_gnip_profilelocations_base</span> 
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="c"># if we found the list, we really want the first (only) thing in it</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="Field_gnip_profilelocations_displayname"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_gnip_profilelocations_displayname">[docs]</a><span class="k">class</span> <span class="nc">Field_gnip_profilelocations_displayname</span><span class="p">(</span><span class="n">_Field_gnip_profilelocations_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of gnip.profileLocations[0].displayName.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Profile Geo: Name&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">Field_gnip_profilelocations_displayname</span> 
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">walk_path</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;displayName&#39;</span><span class="p">]</span> <span class="p">)</span> 
+
+</div>
+<div class="viewcode-block" id="Field_gnip_profilelocations_objecttype"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_gnip_profilelocations_objecttype">[docs]</a><span class="k">class</span> <span class="nc">Field_gnip_profilelocations_objecttype</span><span class="p">(</span><span class="n">_Field_gnip_profilelocations_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of gnip.profileLocations[0].objectType&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Profile Geo: Object Type&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">Field_gnip_profilelocations_objecttype</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">walk_path</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;objectType&#39;</span><span class="p">]</span> <span class="p">)</span> 
+
+</div>
+<div class="viewcode-block" id="Field_gnip_profilelocations_geo_type"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_gnip_profilelocations_geo_type">[docs]</a><span class="k">class</span> <span class="nc">Field_gnip_profilelocations_geo_type</span><span class="p">(</span><span class="n">_Field_gnip_profilelocations_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of gnip.profileLocations[0].geo.type&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Profile Geo: Type&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">Field_gnip_profilelocations_geo_type</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">walk_path</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;geo&#39;</span><span class="p">,</span> <span class="s">&#39;type&#39;</span><span class="p">]</span> <span class="p">)</span> 
+
+</div>
+<div class="viewcode-block" id="Field_gnip_profilelocations_geo_coordinates"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_gnip_profilelocations_geo_coordinates">[docs]</a><span class="k">class</span> <span class="nc">Field_gnip_profilelocations_geo_coordinates</span><span class="p">(</span><span class="n">_Field_gnip_profilelocations_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of gnip.profileLocations[0].geo.coordinates&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Profile Geo: Coordinates&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">Field_gnip_profilelocations_geo_coordinates</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">walk_path</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;geo&#39;</span><span class="p">,</span> <span class="s">&#39;coordinates&#39;</span><span class="p">]</span> <span class="p">)</span> 
+
+</div>
+<div class="viewcode-block" id="Field_gnip_profilelocations_address_country"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_gnip_profilelocations_address_country">[docs]</a><span class="k">class</span> <span class="nc">Field_gnip_profilelocations_address_country</span><span class="p">(</span><span class="n">_Field_gnip_profilelocations_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of gnip.profileLocations[0].address.country&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Profile Geo: Country&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">Field_gnip_profilelocations_address_country</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">walk_path</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;address&#39;</span><span class="p">,</span> <span class="s">&#39;country&#39;</span><span class="p">]</span> <span class="p">)</span> 
+
+</div>
+<div class="viewcode-block" id="Field_gnip_profilelocations_address_countrycode"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_gnip_profilelocations_address_countrycode">[docs]</a><span class="k">class</span> <span class="nc">Field_gnip_profilelocations_address_countrycode</span><span class="p">(</span><span class="n">_Field_gnip_profilelocations_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of gnip.profileLocations[0].address.countryCode&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Profile Geo: Country Code&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">Field_gnip_profilelocations_address_countrycode</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">walk_path</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;address&#39;</span><span class="p">,</span> <span class="s">&#39;countryCode&#39;</span><span class="p">]</span> <span class="p">)</span> 
+
+</div>
+<div class="viewcode-block" id="Field_gnip_profilelocations_address_locality"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_gnip_profilelocations_address_locality">[docs]</a><span class="k">class</span> <span class="nc">Field_gnip_profilelocations_address_locality</span><span class="p">(</span><span class="n">_Field_gnip_profilelocations_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of gnip.profileLocations[0].address.locality&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Profile Geo: Locality&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">Field_gnip_profilelocations_address_locality</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">walk_path</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;address&#39;</span><span class="p">,</span> <span class="s">&#39;locality&#39;</span><span class="p">]</span> <span class="p">)</span> 
+
+</div>
+<div class="viewcode-block" id="Field_gnip_profilelocations_address_region"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_gnip_profilelocations_address_region">[docs]</a><span class="k">class</span> <span class="nc">Field_gnip_profilelocations_address_region</span><span class="p">(</span><span class="n">_Field_gnip_profilelocations_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of gnip.profileLocations[0].address.region&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Profile Geo: Region&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">Field_gnip_profilelocations_address_region</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">walk_path</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;address&#39;</span><span class="p">,</span> <span class="s">&#39;region&#39;</span><span class="p">]</span> <span class="p">)</span> 
+
+</div>
+<div class="viewcode-block" id="Field_gnip_profilelocations_address_subregion"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_gnip_profilelocations_address_subregion">[docs]</a><span class="k">class</span> <span class="nc">Field_gnip_profilelocations_address_subregion</span><span class="p">(</span><span class="n">_Field_gnip_profilelocations_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of gnip.profileLocations[0].address.subRegion&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Profile Geo: Subregion&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">Field_gnip_profilelocations_address_subregion</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">walk_path</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;address&#39;</span><span class="p">,</span> <span class="s">&#39;subRegion&#39;</span><span class="p">]</span> <span class="p">)</span> 
+
+
+
+<span class="c">########################################</span>
+<span class="c">#   &#39;actor&#39; fields </span>
+<span class="c">########################################</span>
+</div>
+<div class="viewcode-block" id="Field_actor_id"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_id">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_id</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Take a dict, assign to self.value the numerical value of actor.id (after stripping off </span>
+<span class="sd">    the leading &#39;id:twitter...&#39; characters).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User ID&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;id&#39;</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">Field_actor_id</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="c"># self.value has an id:twitter....</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;:&quot;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_actor_objecttype"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_objecttype">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_objecttype</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of actor.objecttype &quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User Object Type&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;objectType&#39;</span><span class="p">]</span>
+    
+</div>
+<div class="viewcode-block" id="Field_actor_postedtime"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_postedtime">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_postedtime</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of actor.postedTime &quot;&quot;&quot;</span> 
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User Account Creation Date&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;postedTime&#39;</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">Field_actor_postedtime</span> 
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is a string (of a timestamp) </span>
+        <span class="n">input_fmt</span> <span class="o">=</span> <span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s">T%H:%M:%S.000Z&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c"># default_t_fmt defined in _Field constructor</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">input_fmt</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_t_fmt</span><span class="p">)</span> 
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s">&quot;INVALID_DATE_FORMAT&quot;</span>
+
+</div>
+<div class="viewcode-block" id="Field_actor_displayname"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_displayname">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_displayname</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of actor.displayName &quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User Display Name&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;displayName&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_actor_preferredusername"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_preferredusername">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_preferredusername</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of actor.preferredUsername&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User Account Name&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;preferredUsername&#39;</span><span class="p">]</span>
+ 
+</div>
+<div class="viewcode-block" id="Field_actor_summary"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_summary">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_summary</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of actor.summary&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User Bio&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;summary&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_actor_link"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_link">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_link</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of actor.link&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User Account URL&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;link&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_actor_image"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_image">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_image</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of actor.image&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User Account Image&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;image&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_actor_language"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_language">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_language</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Take a dict, assign to self.value the first (currently only) value in the list at </span>
+<span class="sd">    actor.languages</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User-chosen Language&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;languages&#39;</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">Field_actor_language</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># self.value is a list, but have only ever seen it with one value, so take that one. </span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_actor_links"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_links">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_links</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the list of dicts at actor.links &quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User Account Bio URLs&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;links&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">Field_actor_links</span>
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Field_actor_twittertimezone"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_twittertimezone">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_twittertimezone</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of actor.twitterTimeZone&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User-chosen Timezone&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;twitterTimeZone&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_actor_utcoffset"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_utcoffset">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_utcoffset</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of actor.utcOffset &quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User-chosen Offset From UTC&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;utcOffset&#39;</span><span class="p">]</span>
+    
+</div>
+<div class="viewcode-block" id="Field_actor_verified"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_verified">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_verified</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Take a dict, assign to self.value a boolean repr of the value of actor.verified. </span>
+<span class="sd">    Default value is False.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Actor Verified&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;verified&#39;</span><span class="p">]</span>
+    <span class="n">default_value</span> <span class="o">=</span> <span class="bp">False</span>
+
+</div>
+<div class="viewcode-block" id="Field_actor_location_displayname"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_location_displayname">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_location_displayname</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of actor.location.displayName&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User-chosen Location Name&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;location&#39;</span><span class="p">,</span> <span class="s">&#39;displayName&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_actor_location_objecttype"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_location_objecttype">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_location_objecttype</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of actor.location.objectType&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User-chosen Location Type&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;location&#39;</span><span class="p">,</span> <span class="s">&#39;objectType&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_actor_followerscount"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_followerscount">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_followerscount</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of actor.followersCount.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User Follower Count&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;followersCount&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_actor_friendscount"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_friendscount">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_friendscount</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of actor.friendsCount.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User Following Count&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;friendsCount&#39;</span><span class="p">]</span>
+
+    </div>
+<div class="viewcode-block" id="Field_actor_listedcount"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_listedcount">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_listedcount</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of actor.listedCount.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User Listed Count&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;listedCount&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_actor_statusesCount"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_statusesCount">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_statusesCount</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of actor.statusesCount&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User Statuses Count&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;statusesCount&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_actor_favoritesCount"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_actor_favoritesCount">[docs]</a><span class="k">class</span> <span class="nc">Field_actor_favoritesCount</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of actor.favoritesCount&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;User Favorites Count&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;actor&#39;</span><span class="p">,</span> <span class="s">&#39;favoritesCount&#39;</span><span class="p">]</span>
+
+
+
+<span class="c">########################################</span>
+<span class="c">#   &#39;twitter_entities&#39; fields </span>
+<span class="c">########################################</span>
+
+<span class="c"># URLs</span></div>
+<div class="viewcode-block" id="Field_twitter_entities_urls"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_twitter_entities_urls">[docs]</a><span class="k">class</span> <span class="nc">Field_twitter_entities_urls</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the list of dicts at twitter_entities.urls&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;List of URLs (Twitter)&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;twitter_entities&#39;</span><span class="p">,</span> <span class="s">&#39;urls&#39;</span><span class="p">]</span>
+
+
+<span class="c"># hashtags</span></div>
+<div class="viewcode-block" id="Field_twitter_entities_hashtags"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_twitter_entities_hashtags">[docs]</a><span class="k">class</span> <span class="nc">Field_twitter_entities_hashtags</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the list of dicts at twitter_entities.hashtags&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;List of Hashtags (Twitter)&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;twitter_entities&#39;</span><span class="p">,</span> <span class="s">&#39;hashtags&#39;</span><span class="p">]</span>
+
+
+<span class="c"># symbols</span></div>
+<div class="viewcode-block" id="Field_twitter_entities_symbols"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_twitter_entities_symbols">[docs]</a><span class="k">class</span> <span class="nc">Field_twitter_entities_symbols</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the list of dicts at twitter_entities.symbols&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;List of Symbols (Twitter)&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;twitter_entities&#39;</span><span class="p">,</span> <span class="s">&#39;symbols&#39;</span><span class="p">]</span>
+
+
+<span class="c"># mentions</span></div>
+<div class="viewcode-block" id="Field_twitter_entities_user_mentions"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_twitter_entities_user_mentions">[docs]</a><span class="k">class</span> <span class="nc">Field_twitter_entities_user_mentions</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the list of dicts at twitter_entities.user_mentions&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;List of Mentions (Twitter)&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;twitter_entities&#39;</span><span class="p">,</span> <span class="s">&#39;user_mentions&#39;</span><span class="p">]</span>
+
+
+<span class="c"># media</span></div>
+<div class="viewcode-block" id="Field_twitter_entities_media"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_twitter_entities_media">[docs]</a><span class="k">class</span> <span class="nc">Field_twitter_entities_media</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the list of dicts at twitter_entities.media&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;List of Media (Twitter)&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;twitter_entities&#39;</span><span class="p">,</span> <span class="s">&#39;media&#39;</span><span class="p">]</span>
+
+
+
+<span class="c">########################################</span>
+<span class="c">#   &#39;geo&#39; fields </span>
+<span class="c">########################################</span>
+</div>
+<div class="viewcode-block" id="Field_geo_type"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_geo_type">[docs]</a><span class="k">class</span> <span class="nc">Field_geo_type</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of geo.type&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Geo-tag: Type&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;geo&#39;</span><span class="p">,</span> <span class="s">&#39;type&#39;</span><span class="p">]</span>
+    
+</div>
+<div class="viewcode-block" id="Field_geo_coordinates"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_geo_coordinates">[docs]</a><span class="k">class</span> <span class="nc">Field_geo_coordinates</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Take a dict, assign to self.value the list at geo.coordinates. This is the coordinate pair </span>
+<span class="sd">    of the user-enabled tweet geotag.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Geo-tag: Coordinates&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;geo&#39;</span><span class="p">,</span> <span class="s">&#39;coordinates&#39;</span><span class="p">]</span>
+   
+
+
+<span class="c">########################################</span>
+<span class="c">#   &#39;location&#39; fields </span>
+<span class="c">########################################</span>
+</div>
+<div class="viewcode-block" id="Field_location_displayname"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_location_displayname">[docs]</a><span class="k">class</span> <span class="nc">Field_location_displayname</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of location.displayName&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Geo-tag: Full Name&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;location&#39;</span><span class="p">,</span> <span class="s">&#39;displayName&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_location_name"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_location_name">[docs]</a><span class="k">class</span> <span class="nc">Field_location_name</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of location.name&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Geo-tag: Short Name&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;location&#39;</span><span class="p">,</span> <span class="s">&#39;name&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_location_objecttype"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_location_objecttype">[docs]</a><span class="k">class</span> <span class="nc">Field_location_objecttype</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of location.objectType&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Geo-tag: Location Type&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;location&#39;</span><span class="p">,</span> <span class="s">&#39;objectType&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_location_twitter_country_code"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_location_twitter_country_code">[docs]</a><span class="k">class</span> <span class="nc">Field_location_twitter_country_code</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of location.twitter_country_code.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Geo-tag: Country Code&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;location&#39;</span><span class="p">,</span> <span class="s">&#39;twitter_country_code&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_location_country_code"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_location_country_code">[docs]</a><span class="k">class</span> <span class="nc">Field_location_country_code</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of location.country_code.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Geo-tag: Country&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;location&#39;</span><span class="p">,</span> <span class="s">&#39;country_code&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_location_link"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_location_link">[docs]</a><span class="k">class</span> <span class="nc">Field_location_link</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of location.link.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Geo-tag: Place URL&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;location&#39;</span><span class="p">,</span> <span class="s">&#39;link&#39;</span><span class="p">]</span>
+
+
+<span class="c"># location.geo</span></div>
+<div class="viewcode-block" id="Field_location_geo_type"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_location_geo_type">[docs]</a><span class="k">class</span> <span class="nc">Field_location_geo_type</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a dict, assign to self.value the value of location.geo.type.&quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Geo-tag: Place Type&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;location&#39;</span><span class="p">,</span> <span class="s">&#39;geo&#39;</span><span class="p">,</span> <span class="s">&#39;type&#39;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Field_location_geo_coordinates"><a class="viewcode-back" href="../../twitter.html#acscsv.twitter_acs_fields.Field_location_geo_coordinates">[docs]</a><span class="k">class</span> <span class="nc">Field_location_geo_coordinates</span><span class="p">(</span><span class="n">acscsv</span><span class="o">.</span><span class="n">_Field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Take a dict, assign to self.value the list of coord pairs (vertices) in the value </span>
+<span class="sd">    of location.geo.coordinates.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s">&#39;Geo-tag: Place Coordinates&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;location&#39;</span><span class="p">,</span> <span class="s">&#39;geo&#39;</span><span class="p">,</span> <span class="s">&#39;coordinates&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span>
+            <span class="n">Field_location_geo_coordinates</span> 
+            <span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c"># this list has only been observed to contain another list of the bounding vertices </span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+
+<span class="c">########################################</span>
+<span class="c">#   &#39;object&#39; fields </span>
+<span class="c">########################################</span>
+
+<span class="c"># these fields appear to be redundant with the fields already defined </span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">gnacs 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Scott Hendrickson, Josh Montague.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

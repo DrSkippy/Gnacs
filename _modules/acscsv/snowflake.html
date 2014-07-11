@@ -1,0 +1,238 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>acscsv.snowflake &mdash; gnacs 0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="gnacs 0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">gnacs 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for acscsv.snowflake</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">calendar</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">From twitter code on github</span>
+<span class="sd"> workerIdBits = 5L</span>
+<span class="sd"> datacenterIdBits = 5L</span>
+<span class="sd"> sequenceBits = 12L</span>
+<span class="sd"> </span>
+<span class="sd"> maxWorkerId = -1L ^ (-1L &lt;&lt; workerIdBits)</span>
+<span class="sd"> maxDatacenterId = -1L ^ (-1L &lt;&lt; datacenterIdBits)</span>
+
+<span class="sd"> sequenceMask = -1L ^ (-1L &lt;&lt; sequenceBits)</span>
+<span class="sd"> </span>
+<span class="sd"> workerIdShift = sequenceBits</span>
+<span class="sd"> datacenterIdShift = sequenceBits + workerIdBits</span>
+<span class="sd"> timestampLeftShift = sequenceBits + workerIdBits + datacenterIdBits</span>
+
+<span class="sd"> ((timestamp - twepoch) &lt;&lt; timestampLeftShift) |</span>
+<span class="sd">          (datacenterId &lt;&lt; datacenterIdShift) |</span>
+<span class="sd">              (workerId &lt;&lt; workerIdShift) | </span>
+<span class="sd">               sequence</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">FMT</span> <span class="o">=</span> <span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s">T%H:%M:%S&quot;</span>
+<span class="n">TWEPOCH</span> <span class="o">=</span> <span class="mf">1288834974657.</span>
+
+<span class="n">SF_SEQ_BITS</span> <span class="o">=</span> <span class="mi">12</span>
+<span class="n">SF_WORK_BITS</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">SF_DC_BITS</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">SF_TIME_BITS</span> <span class="o">=</span> <span class="mi">41</span>
+<span class="n">SF_BITS</span> <span class="o">=</span> <span class="mi">64</span>
+
+<span class="n">nRE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&quot;[0-9]{18}&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Snowflake"><a class="viewcode-back" href="../../twitter.html#acscsv.snowflake.Snowflake">[docs]</a><span class="k">class</span> <span class="nc">Snowflake</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Snowflake id object provides access to multiple forms of of the bit fields</span>
+<span class="sd">    present in a snowflake id. Ids can be of the form</span>
+<span class="sd">        tag:search.twitter.com,2005:113733024721539072</span>
+<span class="sd">        113733024721539072</span>
+<span class="sd">        132454352345</span>
+<span class="sd">    where the latter represents a pre-snowflake twitter id. In this case all </span>
+<span class="sd">    fields will be null.</span>
+<span class="sd">    </span>
+<span class="sd">    Avaialble fields:</span>
+<span class="sd">        id </span>
+<span class="sd">        sequence </span>
+<span class="sd">        worker </span>
+<span class="sd">        data_center </span>
+<span class="sd">        ts </span>
+<span class="sd">        sample_set </span>
+<span class="sd">        timestamp </span>
+<span class="sd">        timeStruct </span>
+<span class="sd">        timeString </span>
+<span class="sd">        year </span>
+<span class="sd">        month </span>
+<span class="sd">        day </span>
+<span class="sd">        hour </span>
+<span class="sd">        min </span>
+<span class="sd">        sec </span>
+<span class="sd">        dow </span>
+<span class="sd">        doy </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a new snowflake object from string or number represenataion</span>
+<span class="sd">        of id.&quot;&quot;&quot;</span>
+        <span class="n">ns</span> <span class="o">=</span> <span class="n">nRE</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">id</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ns</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c"># only process first matching id in string</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ns</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sequence</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">masked_id</span><span class="p">(</span><span class="n">SF_SEQ_BITS</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">worker</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">masked_id</span><span class="p">(</span><span class="n">SF_WORK_BITS</span><span class="p">,</span> <span class="n">SF_SEQ_BITS</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_center</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">masked_id</span><span class="p">(</span><span class="n">SF_DC_BITS</span><span class="p">,</span> <span class="n">SF_WORK_BITS</span> <span class="o">+</span> <span class="n">SF_SEQ_BITS</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">masked_id</span><span class="p">(</span><span class="n">SF_TIME_BITS</span><span class="p">,</span> <span class="n">SF_DC_BITS</span> <span class="o">+</span> <span class="n">SF_WORK_BITS</span> <span class="o">+</span> <span class="n">SF_SEQ_BITS</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sample_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ts</span> <span class="o">%</span> <span class="mi">100</span>
+            <span class="c"># originally  ((self.id &gt;&gt; 22) + TWEPOCH)/1000.0 </span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ts</span> <span class="o">+</span> <span class="n">TWEPOCH</span><span class="p">)</span><span class="o">/</span><span class="mf">1000.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timeStruct</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">gmtime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timeString</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">FMT</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeStruct</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">year</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeStruct</span><span class="o">.</span><span class="n">tm_year</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">month</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeStruct</span><span class="o">.</span><span class="n">tm_mon</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">day</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeStruct</span><span class="o">.</span><span class="n">tm_mday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeStruct</span><span class="o">.</span><span class="n">tm_hour</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeStruct</span><span class="o">.</span><span class="n">tm_min</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeStruct</span><span class="o">.</span><span class="n">tm_sec</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeStruct</span><span class="o">.</span><span class="n">tm_wday</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">doy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeStruct</span><span class="o">.</span><span class="n">tm_yday</span>
+            <span class="c">#self.trials = [self.ndigits(self.id, 2)</span>
+            <span class="c">#        , self.ndigits(self.ts, 2)</span>
+            <span class="c">#        , self.ndigits(self.timestamp, 2)]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ns</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">year</span> <span class="o">&lt;</span> <span class="mi">2010</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">year</span> <span class="o">&gt;</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">year</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c"># no valid snowflake id found</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>  <span class="c"># pass through input</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sequence</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">worker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timeStruct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeString</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">year</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">month</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">day</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">doy</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="c">#def ndigits(self, x, n):</span>
+        <span class="c">#return int(x - (10**n) * int(x/(10**n)))</span>
+
+    <span class="k">def</span> <span class="nf">masked_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bits</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+        <span class="c"># returns an int</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s">&#39;1&#39;</span><span class="o">*</span><span class="n">bits</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">pos</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="n">mask</span> <span class="o">&amp;</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">pos</span>
+        <span class="c">#print &#39;%s&#39; % bin(self.id).rjust(65)</span>
+        <span class="c">#print &#39;%s&#39; % bin(mask).rjust(65)</span>
+        <span class="c">#print &#39;%s&#39; % bin(res).rjust(65)</span>
+        <span class="k">return</span> <span class="n">res</span>
+    
+    <span class="k">def</span> <span class="nf">get_id_datetime</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeString</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="s">&quot;#&quot;</span><span class="o">*</span><span class="mi">15</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+        <span class="n">res</span> <span class="o">+=</span> <span class="s">&quot;id:      </span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">res</span> <span class="o">+=</span> <span class="s">&quot;seq:     </span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">sequence</span>
+        <span class="n">res</span> <span class="o">+=</span> <span class="s">&quot;worker:  </span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">worker</span>
+        <span class="n">res</span> <span class="o">+=</span> <span class="s">&quot;DS:      </span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">data_center</span>
+        <span class="n">res</span> <span class="o">+=</span> <span class="s">&quot;Seconds: </span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span>
+        <span class="n">res</span> <span class="o">+=</span> <span class="s">&quot;time:    </span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">timeString</span>
+        <span class="k">return</span> <span class="n">res</span>
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">csv</span>
+    <span class="n">wrtr</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="p">:</span>
+        <span class="n">ns</span> <span class="o">=</span> <span class="n">nRE</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ns</span><span class="p">:</span>
+                <span class="n">sf</span> <span class="o">=</span> <span class="n">Snowflake</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">wrtr</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="n">sf</span><span class="o">.</span><span class="n">id</span>
+                    <span class="p">,</span> <span class="n">sf</span><span class="o">.</span><span class="n">sequence</span>
+                    <span class="p">,</span> <span class="n">sf</span><span class="o">.</span><span class="n">worker</span>
+                    <span class="p">,</span> <span class="n">sf</span><span class="o">.</span><span class="n">data_center</span>
+                    <span class="p">,</span> <span class="n">sf</span><span class="o">.</span><span class="n">timeString</span>
+                    <span class="p">,</span> <span class="n">sf</span><span class="o">.</span><span class="n">hour</span>
+                    <span class="p">,</span> <span class="n">sf</span><span class="o">.</span><span class="n">min</span>
+                    <span class="p">,</span> <span class="n">sf</span><span class="o">.</span><span class="n">sec</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="s">&quot;ERROR </span><span class="si">%s</span><span class="s">&quot;</span><span class="o">%</span><span class="n">ns</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">gnacs 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Scott Hendrickson, Josh Montague.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

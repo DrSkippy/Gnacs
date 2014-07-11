@@ -80,6 +80,461 @@ appropriate output() method.</p>
 
 </dd></dl>
 
+<span class="target" id="module-acscsv.snowflake"></span><dl class="class">
+<dt id="acscsv.snowflake.Snowflake">
+<em class="property">class </em><tt class="descclassname">acscsv.snowflake.</tt><tt class="descname">Snowflake</tt><big>(</big><em>id</em><big>)</big><a class="reference internal" href="_modules/acscsv/snowflake.html#Snowflake"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.snowflake.Snowflake" title="Permalink to this definition">¶</a></dt>
+<dd><p>Snowflake id object provides access to multiple forms of of the bit fields
+present in a snowflake id. Ids can be of the form</p>
+<blockquote>
+<div><a class="reference external" href="tag:search.twitter.com,2005:113733024721539072">tag:search.twitter.com,2005:113733024721539072</a>
+113733024721539072
+132454352345</div></blockquote>
+<p>where the latter represents a pre-snowflake twitter id. In this case all 
+fields will be null.</p>
+<dl class="docutils">
+<dt>Avaialble fields:</dt>
+<dd>id 
+sequence 
+worker 
+data_center 
+ts 
+sample_set 
+timestamp 
+timeStruct 
+timeString 
+year 
+month 
+day 
+hour 
+min 
+sec 
+dow 
+doy</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-acscsv.twitter_acs_fields"></span><dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_activity_type">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_activity_type</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_activity_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_activity_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the appropriate value of Tweet, Retweet, or Reply. This 
+class is being held onto for now, but may not be needed in future.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_displayname">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_displayname</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_displayname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_displayname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of actor.displayName</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_favoritesCount">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_favoritesCount</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_favoritesCount"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_favoritesCount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of actor.favoritesCount</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_followerscount">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_followerscount</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_followerscount"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_followerscount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of actor.followersCount.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_friendscount">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_friendscount</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_friendscount"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_friendscount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of actor.friendsCount.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_id">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_id</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the numerical value of actor.id (after stripping off 
+the leading &#8216;id:twitter...&#8217; characters).</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_image">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_image</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of actor.image</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_language">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_language</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_language"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_language" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the first (currently only) value in the list at 
+actor.languages</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_link">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_link</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of actor.link</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_links">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_links</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_links"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_links" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the list of dicts at actor.links</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_listedcount">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_listedcount</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_listedcount"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_listedcount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of actor.listedCount.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_location_displayname">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_location_displayname</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_location_displayname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_location_displayname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of actor.location.displayName</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_location_objecttype">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_location_objecttype</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_location_objecttype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_location_objecttype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of actor.location.objectType</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_objecttype">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_objecttype</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_objecttype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_objecttype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of actor.objecttype</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_postedtime">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_postedtime</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_postedtime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_postedtime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of actor.postedTime</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_preferredusername">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_preferredusername</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_preferredusername"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_preferredusername" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of actor.preferredUsername</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_statusesCount">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_statusesCount</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_statusesCount"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_statusesCount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of actor.statusesCount</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_summary">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_summary</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of actor.summary</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_twittertimezone">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_twittertimezone</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_twittertimezone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_twittertimezone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of actor.twitterTimeZone</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_utcoffset">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_utcoffset</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_utcoffset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_utcoffset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of actor.utcOffset</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_actor_verified">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_actor_verified</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_actor_verified"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_actor_verified" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value a boolean repr of the value of actor.verified. 
+Default value is False.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_body">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_body</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_body"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_body" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value in top-level body key.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_favoritescount">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_favoritescount</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_favoritescount"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_favoritescount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of top-level favoritesCount key.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_generator_displayname">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_generator_displayname</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_generator_displayname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_generator_displayname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of generator.displayName key.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_generator_link">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_generator_link</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_generator_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_generator_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of generator.link key.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_geo_coordinates">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_geo_coordinates</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_geo_coordinates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_geo_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the list at geo.coordinates. This is the coordinate pair 
+of the user-enabled tweet geotag.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_geo_type">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_geo_type</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_geo_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_geo_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of geo.type</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_gnip_klout_profile_klout_user_id">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_gnip_klout_profile_klout_user_id</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_gnip_klout_profile_klout_user_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_gnip_klout_profile_klout_user_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of gnip.klout_profile.klout_user_id</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_gnip_klout_profile_link">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_gnip_klout_profile_link</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_gnip_klout_profile_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_gnip_klout_profile_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of gnip.klout_profile.link</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_gnip_klout_profile_topics">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_gnip_klout_profile_topics</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_gnip_klout_profile_topics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_gnip_klout_profile_topics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the list at gnip.klout_profile.topics</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_gnip_klout_score">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_gnip_klout_score</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_gnip_klout_score"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_gnip_klout_score" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of gnip.klout_score</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_gnip_language_value">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_gnip_language_value</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_gnip_language_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_gnip_language_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of gnip.language.value</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_gnip_profilelocations_address_country">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_gnip_profilelocations_address_country</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_gnip_profilelocations_address_country"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_gnip_profilelocations_address_country" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of gnip.profileLocations[0].address.country</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_gnip_profilelocations_address_countrycode">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_gnip_profilelocations_address_countrycode</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_gnip_profilelocations_address_countrycode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_gnip_profilelocations_address_countrycode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of gnip.profileLocations[0].address.countryCode</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_gnip_profilelocations_address_locality">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_gnip_profilelocations_address_locality</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_gnip_profilelocations_address_locality"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_gnip_profilelocations_address_locality" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of gnip.profileLocations[0].address.locality</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_gnip_profilelocations_address_region">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_gnip_profilelocations_address_region</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_gnip_profilelocations_address_region"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_gnip_profilelocations_address_region" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of gnip.profileLocations[0].address.region</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_gnip_profilelocations_address_subregion">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_gnip_profilelocations_address_subregion</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_gnip_profilelocations_address_subregion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_gnip_profilelocations_address_subregion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of gnip.profileLocations[0].address.subRegion</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_gnip_profilelocations_displayname">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_gnip_profilelocations_displayname</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_gnip_profilelocations_displayname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_gnip_profilelocations_displayname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of gnip.profileLocations[0].displayName.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_gnip_profilelocations_geo_coordinates">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_gnip_profilelocations_geo_coordinates</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_gnip_profilelocations_geo_coordinates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_gnip_profilelocations_geo_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of gnip.profileLocations[0].geo.coordinates</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_gnip_profilelocations_geo_type">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_gnip_profilelocations_geo_type</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_gnip_profilelocations_geo_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_gnip_profilelocations_geo_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of gnip.profileLocations[0].geo.type</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_gnip_profilelocations_objecttype">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_gnip_profilelocations_objecttype</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_gnip_profilelocations_objecttype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_gnip_profilelocations_objecttype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of gnip.profileLocations[0].objectType</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_gnip_rules">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_gnip_rules</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_gnip_rules"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_gnip_rules" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the list of dicts at gnip.matching_rules</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_gnip_urls">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_gnip_urls</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_gnip_urls"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_gnip_urls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the list of dicts at gnip.urls</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_id">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_id</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value in the top-level id key.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_inreplyto_link">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_inreplyto_link</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_inreplyto_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_inreplyto_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of inReplyTo.link. 
+Should only appear in Replies.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_link">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_link</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value in top-level link key.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_location_country_code">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_location_country_code</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_location_country_code"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_location_country_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of location.country_code.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_location_displayname">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_location_displayname</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_location_displayname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_location_displayname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of location.displayName</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_location_geo_coordinates">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_location_geo_coordinates</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_location_geo_coordinates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_location_geo_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the list of coord pairs (vertices) in the value 
+of location.geo.coordinates.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_location_geo_type">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_location_geo_type</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_location_geo_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_location_geo_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of location.geo.type.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_location_link">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_location_link</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_location_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_location_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of location.link.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_location_name">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_location_name</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_location_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_location_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of location.name</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_location_objecttype">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_location_objecttype</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_location_objecttype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_location_objecttype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of location.objectType</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_location_twitter_country_code">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_location_twitter_country_code</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_location_twitter_country_code"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_location_twitter_country_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of location.twitter_country_code.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_object">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_object</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_object"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value in the top-level object key.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_objecttype">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_objecttype</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_objecttype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_objecttype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value in the top-level objectType key.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_postedtime">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_postedtime</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_postedtime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_postedtime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value in the top-level postedTime key. Timestamp is 
+formatted according to input_fmt, which is set in the constructor.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_provider_displayname">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_provider_displayname</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_provider_displayname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_provider_displayname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of provider.displayName key.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_provider_link">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_provider_link</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_provider_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_provider_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of provider.link key.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_provider_objecttype">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_provider_objecttype</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_provider_objecttype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_provider_objecttype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of provider.objectType key.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_retweetcount">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_retweetcount</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_retweetcount"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_retweetcount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of top-level retweetCount key.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_twitter_entities_hashtags">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_twitter_entities_hashtags</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_twitter_entities_hashtags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_twitter_entities_hashtags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the list of dicts at twitter_entities.hashtags</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_twitter_entities_media">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_twitter_entities_media</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_twitter_entities_media"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_twitter_entities_media" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the list of dicts at twitter_entities.media</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_twitter_entities_symbols">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_twitter_entities_symbols</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_twitter_entities_symbols"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_twitter_entities_symbols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the list of dicts at twitter_entities.symbols</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_twitter_entities_urls">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_twitter_entities_urls</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_twitter_entities_urls"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_twitter_entities_urls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the list of dicts at twitter_entities.urls</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_twitter_entities_user_mentions">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_twitter_entities_user_mentions</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_twitter_entities_user_mentions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_twitter_entities_user_mentions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the list of dicts at twitter_entities.user_mentions</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_twitter_filter_level">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_twitter_filter_level</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_twitter_filter_level"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_twitter_filter_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of top-level twitter_filter_level key.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_twitter_lang">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_twitter_lang</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_twitter_lang"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_twitter_lang" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value of top-level twitter_lang key.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.twitter_acs_fields.Field_verb">
+<em class="property">class </em><tt class="descclassname">acscsv.twitter_acs_fields.</tt><tt class="descname">Field_verb</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/twitter_acs_fields.html#Field_verb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.twitter_acs_fields.Field_verb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a dict, assign to self.value the value in the top-level verb key.</p>
+</dd></dl>
+
 </div></blockquote>
 </div>
 
