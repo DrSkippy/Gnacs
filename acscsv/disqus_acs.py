@@ -5,6 +5,10 @@ __license__="Simplified BSD"
 import sys
 import acscsv
 class DiacsCSV(acscsv.AcsCSV):
+    """
+    DiacsCSV determins the parse order and included fields when parsing Disqus Activity Streams
+    JSON records to CSV fields.
+    """
     def __init__(self, delim, options_keypath, options_user, options_rules, options_lang, options_struct, options_status):
         super(DiacsCSV, self).__init__(delim,options_keypath)
         self.options_user = options_user
@@ -14,6 +18,22 @@ class DiacsCSV(acscsv.AcsCSV):
         self.options_status = options_status
 
     def procRecordToList(self, d):
+        """Take a JSON Activity Streams payload as a Python dictionary. Check 
+        activity for system information and compliance handling. If necessary, 
+        return the system info or compliance message. Otherwise, if the activity 
+        is valid, return list of fields as specified by the input flags.
+        
+        Flags::
+
+            delim
+            options_keypath
+            options_user
+            options_rules
+            options_lang
+            options_struct
+            options_status
+
+        """
         record = []
         try:
             if "verb" in d:

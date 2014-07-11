@@ -9,4 +9,5 @@ __all__ = [
         , 'twitter_acs_fields'
         , 'tumblr_acs'
         , 'wordpress_acs'
+        , 'snowflake'
         ]

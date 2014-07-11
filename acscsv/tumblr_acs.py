@@ -15,6 +15,22 @@ class TblracsCSV(acscsv.AcsCSV):
         self.options_struct = options_struct
 
     def procRecordToList(self,d):
+        """Take a JSON Activity Streams payload as a Python dictionary. Check 
+        activity for system information and compliance handling. If necessary, 
+        return the system info or compliance message. Otherwise, if the activity 
+        is valid, return list of fields as specified by the input flags.
+        
+        Flags::
+
+            delim
+            options_keypath
+            options_user
+            options_rules
+            options_lang
+            options_struct
+
+        """
+
         record = []
         try:
             if "verb" in d:

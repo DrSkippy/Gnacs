@@ -39,14 +39,22 @@ nRE = re.compile("[0-9]{18}")
 
 class Snowflake(object):
     """Snowflake id object provides access to multiple forms of of the bit fields
-    present in a snowflake id. Ids can be of the form
+    present in a snowflake id. Ids can be of the form of a string with leading and
+    trailing characters or symbols. The first 18 consecutive digits will be used
+    as the id. It is also permitted to provide an int::
+
         tag:search.twitter.com,2005:113733024721539072
         113733024721539072
-        132454352345
+        113733024721539072|This is the tweet for which you are looking|en
+
     where the latter represents a pre-snowflake twitter id. In this case all 
     fields will be null.
     
-    Avaialble fields:
+    When the input does not match a valid snowflake id, the input field is available
+    as the id and all other fields are set to None.
+
+    Available fields::
+
         id 
         sequence 
         worker 
@@ -64,6 +72,7 @@ class Snowflake(object):
         sec 
         dow 
         doy 
+
     """
 
     def __init__(self, id):
