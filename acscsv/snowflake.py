@@ -25,6 +25,7 @@ From twitter code on github
               (workerId << workerIdShift) | 
                sequence
 """
+
 FMT = "%Y-%m-%dT%H:%M:%S"
 TWEPOCH = 1288834974657.
 
@@ -43,7 +44,27 @@ class Snowflake(object):
         113733024721539072
         132454352345
     where the latter represents a pre-snowflake twitter id. In this case all 
-    fields will be null."""
+    fields will be null.
+    
+    Avaialble fields:
+        id 
+        sequence 
+        worker 
+        data_center 
+        ts 
+        sample_set 
+        timestamp 
+        timeStruct 
+        timeString 
+        year 
+        month 
+        day 
+        hour 
+        min 
+        sec 
+        dow 
+        doy 
+    """
 
     def __init__(self, id):
         """Create a new snowflake object from string or number represenataion
@@ -57,7 +78,6 @@ class Snowflake(object):
             self.data_center = int(self.masked_id(SF_DC_BITS, SF_WORK_BITS + SF_SEQ_BITS))
             self.ts = int(self.masked_id(SF_TIME_BITS, SF_DC_BITS + SF_WORK_BITS + SF_SEQ_BITS))
             self.sample_set = self.ts % 100
-            # time in seconds
             # originally  ((self.id >> 22) + TWEPOCH)/1000.0 
             self.timestamp = (self.ts + TWEPOCH)/1000.
             self.timeStruct = time.gmtime(self.timestamp)
@@ -70,18 +90,18 @@ class Snowflake(object):
             self.sec = self.timeStruct.tm_sec
             self.dow = self.timeStruct.tm_wday
             self.doy = self.timeStruct.tm_yday
-            self.trials = [self.ndigits(self.id, 2)
-                    , self.ndigits(self.ts, 2)
-                    , self.ndigits(self.timestamp, 2)]
+            #self.trials = [self.ndigits(self.id, 2)
+            #        , self.ndigits(self.ts, 2)
+            #        , self.ndigits(self.timestamp, 2)]
         if len(ns) == 0 or self.year < 2010 or self.year > datetime.datetime.now().year + 1:
             # no valid snowflake id found
             self.id = id  # pass through input
             self.sequence = self.worker = self.data_center = self.ts = self.timestamp = None
             self.timeStruct = self.timeString = self.year = self.month = self.day = None
-            self.hour = self.min = self.sec = self.dow = self.doy = self.trials = None
+            self.hour = self.min = self.sec = self.dow = self.doy = None
 
-    def ndigits(self, x, n):
-        return int(x - (10**n) * int(x/(10**n)))
+    #def ndigits(self, x, n):
+        #return int(x - (10**n) * int(x/(10**n)))
 
     def masked_id(self, bits, pos):
         # returns an int
@@ -113,7 +133,14 @@ if __name__ == "__main__":
         try:
             for x in ns:
                 sf = Snowflake(x)
-                wrtr.writerow([sf.id, sf.sequence, sf.worker, sf.data_center, sf.timeString, sf.hour, sf.min, sf.sec] + sf.trials)
+                wrtr.writerow([sf.id
+                    , sf.sequence
+                    , sf.worker
+                    , sf.data_center
+                    , sf.timeString
+                    , sf.hour
+                    , sf.min
+                    , sf.sec])
         except IndexError:
             sys.stderr.write( "ERROR %s"%ns)
 
