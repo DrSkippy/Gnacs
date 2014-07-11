@@ -74,19 +74,6 @@
 <span class="n">gnipDateTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s">T%H:%M:%S.000Z&quot;</span><span class="p">)</span>
 <span class="n">INTERNAL_EMPTY_FIELD</span> <span class="o">=</span> <span class="s">&quot;GNIPEMPTYFIELD&quot;</span>
 
-<div class="viewcode-block" id="Singleton"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.Singleton">[docs]</a><span class="k">class</span> <span class="nc">Singleton</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Singleton class is the base class for every field.  Each object is reused to process the</span>
-<span class="sd">    stream of data before an object is deleted.  This keeps memory management from thrashing</span>
-<span class="sd">    for long input streams.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_instances</span> <span class="o">=</span> <span class="p">{}</span>                                                               
-    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">class_</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">class_</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">class_</span><span class="o">.</span><span class="n">_instances</span><span class="p">:</span>
-            <span class="n">class_</span><span class="o">.</span><span class="n">_instances</span><span class="p">[</span><span class="n">class_</span><span class="p">]</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Singleton</span><span class="p">,</span> <span class="n">class_</span><span class="p">)</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">class_</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">class_</span><span class="o">.</span><span class="n">_instances</span><span class="p">[</span><span class="n">class_</span><span class="p">]</span>
-
-<span class="c">#class _Field(Singleton):</span></div>
 <span class="k">class</span> <span class="nc">_Field</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for extracting the desired value at the end of a series of keys in a JSON Activity </span>
@@ -132,6 +119,7 @@
         <span class="k">return</span> <span class="n">res</span>
     
     <span class="k">def</span> <span class="nf">walk_path_slower</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Slower version fo walk path. Depricated.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span>
         <span class="k">try</span><span class="p">:</span>
@@ -178,8 +166,6 @@
 
 
 <span class="k">class</span> <span class="nc">_LimitedField</span><span class="p">(</span><span class="n">_Field</span><span class="p">):</span>
-    <span class="c">#TODO: is there a better way that this class and the fix_length() method in _Field class</span>
-    <span class="c">#       could be combined?</span>
     <span class="sd">&quot;&quot;&quot;  </span>
 <span class="sd">    Takes JSON record (in python dict form) and optionally a maximum length (limit, </span>
 <span class="sd">    with default length=5). Uses parent class _Field() to assign the appropriate value </span>
@@ -193,8 +179,12 @@
 <span class="sd">    to overwrite the fields list ( fields=[&quot;a&quot;, &quot;b&quot;] ) to obtain this result. </span>
 <span class="sd">    Finally, self.value is set to a string representation of the final self.value_list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c">#TODO: is there a better way that this class and the fix_length() method in _Field class</span>
+    <span class="c">#       could be combined?</span>
     <span class="c">#TODO: set limit=None by default and just return as many as there are, otherwise (by specifying </span>
     <span class="c">#    limit), return a maximum of limit.</span>
+    <span class="c"># TODO:</span>
+    <span class="c"># - consolidate _LimitedField() &amp; fix_length() if possible </span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fields</span> <span class="o">=</span> <span class="bp">None</span>
@@ -212,11 +202,6 @@
                             <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span><span class="p">[</span> <span class="nb">len</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span> <span class="p">)</span><span class="o">*</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="p">]</span> 
             <span class="c"># finally, str-ify the list</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span> <span class="p">)</span>
-
-
-<span class="c"># TODO:</span>
-<span class="c"># - consolidate _LimitedField() &amp; fix_length() if possible </span>
-
     
 <div class="viewcode-block" id="AcsCSV"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV">[docs]</a><span class="k">class</span> <span class="nc">AcsCSV</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Base class for all delimited list objects. Basic delimited list utility functions&quot;&quot;&quot;</span>
@@ -285,9 +270,7 @@
             <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
                 <span class="k">pass</span>
         <span class="k">return</span> <span class="n">res</span>
-
-    <span class="c">#Experimental </span>
-    <span class="c">#@jit</span></div>
+</div>
 <div class="viewcode-block" id="AcsCSV.buildListString"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV.buildListString">[docs]</a>    <span class="k">def</span> <span class="nf">buildListString</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">l</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Generic list builder returns a string representation of list&quot;&quot;&quot;</span>
         <span class="c"># unicode output of list (without u&#39;s)</span>
@@ -305,9 +288,7 @@
             <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">res</span> <span class="o">+=</span> <span class="s">&#39;]&#39;</span>
         <span class="k">return</span> <span class="n">res</span>
-
-    <span class="c">#Experimental </span>
-    <span class="c">#@jit</span></div>
+</div>
 <div class="viewcode-block" id="AcsCSV.splitId"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV.splitId">[docs]</a>    <span class="k">def</span> <span class="nf">splitId</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Generic functions for splitting id parts&quot;&quot;&quot;</span>
         <span class="n">tmp</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">)</span>
@@ -332,11 +313,9 @@
             <span class="n">source_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keyPath</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
         <span class="c"># ensure no pipes, newlines, etc</span>
         <span class="k">return</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">cleanField</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">source_list</span> <span class="p">]</span>
-
 </div>
     <span class="k">def</span> <span class="nf">procRecord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">emptyField</span><span class="o">=</span><span class="s">&quot;None&quot;</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">asString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_source_list</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">emptyField</span><span class="p">)</span>
-
 
 <div class="viewcode-block" id="AcsCSV.asGeoJSON"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV.asGeoJSON">[docs]</a>    <span class="k">def</span> <span class="nf">asGeoJSON</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get results as GeoJSON representation.&quot;&quot;&quot;</span>
@@ -356,7 +335,7 @@
                 <span class="p">}</span>
     </div>
 <div class="viewcode-block" id="AcsCSV.keyPath"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV.keyPath">[docs]</a>    <span class="k">def</span> <span class="nf">keyPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">d</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get a generic key path specified at run time.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Get a generic key path specified at run time. Consider using jq instead?&quot;&quot;&quot;</span>
         <span class="c">#key_list = self.options_keypath.split(&quot;:&quot;)</span>
         <span class="n">delim</span> <span class="o">=</span> <span class="s">&quot;:&quot;</span>
         <span class="c">#print &gt;&gt; sys.stderr, &quot;self.__class__ &quot; + str(self.__class__)</span>
