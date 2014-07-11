@@ -24,19 +24,6 @@ gnipRemove = "GNIPREMOVE"
 gnipDateTime = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.000Z")
 INTERNAL_EMPTY_FIELD = "GNIPEMPTYFIELD"
 
-class Singleton(object):
-    """
-    Singleton class is the base class for every field.  Each object is reused to process the
-    stream of data before an object is deleted.  This keeps memory management from thrashing
-    for long input streams.
-    """
-    _instances = {}                                                               
-    def __new__(class_, *args, **kwargs):
-        if class_ not in class_._instances:
-            class_._instances[class_] = super(Singleton, class_).__new__(class_, *args, **kwargs)
-        return class_._instances[class_]
-
-#class _Field(Singleton):
 class _Field(object):
     """
     Base class for extracting the desired value at the end of a series of keys in a JSON Activity 
@@ -82,6 +69,7 @@ class _Field(object):
         return res
     
     def walk_path_slower(self, json_record, path=None):
+        """Slower version fo walk path. Depricated."""
         if path is None:
             path = self.path
         try:
@@ -128,8 +116,6 @@ class _Field(object):
 
 
 class _LimitedField(_Field):
-    #TODO: is there a better way that this class and the fix_length() method in _Field class
-    #       could be combined?
     """  
     Takes JSON record (in python dict form) and optionally a maximum length (limit, 
     with default length=5). Uses parent class _Field() to assign the appropriate value 
@@ -143,8 +129,12 @@ class _LimitedField(_Field):
     to overwrite the fields list ( fields=["a", "b"] ) to obtain this result. 
     Finally, self.value is set to a string representation of the final self.value_list.
     """
+    #TODO: is there a better way that this class and the fix_length() method in _Field class
+    #       could be combined?
     #TODO: set limit=None by default and just return as many as there are, otherwise (by specifying 
     #    limit), return a maximum of limit.
+    # TODO:
+    # - consolidate _LimitedField() & fix_length() if possible 
 
     def __init__(self, json_record, limit=1):
         self.fields = None
@@ -162,11 +152,6 @@ class _LimitedField(_Field):
                             self.value_list[ len( self.fields )*i + j ] = x[ self.fields[j] ] 
             # finally, str-ify the list
             self.value = str( self.value_list )
-
-
-# TODO:
-# - consolidate _LimitedField() & fix_length() if possible 
-
     
 class AcsCSV(object):
     """Base class for all delimited list objects. Basic delimited list utility functions"""
@@ -236,8 +221,6 @@ class AcsCSV(object):
                 pass
         return res
 
-    #Experimental 
-    #@jit
     def buildListString(self,l):
         """Generic list builder returns a string representation of list"""
         # unicode output of list (without u's)
@@ -256,8 +239,6 @@ class AcsCSV(object):
         res += ']'
         return res
 
-    #Experimental 
-    #@jit
     def splitId(self, x, index=1):
         """Generic functions for splitting id parts"""
         tmp = x.split("/")
@@ -283,10 +264,8 @@ class AcsCSV(object):
         # ensure no pipes, newlines, etc
         return [ self.cleanField(x) for x in source_list ]
 
-
     def procRecord(self, x, emptyField="None"):
         return self.asString(self.get_source_list(x), emptyField)
-
 
     def asGeoJSON(self, x):
         """Get results as GeoJSON representation."""
@@ -306,7 +285,7 @@ class AcsCSV(object):
                 }
     
     def keyPath(self,d):
-        """Get a generic key path specified at run time."""
+        """Get a generic key path specified at run time. Consider using jq instead?"""
         #key_list = self.options_keypath.split(":")
         delim = ":"
         #print >> sys.stderr, "self.__class__ " + str(self.__class__)
