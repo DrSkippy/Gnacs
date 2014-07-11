@@ -74,7 +74,7 @@
 <span class="n">gnipDateTime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s">T%H:%M:%S.000Z&quot;</span><span class="p">)</span>
 <span class="n">INTERNAL_EMPTY_FIELD</span> <span class="o">=</span> <span class="s">&quot;GNIPEMPTYFIELD&quot;</span>
 
-<span class="k">class</span> <span class="nc">_Field</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="_Field"><a class="viewcode-back" href="../../twitter.html#acscsv.acscsv._Field">[docs]</a><span class="k">class</span> <span class="nc">_Field</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for extracting the desired value at the end of a series of keys in a JSON Activity </span>
 <span class="sd">    Streams payload. Set the application-wide default value (for e.g. missing values) here, </span>
@@ -118,7 +118,7 @@
         <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="k">if</span> <span class="n">res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span>
         <span class="k">return</span> <span class="n">res</span>
     
-    <span class="k">def</span> <span class="nf">walk_path_slower</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="_Field.walk_path_slower"><a class="viewcode-back" href="../../twitter.html#acscsv.acscsv._Field.walk_path_slower">[docs]</a>    <span class="k">def</span> <span class="nf">walk_path_slower</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Slower version fo walk path. Depricated.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span>
@@ -130,8 +130,8 @@
         <span class="k">if</span> <span class="n">res</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span>
         <span class="k">return</span> <span class="n">res</span>
-
-    <span class="k">def</span> <span class="nf">fix_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iterable</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+</div>
+<div class="viewcode-block" id="_Field.fix_length"><a class="viewcode-back" href="../../twitter.html#acscsv.acscsv._Field.fix_length">[docs]</a>    <span class="k">def</span> <span class="nf">fix_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iterable</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Take an iterable (typically a list) and an optional maximum length (limit). </span>
 <span class="sd">        If limit is not given, and the input iterable is not equal to self.default_value</span>
@@ -164,8 +164,8 @@
                     <span class="n">res</span> <span class="o">=</span> <span class="n">iterable</span><span class="p">[:</span><span class="n">limit</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">res</span>
 
-
-<span class="k">class</span> <span class="nc">_LimitedField</span><span class="p">(</span><span class="n">_Field</span><span class="p">):</span>
+</div></div>
+<div class="viewcode-block" id="_LimitedField"><a class="viewcode-back" href="../../twitter.html#acscsv.acscsv._LimitedField">[docs]</a><span class="k">class</span> <span class="nc">_LimitedField</span><span class="p">(</span><span class="n">_Field</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;  </span>
 <span class="sd">    Takes JSON record (in python dict form) and optionally a maximum length (limit, </span>
 <span class="sd">    with default length=5). Uses parent class _Field() to assign the appropriate value </span>
@@ -202,7 +202,7 @@
                             <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span><span class="p">[</span> <span class="nb">len</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span> <span class="p">)</span><span class="o">*</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="p">]</span> 
             <span class="c"># finally, str-ify the list</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_list</span> <span class="p">)</span>
-    
+    </div>
 <div class="viewcode-block" id="AcsCSV"><a class="viewcode-back" href="../../basic_csv.html#acscsv.acscsv.AcsCSV">[docs]</a><span class="k">class</span> <span class="nc">AcsCSV</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Base class for all delimited list objects. Basic delimited list utility functions&quot;&quot;&quot;</span>
 

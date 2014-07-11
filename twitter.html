@@ -130,7 +130,49 @@ as the id and all other fields are set to None.</p>
 <div class="section" id="field-objects">
 <h2>Field Objects<a class="headerlink" href="#field-objects" title="Permalink to this headline">¶</a></h2>
 <blockquote>
-<div></div></blockquote>
+<div><dl class="class">
+<dt id="acscsv.acscsv._Field">
+<em class="property">class </em><tt class="descclassname">acscsv.acscsv.</tt><tt class="descname">_Field</tt><big>(</big><em>json_record</em><big>)</big><a class="reference internal" href="_modules/acscsv/acscsv.html#_Field"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.acscsv._Field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for extracting the desired value at the end of a series of keys in a JSON Activity 
+Streams payload. Set the application-wide default value (for e.g. missing values) here, 
+but also use child classes to override when necessary. Subclasses also need to define the 
+key-path (path) to the desired location by overwriting the path attr.</p>
+<dl class="method">
+<dt id="acscsv.acscsv._Field.fix_length">
+<tt class="descname">fix_length</tt><big>(</big><em>iterable</em>, <em>limit=None</em><big>)</big><a class="reference internal" href="_modules/acscsv/acscsv.html#_Field.fix_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.acscsv._Field.fix_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take an iterable (typically a list) and an optional maximum length (limit). 
+If limit is not given, and the input iterable is not equal to self.default_value
+(typically &#8220;None&#8221;), the input iterable is returned. If limit is given, the return
+value is a list that is either truncated to the first limit items, or padded 
+with self.default_value until it is of size limit. Note: strings are iterables, 
+so if you pass this function a string, it will (optionally) truncate the 
+number of characters in the string according to limit.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="acscsv.acscsv._Field.walk_path_slower">
+<tt class="descname">walk_path_slower</tt><big>(</big><em>json_record</em>, <em>path=None</em><big>)</big><a class="reference internal" href="_modules/acscsv/acscsv.html#_Field.walk_path_slower"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.acscsv._Field.walk_path_slower" title="Permalink to this definition">¶</a></dt>
+<dd><p>Slower version fo walk path. Depricated.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="acscsv.acscsv._LimitedField">
+<em class="property">class </em><tt class="descclassname">acscsv.acscsv.</tt><tt class="descname">_LimitedField</tt><big>(</big><em>json_record</em>, <em>limit=1</em><big>)</big><a class="reference internal" href="_modules/acscsv/acscsv.html#_LimitedField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#acscsv.acscsv._LimitedField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes JSON record (in python dict form) and optionally a maximum length (limit, 
+with default length=5). Uses parent class _Field() to assign the appropriate value 
+to self.value. When self.value is a list of dictionaries, 
+inheriting from _LimitedField() class allows for the extraction and combination of 
+an arbitrary number of fields within self.value into self.value_list.</p>
+<p>Ex: if your class would lead to having 
+self.value = [ {&#8216;a&#8217;: 1, &#8216;b&#8217;: 2, &#8216;c&#8217;: 3}, {&#8216;a&#8217;: 4, &#8216;b&#8217;: 5, &#8216;c&#8217;: 6} ], and what you&#8217;d like 
+is a list that looks like [ 1, 2, 4, 5 ], inheriting from _LimitedField() allows you 
+to overwrite the fields list ( fields=[&#8220;a&#8221;, &#8220;b&#8221;] ) to obtain this result. 
+Finally, self.value is set to a string representation of the final self.value_list.</p>
+</dd></dl>
+
+</div></blockquote>
 <div class="section" id="available-field-objects">
 <h3>Available Field Objects<a class="headerlink" href="#available-field-objects" title="Permalink to this headline">¶</a></h3>
 <blockquote>

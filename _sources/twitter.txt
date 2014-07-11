@@ -16,10 +16,10 @@ Snowflake ID Class
 Field Objects
 *************
 
-    .. autoclass:: acscsv._Field
+    .. autoclass:: acscsv.acscsv._Field
         :members:
 
-    .. autoclass:: acscsv._LimitedField
+    .. autoclass:: acscsv.acscsv._LimitedField
         :members:
 
 Available Field Objects
