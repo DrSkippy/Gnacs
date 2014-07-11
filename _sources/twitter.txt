@@ -1,11 +1,20 @@
 Twitter Model
 =============
 
+Base Utility Methods
+********************
+
     .. automodule:: acscsv.twitter_acs
         :members:
 
+Snowflake ID Class
+******************
+
     .. automodule:: acscsv.snowflake
         :members:
+
+Available Field Objects
+***********************
 
     .. automodule:: acscsv.twitter_acs_fields
         :members:
