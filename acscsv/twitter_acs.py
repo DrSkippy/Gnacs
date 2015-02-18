@@ -101,7 +101,10 @@ class TwacsCSV(acscsv.AcsCSV):
             # gnip 
             val = Field_gnip_urls(d).value
             if isinstance(val, list): 
-                output_list.append( self.buildListString( [ x["expanded_url"] for x in val ] ) )  
+                try:
+                    output_list.append( self.buildListString( [ x["expanded_url"] for x in val ] ) )   
+                except KeyError:
+                    output_list.append(Field_gnip_urls(d).default_value)
             else: 
                 output_list.append( val )  
             # twitter
