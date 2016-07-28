@@ -3,10 +3,10 @@ __author__="Scott Hendrickson, Josh Montague"
 __license__="Simplified BSD"
 
 import sys
-import acscsv
-from twitter_acs_fields import *
+from .twitter_acs_fields import *
+from .acscsv import *
 
-class TwacsCSV(acscsv.AcsCSV):
+class TwacsCSV(AcsCSV):
     """Subset of Twitter fields with specified delimiter.  Please see help for options"""
 
     def __init__(self
@@ -55,23 +55,23 @@ class TwacsCSV(acscsv.AcsCSV):
                             msg = d["message"]
                         continue
                     mtype = "Unidentified"
-                record.append('-'.join([acscsv.gnipRemove, mtype]))
-                record.append(acscsv.gnipDateTime)
+                record.append('-'.join([gnipRemove, mtype]))
+                record.append(gnipDateTime)
                 record.append(msg)
                 return record
             elif verb == "delete":
                 record.append(d["object"]["id"])
-                record.append(acscsv.gnipDateTime)
-                record.append('-'.join([acscsv.gnipRemove, verb]))
+                record.append(gnipDateTime)
+                record.append('-'.join([gnipRemove, verb]))
                 return record
             elif verb == "scrub_geo":
                 record.append(d["actor"]["id"])
-                record.append(acscsv.gnipDateTime)
-                record.append('-'.join([acscsv.gnipRemove, verb]))
+                record.append(gnipDateTime)
+                record.append('-'.join([gnipRemove, verb]))
                 return record
         except KeyError:
-            record.append(acscsv.gnipError)
-            record.append(acscsv.gnipRemove)
+            record.append(gnipError)
+            record.append(gnipRemove)
             return record
 
         # at this point, verb is an acceptable record 

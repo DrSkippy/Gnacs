@@ -3,8 +3,8 @@
 __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 import sys
-import acscsv
-class DiacsCSV(acscsv.AcsCSV):
+from .acscsv import AcsCSV
+class DiacsCSV(AcsCSV):
     """
     DiacsCSV determins the parse order and included fields when parsing Disqus Activity Streams
     JSON records to CSV fields.

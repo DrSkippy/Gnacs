@@ -3,8 +3,8 @@ __author__="Josh Montague, Scott Hendrickson"
 __license__="Simplified BSD"
 
 import sys
-import acscsv
-from snowflake import *
+from .acscsv import _Field
+from .snowflake import *
 from datetime import datetime
 import re
 
@@ -13,7 +13,7 @@ import re
 #   activity type 
 ########################################
 
-class Field_activity_type(acscsv._Field):
+class Field_activity_type(_Field):
     """
     Take a dict, assign to self.value the appropriate value of Tweet, Retweet, or Reply. This 
     class is being held onto for now, but may not be needed in future.
@@ -56,7 +56,7 @@ class Field_activity_type(acscsv._Field):
 #   top-level fields 
 ########################################
 
-class Field_verb(acscsv._Field):
+class Field_verb(_Field):
     """Take a dict, assign to self.value the value in the top-level verb key.""" 
     label = 'Verb'
     path = ['verb']
@@ -65,7 +65,7 @@ class Field_verb(acscsv._Field):
     #default_value = "Unidentified meta message"
     
 
-class Field_id(acscsv._Field):
+class Field_id(_Field):
     """Take a dict, assign to self.value the value in the top-level id key.""" 
     label = 'Tweet ID'
     path = ['id']
@@ -87,19 +87,19 @@ class Field_snowflake(Field_id):
         self.value = "_".join([str(sf.id), sf.timeString, str(sf.sample_set)])
 
 
-class Field_objecttype(acscsv._Field):
+class Field_objecttype(_Field):
     """Take a dict, assign to self.value the value in the top-level objectType key.""" 
     label = 'objectType' 
     path = ['objectType']
     
 
-class Field_object(acscsv._Field):
+class Field_object(_Field):
     """Take a dict, assign to self.value the value in the top-level object key.""" 
     label = 'Object'
     path = ['object']
 
 
-class Field_postedtime(acscsv._Field):
+class Field_postedtime(_Field):
     """
     Take a dict, assign to self.value the value in the top-level postedTime key. Timestamp is 
     formatted according to input_fmt, which is set in the constructor.
@@ -121,43 +121,43 @@ class Field_postedtime(acscsv._Field):
 #                            self.default_t_fmt ) 
 
 
-class Field_body(acscsv._Field):
+class Field_body(_Field):
     """Take a dict, assign to self.value the value in top-level body key."""
     label = 'Body'
     path = ['body']
     
 
-class Field_link(acscsv._Field):
+class Field_link(_Field):
     """Take a dict, assign to self.value the value in top-level link key."""
     label = 'Activity URL'
     path = ['link']
     
 
-class Field_twitter_lang(acscsv._Field):
+class Field_twitter_lang(_Field):
     """Take a dict, assign to self.value the value of top-level twitter_lang key."""
     label = 'Twitter-Inferred Activity Language'
     path = ['twitter_lang']
     
 
-class Field_favoritescount(acscsv._Field):
+class Field_favoritescount(_Field):
     """Take a dict, assign to self.value the value of top-level favoritesCount key."""
     label = 'Favorite Count'
     path = ['favoritesCount']
 
 
-class Field_retweetcount(acscsv._Field):
+class Field_retweetcount(_Field):
     """Take a dict, assign to self.value the value of top-level retweetCount key."""
     label = 'Retweet Count'
     path = ['retweetCount']
 
 
-class Field_twitter_filter_level(acscsv._Field):
+class Field_twitter_filter_level(_Field):
     """Take a dict, assign to self.value the value of top-level twitter_filter_level key."""
     label = 'Twitter Filter Level'
     path = ['twitter_filter_level']
 
 
-class Field_inreplyto_link(acscsv._Field):
+class Field_inreplyto_link(_Field):
     """
     Take a dict, assign to self.value the value of inReplyTo.link. 
     Should only appear in Replies.
@@ -171,19 +171,19 @@ class Field_inreplyto_link(acscsv._Field):
 #   'provider' fields 
 ########################################
 
-class Field_provider_objecttype(acscsv._Field):
+class Field_provider_objecttype(_Field):
     """Take a dict, assign to self.value the value of provider.objectType key."""
     label = 'Provider Object Type'
     path = ['provider', 'objectType']
 
 
-class Field_provider_displayname(acscsv._Field):
+class Field_provider_displayname(_Field):
     """Take a dict, assign to self.value the value of provider.displayName key."""
     label = 'Provider Name'
     path = ['provider', 'displayName']
 
 
-class Field_provider_link(acscsv._Field):
+class Field_provider_link(_Field):
     """Take a dict, assign to self.value the value of provider.link key."""
     label = 'Provider Link'
     path = ['provider', 'link']
@@ -194,13 +194,13 @@ class Field_provider_link(acscsv._Field):
 #   'generator' fields 
 ########################################
 
-class Field_generator_displayname(acscsv._Field):
+class Field_generator_displayname(_Field):
     """Take a dict, assign to self.value the value of generator.displayName key."""
     label = 'Generator Name'
     path = ['generator', 'displayName']
     
 
-class Field_generator_link(acscsv._Field):
+class Field_generator_link(_Field):
     """Take a dict, assign to self.value the value of generator.link key."""
     label = 'Generator Link'
     path = ['generator', 'link']
@@ -211,13 +211,13 @@ class Field_generator_link(acscsv._Field):
 #   'gnip' fields 
 ########################################
 
-class Field_gnip_rules(acscsv._Field):
+class Field_gnip_rules(_Field):
     """Take a dict, assign to self.value the list of dicts at gnip.matching_rules"""
     label = 'Matching PT Rules'
     path = ['gnip', 'matching_rules']
     
 
-class Field_gnip_urls(acscsv._Field):
+class Field_gnip_urls(_Field):
     """Take a dict, assign to self.value the list of dicts at gnip.urls"""
     label = 'List of URLs (Gnip)'
     path = ['gnip', 'urls']
@@ -225,39 +225,39 @@ class Field_gnip_urls(acscsv._Field):
 # TODO: extractors that use Field_gnip_urls to get both the shortened & unwound URLs
     
 
-class Field_gnip_language_value(acscsv._Field):
+class Field_gnip_language_value(_Field):
     """Take a dict, assign to self.value the value of gnip.language.value"""
     label = 'Gnip-Inferred Activity Language'
     path = ['gnip', 'language', 'value']
 
 
 # klout
-class Field_gnip_klout_score(acscsv._Field):
+class Field_gnip_klout_score(_Field):
     """Take a dict, assign to self.value the value of gnip.klout_score"""
     label = 'User Klout Score'
     path = ['gnip', 'klout_score']
 
 
-class Field_gnip_klout_profile_topics(acscsv._Field):
+class Field_gnip_klout_profile_topics(_Field):
     """Take a dict, assign to self.value the list at gnip.klout_profile.topics"""
     label = 'User Klout Topics'
     path = ['gnip', 'klout_profile', 'topics']
     
 
-class Field_gnip_klout_profile_klout_user_id(acscsv._Field):
+class Field_gnip_klout_profile_klout_user_id(_Field):
     """Take a dict, assign to self.value the value of gnip.klout_profile.klout_user_id"""
     label = 'User Klout ID'
     path = ['gnip', 'klout_profile', 'klout_user_id']
     
 
-class Field_gnip_klout_profile_link(acscsv._Field):
+class Field_gnip_klout_profile_link(_Field):
     """Take a dict, assign to self.value the value of gnip.klout_profile.link"""
     label = 'User Klout Profile Link'
     path = ['gnip', 'klout_profile', 'link']
 
 
 # profileLocations
-class _Field_gnip_profilelocations_base(acscsv._Field):
+class _Field_gnip_profilelocations_base(_Field):
     """
     Take a dict, assign to self.value the dict at gnip.profileLocations[0]. This class 
     serves as the base for subfields of profileLocations.
@@ -387,7 +387,7 @@ class Field_gnip_profilelocations_address_subregion(_Field_gnip_profilelocations
 #   'actor' fields 
 ########################################
 
-class Field_actor_id(acscsv._Field):
+class Field_actor_id(_Field):
     """
     Take a dict, assign to self.value the numerical value of actor.id (after stripping off 
     the leading 'id:twitter...' characters).
@@ -404,13 +404,13 @@ class Field_actor_id(acscsv._Field):
             self.value = self.value.split(":")[2]
 
 
-class Field_actor_objecttype(acscsv._Field):
+class Field_actor_objecttype(_Field):
     """Take a dict, assign to self.value the value of actor.objecttype """
     label = 'User Object Type'
     path = ['actor', 'objectType']
     
 
-class Field_actor_postedtime(acscsv._Field):
+class Field_actor_postedtime(_Field):
     """Take a dict, assign to self.value the value of actor.postedTime """ 
     label = 'User Account Creation Date'
     path = ['actor', 'postedTime']
@@ -428,37 +428,37 @@ class Field_actor_postedtime(acscsv._Field):
             self.value = "INVALID_DATE_FORMAT"
 
 
-class Field_actor_displayname(acscsv._Field):
+class Field_actor_displayname(_Field):
     """Take a dict, assign to self.value the value of actor.displayName """
     label = 'User Display Name'
     path = ['actor', 'displayName']
 
 
-class Field_actor_preferredusername(acscsv._Field):
+class Field_actor_preferredusername(_Field):
     """Take a dict, assign to self.value the value of actor.preferredUsername"""
     label = 'User Account Name'
     path = ['actor', 'preferredUsername']
  
 
-class Field_actor_summary(acscsv._Field):
+class Field_actor_summary(_Field):
     """Take a dict, assign to self.value the value of actor.summary"""
     label = 'User Bio'
     path = ['actor', 'summary']
 
 
-class Field_actor_link(acscsv._Field):
+class Field_actor_link(_Field):
     """Take a dict, assign to self.value the value of actor.link"""
     label = 'User Account URL'
     path = ['actor', 'link']
 
 
-class Field_actor_image(acscsv._Field):
+class Field_actor_image(_Field):
     """Take a dict, assign to self.value the value of actor.image"""
     label = 'User Account Image'
     path = ['actor', 'image']
 
 
-class Field_actor_language(acscsv._Field):
+class Field_actor_language(_Field):
     """
     Take a dict, assign to self.value the first (currently only) value in the list at 
     actor.languages
@@ -475,7 +475,7 @@ class Field_actor_language(acscsv._Field):
             self.value = self.value[0]
 
 
-class Field_actor_links(acscsv._Field):
+class Field_actor_links(_Field):
     """Take a dict, assign to self.value the list of dicts at actor.links """
     label = 'User Account Bio URLs'
     path = ['actor', 'links']
@@ -486,19 +486,19 @@ class Field_actor_links(acscsv._Field):
             , self).__init__(json_record)
 
 
-class Field_actor_twittertimezone(acscsv._Field):
+class Field_actor_twittertimezone(_Field):
     """Take a dict, assign to self.value the value of actor.twitterTimeZone"""
     label = 'User-chosen Timezone'
     path = ['actor', 'twitterTimeZone']
 
 
-class Field_actor_utcoffset(acscsv._Field):
+class Field_actor_utcoffset(_Field):
     """Take a dict, assign to self.value the value of actor.utcOffset """
     label = 'User-chosen Offset From UTC'
     path = ['actor', 'utcOffset']
     
 
-class Field_actor_verified(acscsv._Field):
+class Field_actor_verified(_Field):
     """
     Take a dict, assign to self.value a boolean repr of the value of actor.verified. 
     Default value is False.
@@ -508,43 +508,43 @@ class Field_actor_verified(acscsv._Field):
     default_value = False
 
 
-class Field_actor_location_displayname(acscsv._Field):
+class Field_actor_location_displayname(_Field):
     """Take a dict, assign to self.value the value of actor.location.displayName"""
     label = 'User-chosen Location Name'
     path = ['actor', 'location', 'displayName']
 
 
-class Field_actor_location_objecttype(acscsv._Field):
+class Field_actor_location_objecttype(_Field):
     """Take a dict, assign to self.value the value of actor.location.objectType"""
     label = 'User-chosen Location Type'
     path = ['actor', 'location', 'objectType']
 
 
-class Field_actor_followerscount(acscsv._Field):
+class Field_actor_followerscount(_Field):
     """Take a dict, assign to self.value the value of actor.followersCount."""
     label = 'User Follower Count'
     path = ['actor', 'followersCount']
 
 
-class Field_actor_friendscount(acscsv._Field):
+class Field_actor_friendscount(_Field):
     """Take a dict, assign to self.value the value of actor.friendsCount."""
     label = 'User Following Count'
     path = ['actor', 'friendsCount']
 
     
-class Field_actor_listedcount(acscsv._Field):
+class Field_actor_listedcount(_Field):
     """Take a dict, assign to self.value the value of actor.listedCount."""
     label = 'User Listed Count'
     path = ['actor', 'listedCount']
 
 
-class Field_actor_statusesCount(acscsv._Field):
+class Field_actor_statusesCount(_Field):
     """Take a dict, assign to self.value the value of actor.statusesCount"""
     label = 'User Statuses Count'
     path = ['actor', 'statusesCount']
 
 
-class Field_actor_favoritesCount(acscsv._Field):
+class Field_actor_favoritesCount(_Field):
     """Take a dict, assign to self.value the value of actor.favoritesCount"""
     label = 'User Favorites Count'
     path = ['actor', 'favoritesCount']
@@ -556,35 +556,35 @@ class Field_actor_favoritesCount(acscsv._Field):
 ########################################
 
 # URLs
-class Field_twitter_entities_urls(acscsv._Field):
+class Field_twitter_entities_urls(_Field):
     """Take a dict, assign to self.value the list of dicts at twitter_entities.urls"""
     label = 'List of URLs (Twitter)'
     path = ['twitter_entities', 'urls']
 
 
 # hashtags
-class Field_twitter_entities_hashtags(acscsv._Field):
+class Field_twitter_entities_hashtags(_Field):
     """Take a dict, assign to self.value the list of dicts at twitter_entities.hashtags"""
     label = 'List of Hashtags (Twitter)'
     path = ['twitter_entities', 'hashtags']
 
 
 # symbols
-class Field_twitter_entities_symbols(acscsv._Field):
+class Field_twitter_entities_symbols(_Field):
     """Take a dict, assign to self.value the list of dicts at twitter_entities.symbols"""
     label = 'List of Symbols (Twitter)'
     path = ['twitter_entities', 'symbols']
 
 
 # mentions
-class Field_twitter_entities_user_mentions(acscsv._Field):
+class Field_twitter_entities_user_mentions(_Field):
     """Take a dict, assign to self.value the list of dicts at twitter_entities.user_mentions"""
     label = 'List of Mentions (Twitter)'
     path = ['twitter_entities', 'user_mentions']
 
 
 # media
-class Field_twitter_entities_media(acscsv._Field):
+class Field_twitter_entities_media(_Field):
     """Take a dict, assign to self.value the list of dicts at twitter_entities.media"""
     label = 'List of Media (Twitter)'
     path = ['twitter_entities', 'media']
@@ -595,13 +595,13 @@ class Field_twitter_entities_media(acscsv._Field):
 #   'geo' fields 
 ########################################
 
-class Field_geo_type(acscsv._Field):
+class Field_geo_type(_Field):
     """Take a dict, assign to self.value the value of geo.type"""
     label = 'Geo-tag: Type'
     path = ['geo', 'type']
     
 
-class Field_geo_coordinates(acscsv._Field):
+class Field_geo_coordinates(_Field):
     """
     Take a dict, assign to self.value the list at geo.coordinates. This is the coordinate pair 
     of the user-enabled tweet geotag.
@@ -615,50 +615,50 @@ class Field_geo_coordinates(acscsv._Field):
 #   'location' fields 
 ########################################
 
-class Field_location_displayname(acscsv._Field):
+class Field_location_displayname(_Field):
     """Take a dict, assign to self.value the value of location.displayName"""
     label = 'Geo-tag: Full Name'
     path = ['location', 'displayName']
 
 
-class Field_location_name(acscsv._Field):
+class Field_location_name(_Field):
     """Take a dict, assign to self.value the value of location.name"""
     label = 'Geo-tag: Short Name'
     path = ['location', 'name']
 
 
-class Field_location_objecttype(acscsv._Field):
+class Field_location_objecttype(_Field):
     """Take a dict, assign to self.value the value of location.objectType"""
     label = 'Geo-tag: Location Type'
     path = ['location', 'objectType']
 
 
-class Field_location_twitter_country_code(acscsv._Field):
+class Field_location_twitter_country_code(_Field):
     """Take a dict, assign to self.value the value of location.twitter_country_code."""
     label = 'Geo-tag: Country Code'
     path = ['location', 'twitter_country_code']
 
 
-class Field_location_country_code(acscsv._Field):
+class Field_location_country_code(_Field):
     """Take a dict, assign to self.value the value of location.country_code."""
     label = 'Geo-tag: Country'
     path = ['location', 'country_code']
 
 
-class Field_location_link(acscsv._Field):
+class Field_location_link(_Field):
     """Take a dict, assign to self.value the value of location.link."""
     label = 'Geo-tag: Place URL'
     path = ['location', 'link']
 
 
 # location.geo
-class Field_location_geo_type(acscsv._Field):
+class Field_location_geo_type(_Field):
     """Take a dict, assign to self.value the value of location.geo.type."""
     label = 'Geo-tag: Place Type'
     path = ['location', 'geo', 'type']
 
 
-class Field_location_geo_coordinates(acscsv._Field):
+class Field_location_geo_coordinates(_Field):
     """
     Take a dict, assign to self.value the list of coord pairs (vertices) in the value 
     of location.geo.coordinates.

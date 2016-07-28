@@ -3,9 +3,9 @@
 __author__="Scott Hendrickson"
 __license__="Simplified BSD"
 import sys
-import acscsv
+from .acscsv import AcsCSV
 
-class WPacsCSV(acscsv.AcsCSV):
+class WPacsCSV(AcsCSV):
     """Word press activites"""
     def __init__(self, delim, options_keypath, options_user, options_rules, options_lang, options_struct):
         super(WPacsCSV, self).__init__(delim,options_keypath)

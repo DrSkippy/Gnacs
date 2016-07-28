@@ -10,10 +10,10 @@ if '__main__' == __name__:
         author_email='drskippy@twitter.com',
         packages=['acscsv'],
         scripts=['gnacs.py'],
-        url='https://github.com/DrSkippy27/Gnacs',
-        download_url='https://github.com/DrSkippy27/Gnacs/tags/%s'%(GNACS_VERSION_NUMBER),
+        url='https://github.com/DrSkippy/Gnacs',
+        download_url='https://github.com/DrSkippy/Gnacs/tags/%s'%(GNACS_VERSION_NUMBER),
         license='LICENSE.txt',
-        description='Gnip normalized activity JSON to csv parser (Disqus Comments, Wordpress Posts and Comments, Twitter, Tumblr, Foursquare, StockTwits)',
+        description='Gnip normalized activity JSON to csv parser (Twitter, Disqus Comments, and Wordpress Posts and Comments)',
         install_requires=[
                     "ujson >= 1.2",
                         ]
