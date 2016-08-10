@@ -6,7 +6,7 @@ __license__="Simplified BSD"
 import sys
 import datetime
 import fileinput
-from StringIO import StringIO
+from io import StringIO
 # Experimental: Use numba to speed up some fo the basic function
 # that are run many times per record
 # from numba import jit

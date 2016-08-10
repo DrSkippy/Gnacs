@@ -14,7 +14,7 @@ import fileinput
 import re
 import os
 import argparse
-from acscsv import *
+from acscsv import twitter_acs
 # needed only for the pretty-printing
 import json as json_printer
 # use fastest option available for parsing
@@ -25,10 +25,6 @@ except ImportError:
         import json
     except ImportError:
         import simplejson as json
-
-# unicode input
-reload(sys)
-sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 
 def gnacs_args():
     """Parse comand line arguemnts for defining input and output of command line utility."""
@@ -95,11 +91,11 @@ if __name__ == "__main__":
     
     options = gnacs_args().parse_args()
     if options.ver:
-        print "*"*70
-        print "Gnacs Version: %s"%__version__
-        print "Please see https://github.com/DrSkippy27/Gnacs for updates or"
-        print "sudo pip install gnacs --upgrade to install the latest version."
-        print "*"*70
+        print("*"*70)
+        print("Gnacs Version: %s"%__version__)
+        print("Please see https://github.com/DrSkippy27/Gnacs for updates or")
+        print("sudo pip install gnacs --upgrade to install the latest version.")
+        print("*"*70)
         sys.exit()
     #
     delim = "|"     # default delimiter
@@ -127,49 +123,6 @@ if __name__ == "__main__":
 			, options.struct
 			, options.status
             )
-    elif options.pub.lower().startswith("tumb"): 
-        processing_obj = tumblr_acs.TblracsCSV(delim
-			, options.keypath
-			, options.user
-			, options.rules
-			, options.lang
-			, options.struct
-            )
-    elif options.pub.lower().startswith("four") or options.pub.lower().startswith("fsq"):
-        processing_obj = foursquare_acs.FsqacsCSV(delim
-			, options.keypath
-			, options.geo
-			, options.user
-			, options.rules
-            )
-    elif options.pub.lower().startswith("get") or options.pub.lower().startswith("gg"):
-        processing_obj = getglue_acs.GgacsCSV(delim
-			, options.keypath
-			, options.user
-			, options.rules
-			, options.urls
-			, options.origin
-            )
-    elif options.pub.lower().startswith("st") and options.pub.lower().endswith("native"):
-        processing_obj = stocktwits_native.StocktwitsNative(delim
-			, options.keypath
-			, options.user
-			, options.struct
-			, options.influence
-            )
-    elif options.pub.lower().startswith("st"):
-        processing_obj = stocktwits_acs.StacsCSV(delim
-			, options.keypath
-			, options.user
-			, options.struct
-			, options.influence
-            )
-    elif options.pub.lower().startswith("news") or options.pub.lower().startswith("ng"):
-        processing_obj = newsgator_acs.NGacsCSV(delim
-			, options.keypath
-			, options.urls
-			, options.user
-            )
     else:
         processing_obj = twitter_acs.TwacsCSV(delim
 			, options.keypath
@@ -185,12 +138,12 @@ if __name__ == "__main__":
     first_geo = True 
     for line_number, record in processing_obj.file_reader(options.file_name): 
         if options.pretty:
-            print json_printer.dumps(record, indent=3, ensure_ascii=False)
+            print(json_printer.dumps(record, indent=3, ensure_ascii=False) )
             continue 
         try:
             if options.explain:
                 #### TODO: fix -x option for new extractors ####
-                print >>sys.stderr, "\n****\n\n'explain' functionality currently unavailable\n\n****\n"
+                sys.stderr.write("\n****\n\n'explain' functionality currently unavailable\n\n****\n")
                 sys.exit()
                 ################################################
                 record = reflect_json.reflect_json(record)
@@ -208,7 +161,7 @@ if __name__ == "__main__":
                 sys.stdout.write(u"{}\n".format(processing_obj.procRecord(record, emptyField="None")))
         # handle I/O exceptions associated with writing to stdout (e.g. when output is piped to 'head')
         # TODO: handle this via contextmanager (within AcsCSV)? 
-        except IOError, e:
+        except IOError as e:
             try:
                 sys.stdout.close()
             except IOError:
