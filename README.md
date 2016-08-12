@@ -27,11 +27,8 @@ If you don't have a `C` complier:
 ``gnacs`` is commonly used in one of two manners: either as a command-line utility (works with ``stdin`` and ``stdout``), or as imported modules within other Python code. Supported data sources: 
 
 - Twitter
-- Tumblr
 - Disqus
 - Wordpress
-- Foursquare 
-- Stocktwits (+ native format) 
 
 The default output (no cmd-line options) will work with input data from any of these sources. The ``-z`` option (must be the last option) takes the source (aka "publisher") as an argument. 
 
@@ -63,9 +60,8 @@ The default output (no cmd-line options) will work with input data from any of t
       -v, --version         Show version number
       -x, --explain         Show field names in output for sample input records
       -z PUB, --publisher PUB
-                            Publisher (default is twitter), twitter, newsgator,
-                            disqus, wordpress, wpcomments, tumblr, foursquare,
-                            getglue, stocktwits, stocktwits-native
+                            Publisher (default is twitter), twitter,
+                            disqus, wordpress, wpcomments
       -k KEYPATH, --keypath KEYPATH
                             returns a value from a path of the form 'key:value'
 
