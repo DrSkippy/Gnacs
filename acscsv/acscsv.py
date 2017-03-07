@@ -227,13 +227,20 @@ class AcsCSV(object):
         res = '['
         for r in l:
             # handle the various types of lists we might see
-            if isinstance(r, list):
-                res += "'" + self.buildListString(r) + "',"
-            #elif isinstance(r, str):
-            elif isinstance(r, str) or isinstance(r, unicode):
-                res += "'" + r + "',"
-            else:
-                res += "'" + str(r) + "',"
+            try:
+                if isinstance(r, list):
+                    res += "'" + self.buildListString(r) + "',"
+                elif isinstance(r, str) or isinstance(r, unicode):
+                    res += "'" + r + "'," 
+                else:
+                    res += "'" + str(r) + "',"
+            except NameError:
+                if isinstance(r, list):
+                    res += "'" + self.buildListString(r) + "',"
+                elif isinstance(r, str):
+                    res += "'" + r + "'," 
+                else:
+                    res += "'" + str(r) + "',"
         if res.endswith(','):
             res = res[:-1]
         res += ']'
